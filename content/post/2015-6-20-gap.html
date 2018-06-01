@@ -1,0 +1,18 @@
+---
+title: "A much-needed gap"
+author: "Thomas Lumley"
+date: 2015-06-20
+output: html_document
+---
+
+
+
+<p>There are a surprisingly large number of research papers that use the Shapiro-Wilk normality test on data from NHANES or the British Household Panel Survey, two large multi-stage surveys.  </p>
+<p>This is a bad idea for multiple reasons</p>
+<ul>
+<li>Testing for normality is typically a bad idea. It’s unusual for Normal/non-Normal to be an interesting question. That’s in contrast to testing for a power law in skewed data, where apparently many people are interested in the question, though fewer of them in <a href="http://bactra.org/weblog/491.html">how to answer it</a>. </li>
+<li>The power of the test depends a lot on the sample size: in small samples it will reject nothing; in large samples it will reject almost anything. These national multistage samples tend to be large</li>
+<li>The usual rationalisation for Normality tests is to do with outliers leading to either incorrect standard errors or to undue sensitivity to individual observations. When you’re doing an analysis with sampling weights it doesn’t make any sense to look at influence without looking at the sampling weights</li>
+<li>What even is the null hypothesis? Since the test doesn’t take any account of the sampling, it can’t be a hypothesis about the population or the data-generating process. </li>
+</ul>
+<p>You might think there is an opportunity here for methodological innovation, adapting the Shapiro-Wilk test so its null hypothesis is a super-population Normal distribution. That would handle the fourth point above, but it would still count as filling a much-needed gap. </p>
