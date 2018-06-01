@@ -1,0 +1,52 @@
+---
+title: "stringsAsFactors = <sigh>"
+author: "Thomas Lumley"
+date: 2015-07-25
+output: html_document
+---
+
+
+
+<p>Problems with R can be divided into several groups:</p>
+<ul>
+<li>R has the defects of its virtues: pass-by-value and deep copying make the language easy to learn, but waste a lot of memory. <br />
+</li>
+<li>R is old: it’s not written in C++ and doesn’t have a 64-bit integer type because those weren’t things in 1992<br />
+</li>
+<li>Base R (and S before it) was developed for interactive use and then got extended into computational infrastructure. For example, the ‘magical’ handling of extra arguments to model.frame() probably seemed like a good idea at the time.</li>
+<li>If you want Genstat, you know where to find it: base R isn’t going to address everyone’s often-inconsistent needs</li>
+<li>R-core screws up just like everyone else (examples would be invidious)</li>
+</ul>
+<p>The stringsAsFactors option to <code>read.table()</code> and <code>ata.frame()</code> is an example of the first, second, and fourth groups (and, some people would say, the fifth). </p>
+<p>Backing up, why do we have strings and factors? There are (at least) three incompatible use cases for things that look superficially the same:</p>
+<ul>
+<li>Character strings: sequences of characters, accessible by position, by regular expression search, and by more complicated search algorithms like suffix trees</li>
+<li>Enumerations: a type with a fixed, known-in-advance set of values</li>
+<li>Value labels: a mostly-numeric type, but with some values representing non-numeric values such as “don’t know”, “refused”, “could not contact”, “impossible value removed in editing”, “below limit of detection”</li>
+</ul>
+<p>Statistical systems tend to have value labels, plus half-assed support for strings. Programming languages tend to have enumerations and strings (or, in older languages like Fortran, half-assed support for strings)</p>
+<p>R had strings (a three-quarter-assed implementation that, like classic C, is just enough to build something useful on top of). R (and S) also had “factors”.</p>
+<p>In S, the implementation of factors is as small integers with a ‘levels’ attribute. They could be used (well) as an enumerated type, or (badly) for labels on integer variables. They also had an important secondary use as a data-compression hack for strings with repeated values: each additional copy of “Massachusetts” as a string took a pointer plus 13 bytes plus a terminating <code>NUL</code> for each copy, but as a factor took just the 4 bytes for the integer. Even better, comparison of factor levels was simple integer equality, done in a single clock cycle, but comparison of strings required walking the string byte by byte. Back in the day, this mattered.  </p>
+<p>Originally in R, factors were a native type and were unambiguously for enumerations. For compatibility, this was changed R 0.62. As the <code>NEWS</code> entry says:</p>
+<pre><code> o  All internal mechanisms to support factors and
+    data.frames have been removed. These are now 
+    entirely supported by interprete code! 
+   `is.unordered&#39; has been eliminated. Thanks
+    to John Chambers for allowing the distribution of
+    his StatLib code.</code></pre>
+<p>So, for lo these many years we struggled on with <code>read.table()</code> automagically coercing strings to factors, and users painfully coercing them back again, but saving memory. The Right and Proper use of factors was as enumerated types, but not everyone agreed.</p>
+<p>The next change happened in R 2.6.0</p>
+<pre><code> o  There is now a global CHARSXP cache, R_StringHash.
+  CHARSXPs are no longer duplicated and must not be modified in
+  place. Developers should strive to only use mkChar (and
+  mkString) for creating new CHARSXPs and avoid use of
+  allocString. A new macro, CallocCharBuf, can be used to
+  obtain a temporary char buffer for manipulating character
+  data. This patch was written by Seth Falcon.</code></pre>
+<p>The Bioconductor project needed to store and manipulate really big strings.  It’s a bit inefficient to store and compare multiple copies of “Massachusetts”, but it’s a really bad idea to store and compare multiple copies of an entire chromosome. </p>
+<p>The new format stored each string once, and then used pointers for copies: memory use was about the same as factors, speed of comparison was about the same for duplicated strings but much faster for unique strings. Bioconductor also introduced a bunch of string tools in packages, in particular so that large numbers of short segments of a ridiculously long string could be handled efficiently. </p>
+<p>As a result of all this development, R now has strings, and it has an enumerated type. It still doesn’t have value labels (there’s some support in packages, but nothing low-level). There’s now no reason to confuse strings and factors, and no reason to automatically assume that non-numeric variables are factors. </p>
+<p>Or rather, that would be true if we wiped out all R users and code and started from scratch. Otherwise, as an early opponent of backwards compatibility noted:</p>
+<blockquote>
+<p><code>'Tis the Last judgment's fire must cure this place,</code>Calcine its clods and set its prisoners free.’’</p>
+</blockquote>

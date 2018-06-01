@@ -1,0 +1,32 @@
+---
+title: "Te Wiki o Te Reo Māori"
+author: "Thomas Lumley"
+date: 2015-07-27
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+_Scene: A wetland by high-country stream, Te Wai Pounamu. Rangers from Te Papa Atawhai pick up a bedraggled hunter._
+
+“How did you get up here? Where’s your boat”
+
+“Not a boat. Over there.” He gestures
+
+“Yeah? So why are you out here in the swamp?”
+
+“Can’t go back.”
+
+“What’s the matter, bro?” asks the bigger ranger, who’s obviously been chosen as the good cop.
+
+“They got out of the net,” the hunter said, showing his bleeding hand is missing a finger
+
+“You mean..”
+
+“Kī tōnu taku waka topaki i te tuna”
+
+The smaller ranger looks blank. His colleague fills him in on the full strength.
+
+“F-ing poachers get more careless every year. His hovercraft is full of eels.”
