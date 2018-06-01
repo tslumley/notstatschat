@@ -1,0 +1,26 @@
+---
+title: "Should SPRINT have stopped?"
+author: "Thomas Lumley"
+date: 2015-11-10
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The SPRINT trial comparing standard blood pressure treatment (to 140mmHg) with intensive treatment (to 120mmHg) stopped early in September and just [published this week](http://www.nejm.org/doi/full/10.1056/NEJMoa1511939?query=featured_home).  Hilda Bastian [wrote about](http://blogs.plos.org/absolutely-maybe/2015/09/30/post-sprint-trial-headaches/) the problems of early stopping back in September.
+
+Now the results are out, we can see a lot more detail on what was going on. I think the right decision was made, but it’s not completely straightforward. Also, I’m only a simple country statistician, so I may be missing some issues.
+
+Rather to my surprise, the trial does provide pretty convincing evidence that more-intensive treatment is better. Not only did the results for the primary outcome (serious cardiovascular events) go well across the stopping boundary, the trial would have been close to stopping even if the decision had been based on all-cause mortality. The treatment effect estimates will be biased by early stopping, but that’s fixable: there’s not just theory but [even software](http://rctdesign.org/Welcome.html) that will undo the bias. 
+
+It’s not clear how useful the results will be in practice -- less than two-thirds of diagnosed hypertensives [in the US](http://www.ncbi.nlm.nih.gov/pubmed/24171916) have blood pressure controlled even to the 140mmHg level -- but we won’t learn anything more about that in SPRINT, and at least the expected minor side-effects didn’t show up. 
+
+There are two main reasons why one might not want to stop the trial. The first is that there’s very little data so far on the **long-term** effects of intensive treatment. The second is that the intensive-treatment group had a higher rate of acute kidney injury measured by drop in eGFR.  In a sense, these two reasons are connected.   
+
+In the Women’s Health Initiative hormone trials, an obvious difficulty right from the planning stage was that the heart disease results would be available faster than the breast cancer results. If, as expected, estrogen decreased cardiovascular risk but increased cancer risk, it would be necessary to keep running the trial to look for cancer effects while watching extra deaths from heart disease accumulate in the control group. If the investigators weren’t willing to do that, there wouldn’t be any value in the trial. In the end, as we know, estrogen increased cardiovascular risk and the decision was easy, but they had to plan for it being hard. In SPRINT, my sense is that there wasn’t the same planned tradeoff between short-term benefit and longer-term harm, and that the trial was designed to run longer in order to have power to detect smaller differences.
+
+However, there was that increase in kidney injury, and something similar was seen [in the ACCORD tria](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4123215/)l of the same intervention in diabetics.  There’s clearly an interest in finding out whether this is likely to lead to end-stage renal disease or even to chronic kidney disease. We’d also like to know whether the rate is going to go up or stay the same, or whether basically all the susceptible people have already had it.
+
+There are two reasons I don’t think the kidney injury is sufficient reason to continue the trial, but I could be wrong about either of them.  The first is time: I don’t think even the planned trial length would be enough to see if intensive treatment is causing end-stage renal disease.  The second is ethical: I don’t think assessing fairly definite short-term CVD benefits vs possible long-term renal harm is the trial that patients and investigators signed up for. 

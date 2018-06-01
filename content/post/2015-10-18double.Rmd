@@ -1,0 +1,29 @@
+---
+title: "Double robustness"
+author: "Thomas Lumley"
+date:  2015-10-18
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+“Double robust” estimation in a regression problem uses a model for the outcome $Y$ given available data $Z$ and a model for the exposure $X$ given available data $Z$. The estimates are consistent if either model is correct and efficient if they both are correct[1].  
+
+Described that way, double robustness doesn’t sound very useful. “All models are wrong; many models are useless”, as we can deduce from Box’s familiar aphorism, so the chance of one of two models being correct is no more than twice the chance of one model being correct: two times $4/5$ of $5/8$ of not very much[2]. 
+
+There’s more to double robustness than that, in two ways. 
+
+First, the bias terms of the two models are multiplied in computing the bias for the parameter of interest.  Asymptotically, a `correct’ parametric model would have bias $o_p(n^{-1/2})$, but a bias of $o_p(1)$ in one model is enough for the multiplication to be helpful, and a bias of $o_p(n^{-1/4})$ in both models is enough for the bias to be asymptotically negligible. Neither of those is a completely useless possibility. [In practice we care about actual bias rather than asymptotic bias, but the same principles more or less hold.]
+
+Secondly, the real benefit of two models is that we can have completely different kinds of substantive knowledge about them. We could have useful knowledge about what affects $Y$, or we could have useful knowledge about what affects $X$, and these are different substantive possibilities. 
+
+  
+
+  
+
+_1. When the two models are inconsistent, some people still call that “doubly robust”, but Robins et al say “generalised doubly robust”_
+
+_2. See the limerick about `A mathematician named Hall'_
+.

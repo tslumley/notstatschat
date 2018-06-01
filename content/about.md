@@ -1,5 +1,5 @@
 ---
-title: "About"
+title: "Biased and Inefficient"
 date: 2018-06-01
 ---
 

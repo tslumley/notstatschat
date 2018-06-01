@@ -1,0 +1,38 @@
+---
+title: "NZ Flag Referendum pseudorandom numbers"
+author: "Thomas Lumley"
+date: 2015-09-22
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The counting process for the NZ Flag Referendum needs some way to break ties. The Act defines a way to generate pseudo-random numbers [(Schedule 4, clauses 14 to 22](http://www.legislation.govt.nz/act/public/2015/0066/16.0/DLM6405468.html)).  Anyone in computational statistics who reads this will recognise some of the magic numbers; for the rest of you, here’s what’s going on.
+
+The Act almost defines the [Wichmann-Hill](https://en.wikipedia.org/wiki/Wichmann-Hill) PRNG, a respectable, if old-fashioned algorithm that was the original RNG in R. We’ve changed the generator in R because Wichmann-Hill isn’t up to modern research use. Its period is only $6.95\times 10^{12}$, and you ideally don’t run a PRNG for longer than the square root of its period. For a research statistician, a limit of 2.5 million numbers in a stream isn’t enough, but the flag referendum can’t possibly need more than 5+4+3+2=14 random numbers.
+
+I said the Act almost defines the Wichmann-Hill PRNG. The process to update the random state $(x,\,y,\,z)$ at each iteration is the same,  but the output of Wichmann-Hill,  is $$(x/30269 + y/30307 + z/30323) \bmod 1$$ and the output of the Flag PRNG is $$(10000x/30269 + 10000y/30307 + 10000z/30323).$$ 
+
+If Clause 17 were changed to use
+
+```
+rc = {[(10 000x) div 30 269] + [(10 000y) div 30 307] + [(10 000z) div 30 323]} rem 10 000
+```
+
+the Flag PRNG would give Wichmann-Hill scaled to $[0,\,9999]$ with a uniform distribution over its range. Without the final “rem 10000″ it actually gives a non-uniform distribution on $[0,\,29997]$. In this application that’s not a big deal, but it’s a small change for the worse.
+
+In the Amendment proposed by NZ Greens to add the ‘Red Peak’ flag to the referendum, the seed for the pseudo-random generator is changed. Initially I couldn’t see why, but it was clearly harmless. The entropy in the PRNG seed comes from the $z$ component, which is based on the number of votes, and that didn’t change.
+
+Chuan-Zheng Lee points out that the PRNG is the one in [Part 5 of Schedule 1A of the Local Electoral Regulations 2001](http://www.legislation.govt.nz/regulation/public/2001/0145/latest/DLM57125.html), and this defines the $x$ part of the seed to be the number of candidates plus 5. A possible reason is to ensure that elections for different positions (which might have the same number of votes, especially with a postal ballot) have different PRNG seeds.
+
+There does seem to be a potential bug in the Local Electoral Regulations version though. Clause 48 says
+
+> For the second and subsequent steps, replace the pseudo-random number for each candidate with the candidate's PRN at the previous step subtracted from 10 000.
+
+That could be negative. In a sense that’s ok: they’re still just as pseudorandom. It does suggest that the omission of the `rem 10000` from the output operation was a mistake.
+
+  
+
+**Update**: The description of counting Single Transferable Vote at the [Department of Internal Affairs](http://www.dia.govt.nz/DIAWebsite.nsf/0/38f781eae0881449cc256c0f00152ea3?OpenDocument) refers to a paper by Hill, Wichmann, and Woodall (1987) that gives a program in Pascal. The program (unsurprisingly) uses the Wichmann-Hill PRNG initialised using number of seats, number of candidates, and number of votes, but gets it right.  The seed setup isn’t exactly the same as in the regulations, but it’s similar. 

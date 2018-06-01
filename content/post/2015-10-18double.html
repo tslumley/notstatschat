@@ -1,0 +1,16 @@
+---
+title: "Double robustness"
+author: "Thomas Lumley"
+date:  2015-10-18
+output: html_document
+---
+
+
+
+<p>“Double robust” estimation in a regression problem uses a model for the outcome <span class="math inline">\(Y\)</span> given available data <span class="math inline">\(Z\)</span> and a model for the exposure <span class="math inline">\(X\)</span> given available data <span class="math inline">\(Z\)</span>. The estimates are consistent if either model is correct and efficient if they both are correct[1].</p>
+<p>Described that way, double robustness doesn’t sound very useful. “All models are wrong; many models are useless”, as we can deduce from Box’s familiar aphorism, so the chance of one of two models being correct is no more than twice the chance of one model being correct: two times <span class="math inline">\(4/5\)</span> of <span class="math inline">\(5/8\)</span> of not very much[2]. </p>
+<p>There’s more to double robustness than that, in two ways. </p>
+<p>First, the bias terms of the two models are multiplied in computing the bias for the parameter of interest.  Asymptotically, a `correct’ parametric model would have bias <span class="math inline">\(o_p(n^{-1/2})\)</span>, but a bias of <span class="math inline">\(o_p(1)\)</span> in one model is enough for the multiplication to be helpful, and a bias of <span class="math inline">\(o_p(n^{-1/4})\)</span> in both models is enough for the bias to be asymptotically negligible. Neither of those is a completely useless possibility. [In practice we care about actual bias rather than asymptotic bias, but the same principles more or less hold.]</p>
+<p>Secondly, the real benefit of two models is that we can have completely different kinds of substantive knowledge about them. We could have useful knowledge about what affects <span class="math inline">\(Y\)</span>, or we could have useful knowledge about what affects <span class="math inline">\(X\)</span>, and these are different substantive possibilities. </p>
+<p><em>1. When the two models are inconsistent, some people still call that “doubly robust”, but Robins et al say “generalised doubly robust”</em></p>
+<p><em>2. See the limerick about `A mathematician named Hall’</em> .</p>
