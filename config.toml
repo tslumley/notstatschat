@@ -3,7 +3,7 @@ languageCode = "en-us"
 title = "Biased and Inefficient"
 theme = "hugo-lithium"
 googleAnalytics = ""
-disqusShortname = "notstatschat"
+disqusShortname = ""
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
 [permalinks]
