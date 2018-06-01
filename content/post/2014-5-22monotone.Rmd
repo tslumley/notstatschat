@@ -1,0 +1,15 @@
+---
+title: "Monotonicity and smoothness"
+author: "Thomas Lumley"
+date:  2014-05-22
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Andrew Gelman has an [interesting discussion](http://andrewgelman.com/2014/05/21/models-constraints/) of monotonicity as a modelling constraint.  I basically agree with what he says, but since my first real statistical research (my [M.Sc. thesis](http://ideas.repec.org/a/eee/csdana/v20y1995i5p499-510.html)) was on order restrictions I thought I'd write about a related aspect of the problem.
+
+Assuming that a relationship is monotone sounds like a very strong assumption, and therefore one that you'd expect to gain a lot by making. Asymptotically, this isn't true.  If the relationship between $X$ and $Y$ is only known to be monotone, you get $E[Y|X=x]$ estimated to $O_p(n^{-1/3})$ where $X$ has non-zero density. By assuming smoothness you can get $O_p(n^{-2/5})$, which is better. That is, if you have a lot of data and you know a relationship is smooth, you don't gain anything by knowing it is monotone, but if you know it is monotone you do gain by knowing it is smooth.
+
+I think that's non-intuitive, and I think the reason it's non-intuitive is the asymptotics. If you have relatively sparse data, knowing that the relationship is monotone is fairly powerful, but knowing it is smooth is pretty useless. If you have very dense data, knowing _a priori_ the relationship is smooth is useful, but knowing _a priori_ that it is monotone is not all that helpful, since it will be fairly obvious whether it's monotone or not. 

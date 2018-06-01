@@ -1,0 +1,13 @@
+---
+title: "Sparse linear systems and calibration of weights"
+author: "Thomas Lumley"
+date: 2013-07-08 
+output: html_document
+---
+
+
+
+<p>Diego Zardetto (Italian national stats agency) wants to be able to calibrate sampling weights to population totals for regions.  This leads to a very large number of calibration variables and solving large linear systems.</p>
+<p>Using the Matrix package in R, we can compute sparse QR decompositions instead of the dense ones used in the survey package.  Alternatively, using block-diagonal sparse matrices from the bdsmatrix package we can represent the linear system as a set of separate systems for each region. </p>
+<p>Which approach works best is an empirical question, but both should be fairly easy to implement (when I get a spare day to do it). </p>
+<p><em>Update: I didn’t, but the people at the Australian Bureau of Statistics did</em></p>

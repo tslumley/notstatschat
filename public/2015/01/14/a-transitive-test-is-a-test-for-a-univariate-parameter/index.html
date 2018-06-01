@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.41" />
+
+
+<title>A transitive test is a test for a univariate parameter - A Hugo website</title>
+<meta property="og:title" content="A transitive test is a test for a univariate parameter - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/notstatschat_1.png"
+         width="75"
+         height="100"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/tslumley/notstatschat">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/tslumley">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">3 min read</span>
+    
+
+    <h1 class="article-title">A transitive test is a test for a univariate parameter</h1>
+
+    
+    <span class="article-date">2015/01/14</span>
+    
+
+    <div class="article-content">
+      <p><a href="http://notstatschat.tumblr.com/post/63237480043/rock-paper-scissors-wilcoxon-test">As you know</a>, rank tests can be non-transitive: they can have the rock-paper-scissors property. Tests that are for a single real-valued summary statistic (eg a test comparing means or medians or variance) are always transitive, because they are just comparing a single number, and ordering on numbers is transitive.</p>
+<p>The converse is almost obviously almost true: if you have a transitive test, it almost has to be a test for a single real-valued summary statistic. The test gives you an ordering on distributions, so there’s a one-dimensional summary statistic in some ordered set saying where you are in the ordering. In any sane situation that one-dimensional summary statistic can be chosen to be real-valued.</p>
+<p>What gets a little tricky is the definition of ‘sane’. Econometricians have been looking at this problem since at least the 1960s, and there’s one simple pathological case.  Suppose your test statistic uses the lower quartile, and then breaks ties using the upper quartile.  That is, you have a two-dimensional summary statistic and you flatten it into one dimension by using the second value just to break ties.  This doesn’t fit into the real numbers: the ordering has uncountably many copies of the real numbers, because the second number can be anything, for any value of the first number. You can’t replace the pair of numbers with a single number.</p>
+<p>A relatively recent (2002) <a href="https://ideas.repec.org/a/eee/mateco/v37y2002i1p17-38.html">paper</a> by Alan Beardon and co-workers characterises all the things that can go wrong. There are four of them</p>
+<ol style="list-style-type: decimal">
+<li>The two-dimensional ordering, as above</li>
+<li>Just Too Long: when you keep finding bigger and bigger elements you have to go on not just a countably infinite number of times, but an uncountably infinite number of times before you bound the whole set.</li>
+<li>A weird thing called Aronszajn chains</li>
+<li>A truly weird thing called a Souslin line</li>
+</ol>
+<p>The first two are standard counterexamples in topology: the <a href="http://en.wikipedia.org/wiki/Lexicographic_order_topology_on_the_unit_square">unit square under the dictionary ordering</a> on points, and the <a href="http://en.wikipedia.org/wiki/Long_line_%28topology%29">long line</a>.</p>
+<p>Aronszajn chains need a delicate construction involving orderings on infinite sets of rational numbers. Not only is the whole ordering not representable by real  numbers, not even any uncountable subset is representable.</p>
+<p>It’s impossible to say anything about useful what Souslin chains look like; their existence or otherwise is not decidable by basic axioms of set theory (ZFC<span class="math inline">\(\pm\)</span>CH)</p>
+<p>Because the counterexamples are weird, it’s hard to come up with intuitive conditions that rule them out. However, I found a <a href="http://books.google.co.nz/books/about/Representations_of_preference_orderings.html?id=xZFFAAAAYAAJ&amp;redir_esc=y">book</a> by Bridges &amp; Mehta (and found that Douglas Bridges is just down the road in Hamilton,ok, at least in the same country), with basically the result I need (Theorem 4.6.3)</p>
+<p><em>If <span class="math inline">\(\preceq\)</span> is a continuous, countably bounded, total preorder on a path-connected topological space, there is a continuous order isomorphism into <span class="math inline">\(\mathbb{R}\)</span>.</em></p>
+<p>Mathematicians can be useful, sometimes, even if it’s just to solve problems basically created by mathematical formalism.</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

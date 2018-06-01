@@ -1,0 +1,22 @@
+---
+title: "On the persistence of variation in horn size among Soay sheep"
+author: "Thomas Lumley"
+date: 2013-08-23
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ _([BBC News](http://www.bbc.co.uk/news/uk-scotland-highlands-islands-23769630))_
+
+_The small-horned rams are fitter,   
+but the big-horned rams are phatter  
+And though we deemed it sweeter  
+To dally with the latter,  
+The small horns still stay with us  
+To Scottish boffins' wonder;  
+In flocks the nerds still pull the birds  
+When the jocks are six feet under_
+
+_(After [Peacock](http://www.bartleby.com/246/103.html))_

@@ -1,0 +1,19 @@
+---
+title: "A people set apart"
+author: "Thomas Lumley"
+date: 2014-11-05
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+There's a [conference](http://www.deakin.edu.au/health/psychology/edconference/) coming up at Deakin University in Melbourne, on energy drinks. The unusual aspect of the conference is that no-one who has received industry funding is welcome. Obviously the energy drink industry [aren't happy](http://australianbeverages.org/industry-banned-attending-1st-international-energy-drinks-conference/) about this.  I couldn't give a fsck about their hurt feelings, but I hope this sort of policy doesn't spread.
+
+Now, I'm not completely naïve about the sorts of things some industry groups will do when there's a lot of money at stake. People in New Zealand will have heard the allegations in Nicky Hager's _Dirty Politics_ about smear campaigns against Doug Sellman and Mike Joy, but I knew about the problem long before that. I have [friends and colleagues](http://www.cbgnetwork.org/1397.html) from Seattle who were the target of pharmaceutical industry dirty tricks over a paper on the safety of some (then new and expensive) blood pressure drugs. At a less serious but more personal scale, I've heard reports of what some sales personnel for Mathsoft used to say about R and its developers.  
+
+Still, I hope this sort of exclusionary policy doesn't spread.  It's fine to organise a workshop by invitation, for people who agree with you on some issue to work on the next step. I've been part of those myself. It's acceptable to exclude non-researchers from research meetings, and I'm entirely in favour of throwing out individuals who persist in being disruptive, but it's a big step to say that anyone who has received research funding from the energy drink industry is _ipso facto_ a fraud.
+
+The problem is particularly bad in research areas where the signal to noise ratio is very low, so that it's easy to miss important problems with your results. I rather like the approach for air pollution epidemiology represented by the [Health Effects Institute](http://www.healtheffects.org/). It was a joint venture by the EPA and the polluting industries to come up with research that addressed the public policy issues and that people could believe, including the most useful peer-review processes I've encountered. It was necessary: although the polluters turned out to be wrong on all the substantive issues, they were right about the quality of some of the research.  I met some first-class scientists in air pollution research (notably, the late [Sally Liu](http://deohs.washington.edu/sites/default/files/newsletter/EHnews-SprSum2011/memoriam.html)), but there were also people who knew what the answer should be and wanted to get it.
+
+I've never received or sought industry research funding, and have done a very limited amount of consulting for them (statistical software courses). I'd be allowed into meetings like this one, but I'd be reluctant to go.

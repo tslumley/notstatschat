@@ -1,0 +1,37 @@
+---
+title: 'How hard did you look: equivalence and non-inferiority'
+author: "Thomas Lumley"
+date: 2015-02-27
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+  I usually don't read nutripharma articles outside the mainstream media, but someone tweeted [a link about saffron](http://www.donotlink.com/dw82), which apparently cures everything. The last straw was a line beginning 
+
+> "Saffron, a major component of the Mediterranean diet..."  
+
+Saffron can't really be described as a major component of anything, even risotto milanese, and it's not unique to the Mediterranean region: it's a well-known spice in India, Pakistan, Iran. And it's not just the well-known places: England produced saffron before Italy produced tomatoes. 
+
+There's no shortage of things to criticise about the article, but there's one that is an important applied biostatistics point.  The article says
+
+> Loss of cognitive function is one of the most common, most feared consequences of aging. Studies show that saffron has promise in preventing or ameliorating some of those effects. A 16-week trial of saffron (30 mg per day) showed that the supplement was superior to placebo in patients with early, probable Alzheimer’s disease. The same dose, for 22 weeks, proved similar in effect to the prescription drugs memantine and donepezil in a comparable population.85,86  
+
+That is more or less what references [85](http://www.ncbi.nlm.nih.gov/pubmed/19838862) and [86](http://www.ncbi.nlm.nih.gov/pubmed/25163440) say (except they were in quite different populations to the first study: mild to moderate, and moderate to severe disease), but it isn't what they actually found.  The two studies randomised a small number of patients to saffron or a fairly modestly effective drug, and didn't collect enough information to demonstrate a difference. Failing to find a difference isn't evidence that there isn't one there -- it may just mean you didn't look hard enough.
+
+If you want to prove that a new treatment is not much worse than an existing treatment, you need a definition of "not much worse" (somewhat unfortunately called 'non-inferiority')  and a test whose null hypothesis is 'not non-inferiority'. Alternatively, if you're a Bayesian, you need a prior that says saffron probably doesn't work (since almost everything doesn't) and you need to collect enough evidence to have high posterior probability that saffron is 'non-inferior' to the drug.
+
+Reference 85 looks at cognitive function scores after 22 weeks and says  
+
+> The changes at the endpoint compared to baseline were −3.96 ± 3.50 (mean ± SD) and −3.77 ± 3.80 for saffron and donepezil, respectively. 
+
+This is with 27 people in each group, so the standard error of the difference is 1 point.  According to [a systematic review](http://www.ncbi.nlm.nih.gov/pubmed/15254918), the benefit of10mg donepezil over placebo at 24 weeks on this scale is 3.1 points with a standard error of 0.4. 
+
+Putting these together, the estimated benefit of saffron over placebo is 3.1-(3.77-3.96)=3.29, with a standard error of 1.08. If we can completely rely on this study, it still allows for saffron to be only 1/3 as effective as donepezil. Given that it's controversial how worthwhile donepezil is, that's not really good enough. We can't say they've demonstrated a similar effect
+
+Worse than that, though, is the whole idea of a non-inferiority trial. In a blinded, randomised trial, any imperfections in measurement or trial conduct will tend to reduce your ability to see differences.  Usually people are trying to show a difference, so we don't need to worry too much about whether everything was done perfectly. In a non-inferiority trial, you are trying not to see a difference, so it's very important that the trial is planned and conducted to the highest possible standards. Starting off with too few participants and the wrong analysis isn't encouraging.
+
+In any case, it's the wrong question. There's no reason to think saffron would worsen the side-effects of donepezil, so the right question would be whether donepezil plus saffron was better than donepezil alone, tested in an ordinary double-blind study.
+
+While we're doing calculations, there are an [estimated](http://www.ncbi.nlm.nih.gov/pubmed/23305823) 35 million people in the world with dementia. At the study dose of 30mg/day, that's 383 tonnes/year, or about 25% more than the current world production.  If saffron worked, the next step would be identification and synthesis of the active components. It wouldn't be a natural herbal remedy for long.  

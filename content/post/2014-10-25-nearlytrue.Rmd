@@ -1,0 +1,53 @@
+---
+title: "Semiparametric efficiency and nearly-true models"
+author: "Thomas Lumley"
+date: 2014-10-25
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Suppose you have $N$ people with some variables measured, and you choose a subset of $n$ to measure additional variables.  I'm going to assume the probability $\pi_i$ that you measure the additional variables on person $i$ is **known**, so it has to be a setting where non-response isn't an issue -- eg, choosing which frozen blood samples to analyse, or which free-text questionnaire responses to code, or which  medical records to pull for abstraction. 
+As an example, if you have a binary outcome $Y$ you might take a case--control sample and measure $X$ on everyone with $Y=1$ and the same number of people with $Y=0$. 
+
+ Suppose in addition that you want to fit a particular parametric or semiparametric model ${\cal P}_{\theta,\eta}$ to the data, where $\theta$ are parameters of interest and $\eta$ are nuisance parameters. For example, you might want to fit a logistic regression model where the coefficients are $\theta$ and the density of $X$ is $\eta$.
+ 
+ There are now two possible semiparametric models for the observed data. Let $R_i$ be the indicator that person $i$ is sampled. We could have
+ 
+* Model D: $\pi_i=E[R_i|\textrm{variables available on everyone}]$ 
+* Model M: the submodel of $D$ that satisfies ${\cal P}_{\theta,\eta}$ 
+
+
+ Typically, estimation under model M will be more efficient. For example, in the case-control setting with a logistic regression model for $Y|X$ we know that the efficient estimator under model M is unweighted logistic regression  (per Prentice &amp; Pyke 1979), and that the efficient estimator under model D is weighted logistic regression with weights $w_i=1/\pi_i$.
+ 
+ I want to consider slight misspecifications, where model M is 'nearly true'. Gross misspecifications aren't interesting: if the data don't look anything like a sample from ${\cal P}_{\theta,\eta}$, a careful data analyst will notice and pick a different model. However, the difference between the efficient estimators under M and under D is $O_p(n^{-1/2})$, so a bias of the same order is enough to outweigh the precision gain. It's not obvious that we should expect to detect a misspecification of this size, so more precise investigation is needed. 
+ 
+ The efficient estimator under $D$ is an Augmented Inverse Probability Weighted (AIPW) estimator (if you're a biostatistician) or a calibration estimator (if you're a survey statistician), and we can get reasonably close to it (Breslow et al, 2009). Write $\hat\theta_{\textrm{wtd}}$ for this estimator, and $\hat\theta_{\textrm{eff}}$ for the efficient estimator under $M$. 
+ 
+ Models M and D agree when there is complete data, so I will **define** the true value $\theta_0$ of $\theta$ as the common limit of $\hat\theta_{eff}$ and $\hat\theta_{wtd}$ with complete data. Survey statisticians call this the 'census estimator.' Biostatisticians call it 'our next grant proposal'.
+ 
+ We now need a mathematical characterisation of 'nearly true'. I will use contiguity.  A sequence of distributions $Q_n$ is contiguous to a sequence $P_n$ if for every event $A$, $P_nA\to0$ implies $Q_nA\to 0$. They are mutually contiguous if the implication goes both ways. Let $A$ be the event that a model diagnostic accepts model $M$, and let $P_n$ be a sequence of distributions in model M.  If this is a useful diagnostic,  $P_nA\not\to 0$, so for a mutually contiguous sequence of distributions $Q_n$ in model D but not in model M, $Q_nA\not\to 0$.
+ 
+ Now, under M
+ $$\sqrt{n}(\hat\theta_{\textrm{eff}}-\theta_0) \stackrel{d}{\to}N(0,\sigma^2)$$
+ and
+ $$\sqrt{n}(\hat\theta_{\textrm{wtd}}-\theta_0) \stackrel{d}{\to}N(0,\sigma^2+\omega^2)$$
+ 
+ By the Convolution Theorem, the extra variance for $\hat\theta_{\textrm{wtd}}$ under model M is pure noise, so 
+ $$\sqrt{n}(\hat\theta_{\textrm{eff}}-\hat\theta_{\textrm{wtd}}) \stackrel{d}{\to} N(0,\omega^2)$$
+ 
+ Now, by LeCam's Third Lemma, if we switch from $P_n$ to $Q_n$ as the data distribution there is no change in variance, but there is bias
+ $$\sqrt{n}(\hat\theta_{\textrm{eff}}-\hat\theta_{\textrm{wtd}}) \stackrel{d}{\to} N(-\kappa\rho\omega,\omega^2)$$
+ where $\kappa$ is the limit of the log likelihood ratio $\log dQ_n/dP_n$, which governs the power of the Neyman--Pearson Lemma test, and $\rho$ measures whether the misspecification is in a direction that matters for $\theta$ or not. 
+ 
+ Substituting back, under the contiguous misspecified model sequence $Q_n$, 
+ $$\sqrt{n}(\hat\theta_{\textrm{eff}}-\theta_0) \stackrel{d}{\to}N(-\kappa\rho\omega,\sigma^2)$$
+ and
+ $$\sqrt{n}(\hat\theta_{\textrm{wtd}}-\theta_0) \stackrel{d}{\to}N(0,\sigma^2+\omega^2)$$
+ So, the mean squared error of $\hat\theta_{\textrm{wtd}}$ is lower if $\kappa^2\rho^2>1$.  If $\rho\approx 1$, this happens when $\kappa\approx 1$, at which point the most powerful test for $Q_n$ vs $P_n$ has power about 24%. 
+ 
+ That is, the least-favourable misspecification of model M leads to worse mean squared error for $\hat\theta_{\textrm{eff}}$ than $\hat\theta_{\textrm{wtd}}$ before the most powerful test of misspecification is even moderately reliable, even if we (unrealistically) knew exactly the form of the misspecification. 
+ 
+ Since the sense in which $\hat\theta_{\textrm{eff}}$ is optimal is precisely this local asymptotic minimax sense within ${\cal P}_{\theta,\eta}$, it seems reasonable to use the same description of optimality outside the model. Under this description of optimality, the 'efficient' estimator's optimality is not robust to undetectable model misspecification.

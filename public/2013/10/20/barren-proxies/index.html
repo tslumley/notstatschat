@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.41" />
+
+
+<title>Barren proxies - A Hugo website</title>
+<meta property="og:title" content="Barren proxies - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/notstatschat_1.png"
+         width="75"
+         height="100"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/tslumley/notstatschat">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/tslumley">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">2 min read</span>
+    
+
+    <h1 class="article-title">Barren proxies</h1>
+
+    
+    <span class="article-date">2013/10/20</span>
+    
+
+    <div class="article-content">
+      <p>In causal inference it is often the case that you can’t obtain a confounding variable directly, you can only measure something that it affects.  Judea Pearl correctly points out the danger of conditioning on a ‘barren proxy’ for a confounder, in situations like this one:</p>
+<div class="figure">
+<img src="http://media.tumblr.com/2578eac1929368b1925969ddd1159ce1/tumblr_inline_muyh92BPuw1s1hdxy.png" />
+
+</div>
+<p>A confounds the effect of B on C. D is affected by A but does not directly affect either B or C, so it is a ‘barren proxy’ for A.</p>
+<p>It’s easy to see that conditioning on D will not, in general, remove confounding by A. The problem, as so often with causal graphs, is where to draw the boundaries. Examined sufficiently closely, almost every variable in statistics is a barren proxy. </p>
+<p>Suppose A is average particulate air pollution dose for people in a city and D is measured particulate air pollution concentration.  The standard measurement technique is to force air through a filter and trap the pollution particles, which are then weighed. The particles that end up on the filter cannot have any effect on health; measured air pollution is a barren proxy for exposure.</p>
+<p>Suppose A is blood glucose concentration. A blood drop is removed and fed into a testing device. The glucose in that drop of blood doesn’t participate in future chemical reactions in the body; measured glucose is a barren proxy.</p>
+<p>Suppose A is whether or not you have had a heart attack, and D is the conclusion from expert examination of your medical records. A subsequent examination of the medical records can’t possibly have an impact on whether your heart muscle cells actually died during the event; diagnosis of heart attack is a barren proxy. </p>
+<p>As a simple matter of fact, essentially all measured variables in medicine are barren proxies. That’s not the important distinction, though. What actually matters is whether there are good causal reasons that the relationship between the true confounder and the measured variable is close, not just observationally but under intervention.  That is, we should care whether D is a reliable measurement of A, not whether it is a barren proxy for A. Unfortunately, the criteria for being a reliable measurement are not simple and qualitative. </p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+  </body>
+</html>
+

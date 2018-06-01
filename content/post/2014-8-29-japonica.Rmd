@@ -1,0 +1,18 @@
+---
+title: "On dialect"
+author: "Thomas Lumley"
+date: 2014-08-29
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In New Zealand, 'radiata' and 'macrocarpa' are accepted common names for two widely planted non-native conifers: _Pinus radiata_ and _Cupressus macrocarpa,_ known in their native US as 'Monterey pine' and 'Monterey cypress' respectively.
+
+It's unusual for the specific epithet of a plant to become the common name. There are plenty of examples of the generic name becoming the common name, from 'bougainvillea' to 'wisteria'.  There are even plenty of examples where a former generic name has stuck as the common name after the botanists have renamed the plant to, eg,  [_Pelargonium_](http://en.wikipedia.org/wiki/Pelargonium), [_Hippeastrum_](http://en.wikipedia.org/wiki/Hippeastrum), or [_Corymbia_](http://en.wikipedia.org/wiki/Corymbia). 
+
+I don't think I've ever heard another example of the specific name working this way, and I only know of one other example.  Henry Reed's famous poem [_Naming of Parts_](http://www.solearabiantree.net/namingofparts/namingofparts.html) mentions 'japonica', which turns out to be the flowering quince _Chaenomeles japonica,_ and by extension, other species and hybrids of _Chaenomeles_. 
+
+Are there others?

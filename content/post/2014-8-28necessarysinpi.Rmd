@@ -1,0 +1,45 @@
+---
+title: "O necessary sinpi"
+author: "Thomas Lumley"
+date: 2014-08-27
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+The [R help page](http://stat.ethz.ch/R-manual/R-devel/library/base/html/Trig.html) for `sin`, `cos`, and `tan`, mentions functions `sinpi, cospi, tanpi`, "accurate for x which are multiples of a half." This struck someone I know as strange. I've been thinking about this sort of thing recently while teaching Stat Computing, so here's some background.
+
+If you're a [mathematician](http://gowers.wordpress.com/2014/03/02/how-do-the-power-series-definitions-of-sin-and-cos-relate-to-their-geometrical-interpretations/), $\sin x$ is given by a power series  
+$$\sin x = x - \frac{x^3}{3!}+\frac{x^5}{5!} -\frac{x^7}{7!} +-\cdots$$
+
+This series converges for all $x$, and so converges uniformly on any finite interval. In fact, it eventually converges faster than exponentially, since $n!\approx (n/e)^n$. At, say, $x=1$, 10 terms gives you 14 digits accuracy. Even better, it's an alternating series, so once the terms start to decrease, the error in truncating the series is smaller than the first omitted term. 
+
+The largest number of terms we could use without getting clever or working with logarithms is 85: at 86 terms, the factorial overflows double-precision storage. According to the real-number maths, that's still enough to get the error down to the 15th decimal place for $x=52,$ and logarithms are perfectly feasible. It turns out that something else goes wrong first.
+
+Consider $x=20$. We know $\sin x$ is between -1 and 1, but the first few terms of the series are huge: $20^{17}/17!$ is more than 35 million.  For the series to converge, there must be almost perfect cancellation between large positive and negative terms. That's a recipe for massive inflation of rounding error when you're doing computations to finite precision. 
+
+The following R function compares the power series to the built-in $\\sin$ function (which uses the one in the C standard library)
+
+```
+culpa = function(x,N=85){
+	n = 1:N
+	terms = (-1)^(n+1)\*x^(2\*n-1)/factorial(2*n-1)
+	sum(terms)-sin(x)
+}
+```
+
+For $x=1$, or 2 or 3, the error is tiny, but it's creeping up. By the time we get to $x=38$, the error is larger than 2, which counts as completely inaccurate for a function bounded by $\pm 1.$  At $x=38$, the last term used is about $2\times 10^{-18}$, and so by standard results on alternating series, the error should be smaller than that.  The real-numbers error bound is wrong by **more than 18 orders of magnitude** when applied to computer numbers -- and taking more terms will only make this worse.
+
+So, how does `sin(x)` do it? The C standard, as is its habit, doesn't specify, but the basic idea is to reduce $x$ modulo $2\pi$ to get the argument into $[-\pi,\pi]$, and then use either the Taylor series or an approximating polynomial or ratio of polynomials.  This works well for moderate $x$, but you still find
+
+```
+> sin((10^10)*pi)
+[1] -2.239363e-06
+```
+
+In a sense, that's unavoidable. We've only got just under 16 digits of precision to work with, so $10^{10}\pi$ is accurate only to six digits after the decimal point. You can't do better.
+
+Except, sometimes you can. If the formula you are trying to implement involves $\sin \pi x$ rather than $\sin x$, you don't need to waste time and accuracy multiplying by $\pi$ and then reducing modulo $2\pi$. You can reduce modulo 1 instead, which is faster, easier, and more accurate. The obvious use case is when $x$ is measured in degrees or cycles. If $x$ is in degrees, you need to evaluate $\sin (2\pi x/360)$. It's more accurate to use `sinpi(x/180)` than to use `sin(pi*x/180)`.
+
+That's why ISO/IEC TS 18661 proposed `sinpi` and its siblings for a new C standard, and why R supplies an interface and an [implementation](https://svn.r-project.org/R/trunk/src/nmath/cospi.c).

@@ -1,0 +1,44 @@
+---
+title: "Some failure modes of statistics research talks"
+author: "Thomas Lumley"
+date: 2013-08-04
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ Written before #JSM2013 actually starts, so it's not about your talk there.
+
+Also, this is about deliberate choices by the presenter, and specifically about statistics research talks. 
+
+1.  _"The Overgeneralized Beta Distribution"_. There is a place for new parametric distributions, but it's a fairly small place and mostly occupied by distributions derived from underlying substantive knowledge.
+
+2.  _"Asymptotics of an uninteresting estimator"_. If there were a novel mathematical idea this would be fine, but otherwise we know its asymptotic behavior and roughly why it happens, and we can't read your notation fast enough anyway.
+
+3.  _"A simple mathematical solution to a complex non-mathematical problem"_ Includes, but is not limited to, straw-man Bayesian/Frequentist talks.  
+    
+4.  _"Small improvements from heroic assumptions"_. Yes, you can do second-order Cornish-Fisher expansions, but do you believe the distributional assumptions hold _that_ accurately?
+
+5.  _"My model takes five pages!"_ Predominantly, but not exclusively, a Bayesian problem.  If you're solving a real problem don't fill all your slides with model and proposal distributions. If you're not? Eh. 
+
+6.  _"Implausible results from inadequate data."_ You battled strong confounding, non-classical measurement error, and 90% missing data, and used clever statistical techniques to demonstrate that the conventional wisdom on health and exercise was completely wrong.
+
+7.  _"Uninteresting results from inadequate data"_ You battled strong confounding, non-classical measurement error, and 90% missing data, and and used clever statistical techniques to demonstrate that the conventional wisdom on health and exercise was completely correct.
+
+8.  _"I did an analysis."_ That's good for your clients or collaborators, but unless it helps us do one, this isn't the right venue. 
+
+9.  _"Mine is faster than yours"_ Useful if it's true and the problem is computation-constrained, but it's not, and it's not.
+
+10.  _"Small-sample efficiency comparisons"_ These can't be comprehensive, so they are only useful when the scope of the real question is very narrow. Is there a reason you know the treatment has exactly the same effect on everyone?
+
+11.  _"You need little teeny eyes for reading little teeny print"_ And I left my opera glasses behind.
+
+12.  _"It worked for Dr Ishihara"_ He was actually _trying_ to make his slides into vision test.  
+    
+
+_"I did an analysis"_ is the least annoying of these, since the background is often interesting and the analysis sensible. It's also one of the few that would be a good talk in the right setting.
+
+My own contribution to #3 is [here](http://faculty.washington.edu/tlumley/multilevel.pdf), but in partial defense (a) it was on a web page, not at a conference, (b) I was a student, and (c) it's less over-the-top and less incorrect than typical for the genre.
+
+It's possible that my JSM poster will be a #9 failure, but I think it's a setting where users actually are computationally constrained and there isn't an easier way.  

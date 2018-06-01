@@ -1,0 +1,35 @@
+---
+title: "Paper helicopters at a science fair"
+author: "Thomas Lumley"
+date: 2015-03-28
+output: html_document
+---
+
+
+
+<p>Today, we ran <a href="http://williamghunter.net/george-box-articles/teaching-engineers-experimental-design-with-a-paper-helicopter">Box’s paper helicopter experimental design example</a> at the <a href="http://www.motat.org.nz/experience/events/science-street-fair/">Science Street Fair</a>  sponsored by the <a href="http://scientists.org.nz/posts/2015/01/motat-science-street-fair">NZ Association of Scientist</a>s and hosted by the Museum of Transport and Technology.</p>
+<p>It went fairly well. In particular, the younger kids really liked dropping paper helicopters and comparing different designs and we got in a few useful discussions of experimental design with adults – mostly school teachers.</p>
+<p>Things to note:</p>
+<ul>
+<li>Use a photocopier and pre-printed design template, such as the one from the <a href="http://cran.r-project.org/web/packages/SixSigma/index.html">SixSigma</a> package for R</li>
+<li>This lets you also produce a 2-up version, giving an extra interesting design factor. The little copters are easier for kids to drop.</li>
+<li>Having five or six experimental factors and a <span class="math inline">\(2^{5-1}\)</span> or <span class="math inline">\(2^{6-2}\)</span> design makes it easier to motivate a good structured design</li>
+<li>Let the kids drop the helicopters, and time the flight, but don’t use that data in modelling. </li>
+<li>The kids like being given copters or paper templates to take home.</li>
+<li>For the good data, it’s important that the drop height is standardised, and is as high as practicable. An adult standing on a chair is (barely) enough.</li>
+<li>For timing, have the person dropping the copter count 3,2,1,drop and the person with the timer watching the floor where it will land.</li>
+<li>It’s worth doing each drop twice and using the average as the measurement, because that’s easy. </li>
+<li>You need at least two and probably three people to run things.</li>
+<li>You can do most of the cutting ahead of time or in quiet periods</li>
+<li>Enter the data as you go, so you can show boxplots for each factor.</li>
+</ul>
+<p>Our experimental factors were height, wing length, paper type, size (A4 vs A5), and paperclip or not.  The paperclip and size are interesting because they have a big effect on how the flight looks, but not a big effect on the flight time. </p>
+<div class="figure">
+<img src="https://40.media.tumblr.com/c29bbc622eab5842d3ba37a1cc968c69/tumblr_inline_nlyipa6ySv1s1hdxy_500.png" />
+
+</div>
+<p>Things to avoid</p>
+<ul>
+<li>getting absolutely drenched by unexpected rain on the way to the event</li>
+<li>doing it with a bad cold. </li>
+</ul>

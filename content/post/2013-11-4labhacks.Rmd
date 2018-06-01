@@ -1,0 +1,17 @@
+---
+title: 'From labhacks: the $25 scrunchable scientific poster'
+author: "Thomas Lumley"
+date: 2013-11-04
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ [labhacks](http://labhacks.tumblr.com/post/62420107780/the-25-scrunchable-scientific-poster):
+
+> ![image](http://media.tumblr.com/247357571238f63e85d5d48c5636b7e0/tumblr_inline_mtsgdeFxBE1rk6chf.jpg)
+> 
+> Printed on [Spoonflower performance knit](http://www.spoonflower.com/performance) at 300 dpi. 36” x 56”, vivid colors, no unraveling, and minimal wrinkling, even after being stuffed in a backpack. Hangs straight with about 8 pins. Print cost is $22 with $3 shipping.
+> 
+> ![image](http://media.tumblr.com/7fb4e3b1a7133dcee64254d1dbc0320b/tumblr_inline_mtsgzkXrSp1rk6chf.jpg)

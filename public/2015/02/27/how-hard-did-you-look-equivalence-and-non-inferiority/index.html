@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.41" />
+
+
+<title>How hard did you look: equivalence and non-inferiority - A Hugo website</title>
+<meta property="og:title" content="How hard did you look: equivalence and non-inferiority - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/notstatschat_1.png"
+         width="75"
+         height="100"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/tslumley/notstatschat">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/tslumley">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">4 min read</span>
+    
+
+    <h1 class="article-title">How hard did you look: equivalence and non-inferiority</h1>
+
+    
+    <span class="article-date">2015/02/27</span>
+    
+
+    <div class="article-content">
+      <p>I usually don’t read nutripharma articles outside the mainstream media, but someone tweeted <a href="http://www.donotlink.com/dw82">a link about saffron</a>, which apparently cures everything. The last straw was a line beginning </p>
+<blockquote>
+<p>“Saffron, a major component of the Mediterranean diet…”</p>
+</blockquote>
+<p>Saffron can’t really be described as a major component of anything, even risotto milanese, and it’s not unique to the Mediterranean region: it’s a well-known spice in India, Pakistan, Iran. And it’s not just the well-known places: England produced saffron before Italy produced tomatoes. </p>
+<p>There’s no shortage of things to criticise about the article, but there’s one that is an important applied biostatistics point.  The article says</p>
+<blockquote>
+<p>Loss of cognitive function is one of the most common, most feared consequences of aging. Studies show that saffron has promise in preventing or ameliorating some of those effects. A 16-week trial of saffron (30 mg per day) showed that the supplement was superior to placebo in patients with early, probable Alzheimer’s disease. The same dose, for 22 weeks, proved similar in effect to the prescription drugs memantine and donepezil in a comparable population.85,86</p>
+</blockquote>
+<p>That is more or less what references <a href="http://www.ncbi.nlm.nih.gov/pubmed/19838862">85</a> and <a href="http://www.ncbi.nlm.nih.gov/pubmed/25163440">86</a> say (except they were in quite different populations to the first study: mild to moderate, and moderate to severe disease), but it isn’t what they actually found.  The two studies randomised a small number of patients to saffron or a fairly modestly effective drug, and didn’t collect enough information to demonstrate a difference. Failing to find a difference isn’t evidence that there isn’t one there – it may just mean you didn’t look hard enough.</p>
+<p>If you want to prove that a new treatment is not much worse than an existing treatment, you need a definition of “not much worse” (somewhat unfortunately called ‘non-inferiority’)  and a test whose null hypothesis is ‘not non-inferiority’. Alternatively, if you’re a Bayesian, you need a prior that says saffron probably doesn’t work (since almost everything doesn’t) and you need to collect enough evidence to have high posterior probability that saffron is ‘non-inferior’ to the drug.</p>
+<p>Reference 85 looks at cognitive function scores after 22 weeks and says</p>
+<blockquote>
+<p>The changes at the endpoint compared to baseline were −3.96 ± 3.50 (mean ± SD) and −3.77 ± 3.80 for saffron and donepezil, respectively. </p>
+</blockquote>
+<p>This is with 27 people in each group, so the standard error of the difference is 1 point.  According to <a href="http://www.ncbi.nlm.nih.gov/pubmed/15254918">a systematic review</a>, the benefit of10mg donepezil over placebo at 24 weeks on this scale is 3.1 points with a standard error of 0.4. </p>
+<p>Putting these together, the estimated benefit of saffron over placebo is 3.1-(3.77-3.96)=3.29, with a standard error of 1.08. If we can completely rely on this study, it still allows for saffron to be only 1/3 as effective as donepezil. Given that it’s controversial how worthwhile donepezil is, that’s not really good enough. We can’t say they’ve demonstrated a similar effect</p>
+<p>Worse than that, though, is the whole idea of a non-inferiority trial. In a blinded, randomised trial, any imperfections in measurement or trial conduct will tend to reduce your ability to see differences.  Usually people are trying to show a difference, so we don’t need to worry too much about whether everything was done perfectly. In a non-inferiority trial, you are trying not to see a difference, so it’s very important that the trial is planned and conducted to the highest possible standards. Starting off with too few participants and the wrong analysis isn’t encouraging.</p>
+<p>In any case, it’s the wrong question. There’s no reason to think saffron would worsen the side-effects of donepezil, so the right question would be whether donepezil plus saffron was better than donepezil alone, tested in an ordinary double-blind study.</p>
+<p>While we’re doing calculations, there are an <a href="http://www.ncbi.nlm.nih.gov/pubmed/23305823">estimated</a> 35 million people in the world with dementia. At the study dose of 30mg/day, that’s 383 tonnes/year, or about 25% more than the current world production.  If saffron worked, the next step would be identification and synthesis of the active components. It wouldn’t be a natural herbal remedy for long.  </p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+  </body>
+</html>
+

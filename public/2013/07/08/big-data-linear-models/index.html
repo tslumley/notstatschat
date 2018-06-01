@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.41" />
+
+
+<title>Big data linear models - A Hugo website</title>
+<meta property="og:title" content="Big data linear models - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/notstatschat_1.png"
+         width="75"
+         height="100"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/tslumley/notstatschat">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/tslumley">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">Big data linear models</h1>
+
+    
+    <span class="article-date">2013/07/08</span>
+    
+
+    <div class="article-content">
+      <p>The biglm package for R currently uses incremental QR decomposition, which fits linear models to big data in linear time and bounded memory, but doesn’t parallelize.</p>
+<p>It turns out that parallel computation is easy (and has been studied by Dongarra and the LAPACK folks).  If you have two data chunks reduced to <span class="math inline">\(R_1\)</span> and <span class="math inline">\(Q_1^TY_1\)</span>, and <span class="math inline">\(R_2\)</span> and <span class="math inline">\(Q_2^TY_2\)</span>, just treat each <span class="math inline">\(R\)</span> as an <span class="math inline">\(X\)</span> and each <span class="math inline">\(Q^TY\)</span> as a <span class="math inline">\(Y\)</span> to merge the QR decompositions.</p>
+<p>So, if you have a file system that can feed <span class="math inline">\(M\)</span> separate QR decomposition processes, you can do the QR decomposition in <span class="math inline">\(M\)</span> parallel processes and then <span class="math inline">\(\log M\)</span> sets of parallel merges.  </p>
+<p>Coming to the biglm package Real Soon Now. </p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

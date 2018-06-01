@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.41" />
+
+
+<title>Zero-inflated Poisson from complex samples - A Hugo website</title>
+<meta property="og:title" content="Zero-inflated Poisson from complex samples - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/notstatschat_1.png"
+         width="75"
+         height="100"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/tslumley/notstatschat">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/tslumley">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">9 min read</span>
+    
+
+    <h1 class="article-title">Zero-inflated Poisson from complex samples</h1>
+
+    
+    <span class="article-date">2015/05/26</span>
+    
+
+    <div class="article-content">
+      <p><em>A very long post about how to add models to the survey package; specifically, the zero-inflated Poisson.</em></p>
+<p>The Zero-Inflated Poisson model is a model for count data with excess zeros. The response distribution is a mixture of a point mass at zero and a Poisson distribution: if <span class="math inline">\(Z\)</span> is Bernoulli with probability <span class="math inline">\(1-p_0\)</span> and <span class="math inline">\(P\)</span> is Poisson with mean <span class="math inline">\(\lambda\)</span> then<br />
+<span class="math display">\[Y=Z+(1-Z)P\]</span><br />
+is zero-inflated Poisson. The ZIP is a latent-class model; we can have <span class="math inline">\(Y=0\)</span> either because <span class="math inline">\(Z=0\)</span> or because <span class="math inline">\(P=0\)</span>. That’s natural in some ecological examples: if you didn’t see any moose it could be because the area is moose-free (it’s downtown Montréal) or because you just randomly didn’t see any.</p>
+<p>There isn’t existing software in R for design-based inference in zero-inflated Poisson models, so it’s a good example for showing how to add models. There’s another example in Appendix E of my book, but that’s owned by Wiley. The <code>pscl</code> package (Zeileis et al) fits zero-inflated models, and they use an example counting medical visits, taken from the Journal of Applied Econometrics (Deb &amp; Trivedi, 1997).  The data in that paper were actually from a complex survey, but the survey design was ignored in the analysis.  </p>
+<p>It’s a bit tricky to get the full data they used, so I’ll do an example with data on number of sexual partners, from NHANES 2003-2004. We will look at questions <code>SXQ200</code> and <code>SXQ100</code>: number of male sexual partners.  Combining these gives a ‘real’ zero-inflated variable: based on sexual orientation the zeroes would divide into “never” and “not yet”.</p>
+<pre><code>library(foreign)
+library(survey)
+setwd(&quot;nhanes&quot;)
+demo = read.xport(&quot;demo_c.xpt&quot;)
+sxq = read.xport(&quot;sxq_c.xpt&quot;)
+merged = merge(demo, sxq, by=&#39;SEQN&#39;)
+merged$total = with(merged, ifelse(RIAGENDR==2, SXQ100+SXQ130, SXQ170+SXQ200))
+merged$total\[merged$SXQ020==2\] = 0
+merged$total\[merged$total&gt;2000\] = NA
+merged$age = merged$RIDAGEYR/25
+merged$malepartners=with(merged, ifelse(RIAGENDR==2,SXQ100,SXQ200))
+merged$malepartners\[merged$malepartners&gt;200\]=NA
+merged$scaledwt=with(merged,WTINT2YR/mean(WTINT2YR))
+des = svydesign(id=~SDMVPSU,strat=~SDMVSTRA,weights=~WTINT2YR, nest=TRUE, data=merged)</code></pre>
+<p>First, look at an unweighted analysis, and at a weighted analysis using frequency weights (scaled to have mean 1 for numerical stability). There are warnings about non-integer numbers of successes; these are due to the weights; ignore them.</p>
+<pre><code>library(pscl)
+## Loading required package: MASS
+## Loading required package: lattice
+## Classes and Methods for R developed in the
+## 
+## Political Science Computational Laboratory
+## 
+## Department of Political Science
+## 
+## Stanford University
+## 
+## Simon Jackman
+## 
+## hurdle and zeroinfl functions by Achim Zeileis
+unwt = zeroinfl(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC|RIDAGEYR+factor(RIDRETH1)+DMDEDUC, data=merged)
+summary(unwt)
+## 
+## Call:
+## zeroinfl(formula = malepartners ~ RIDAGEYR + factor(RIDRETH1) + 
+##     DMDEDUC | RIDAGEYR + factor(RIDRETH1) + DMDEDUC, data = merged)
+## 
+## Pearson residuals:
+##    Min     1Q Median     3Q    Max 
+## -1.020 -0.943 -0.787  0.150 29.257 
+## 
+## Count model coefficients (poisson with log link):
+##                    Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)        1.666622   0.050666   32.89  &lt; 2e-16 ***
+## RIDAGEYR          -0.005510   0.000897   -6.14  8.1e-10 ***
+## factor(RIDRETH1)2 -0.039402   0.077948   -0.51     0.61    
+## factor(RIDRETH1)3  0.650882   0.034573   18.83  &lt; 2e-16 ***
+## factor(RIDRETH1)4  0.667532   0.036596   18.24  &lt; 2e-16 ***
+## factor(RIDRETH1)5  0.564296   0.059493    9.49  &lt; 2e-16 ***
+## DMDEDUC            0.009426   0.013518    0.70     0.49    
+## 
+## Zero-inflation model coefficients (binomial with logit link):
+##                   Estimate Std. Error z value Pr(&gt;|z|)   
+## (Intercept)        0.18813    0.18708    1.01   0.3146   
+## RIDAGEYR          -0.00294    0.00363   -0.81   0.4182   
+## factor(RIDRETH1)2 -0.07964    0.24231   -0.33   0.7424   
+## factor(RIDRETH1)3  0.11837    0.11612    1.02   0.3080   
+## factor(RIDRETH1)4  0.14330    0.12776    1.12   0.2620   
+## factor(RIDRETH1)5  0.25952    0.22303    1.16   0.2446   
+## DMDEDUC           -0.14888    0.05334   -2.79   0.0052 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1 
+## 
+## Number of iterations in BFGS optimization: 21 
+## Log-likelihood: -9.52e+03 on 14 Df
+
+wt= zeroinfl(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC|RIDAGEYR+factor(RIDRETH1)+DMDEDUC, data=merged, weights=scaledwt)
+summary(wt)
+## 
+## Call:
+## zeroinfl(formula = malepartners ~ RIDAGEYR + factor(RIDRETH1) + 
+##     DMDEDUC | RIDAGEYR + factor(RIDRETH1) + DMDEDUC, data = merged, 
+##     weights = scaledwt)
+## 
+## Pearson residuals:
+##    Min     1Q Median     3Q    Max 
+## -1.586 -0.842 -0.543  0.132 31.911 
+## 
+## Count model coefficients (poisson with log link):
+##                    Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)        1.834067   0.061499   29.82  &lt; 2e-16 ***
+## RIDAGEYR          -0.007388   0.000906   -8.16  3.5e-16 ***
+## factor(RIDRETH1)2 -0.107324   0.085353   -1.26    0.209    
+## factor(RIDRETH1)3  0.655138   0.048168   13.60  &lt; 2e-16 ***
+## factor(RIDRETH1)4  0.635817   0.052917   12.02  &lt; 2e-16 ***
+## factor(RIDRETH1)5  0.477415   0.066661    7.16  8.0e-13 ***
+## DMDEDUC           -0.023739   0.014307   -1.66    0.097 .  
+## 
+## Zero-inflation model coefficients (binomial with logit link):
+##                   Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)        0.66051    0.21446    3.08  0.00207 ** 
+## RIDAGEYR          -0.00783    0.00367   -2.13  0.03296 *  
+## factor(RIDRETH1)2 -0.11680    0.25245   -0.46  0.64361    
+## factor(RIDRETH1)3  0.10197    0.15153    0.67  0.50100    
+## factor(RIDRETH1)4 -0.16081    0.18143   -0.89  0.37543    
+## factor(RIDRETH1)5  0.10678    0.23034    0.46  0.64296    
+## DMDEDUC           -0.20240    0.05762   -3.51  0.00044 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1 
+## 
+## Number of iterations in BFGS optimization: 20 
+## Log-likelihood: -9.77e+03 on 14 Df</code></pre>
+<p>The zeroinfl function takes weights, so it can be fed to withReplicates if we have replicate weights. Typically you’d just use the default options to as.svrepdesign(), but in this example the model fitting is a bit sensitive. We go for Fay’s method, which is only available for 2 PSU/stratum designs but has the virtue of having non-zero weight for all units in all replicates.</p>
+<pre><code>repdes = as.svrepdesign(des,type=&quot;Fay&quot;,fay.rho=0.2)
+rep1 = withReplicates(repdes, quote( 
+    coef(zeroinfl(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC|RIDAGEYR+factor(RIDRETH1)+DMDEDUC, weights=.weights))
+    ))
+rep1
+##                            theta   SE
+## count_(Intercept)        1.83407 0.14
+## count_RIDAGEYR          -0.00739 0.00
+## count_factor(RIDRETH1)2 -0.10733 0.25
+## count_factor(RIDRETH1)3  0.65514 0.19
+## count_factor(RIDRETH1)4  0.63581 0.14
+## count_factor(RIDRETH1)5  0.47741 0.25
+## count_DMDEDUC           -0.02374 0.08
+## zero_(Intercept)         0.66050 0.26
+## zero_RIDAGEYR           -0.00783 0.00
+## zero_factor(RIDRETH1)2  -0.11679 0.29
+## zero_factor(RIDRETH1)3   0.10197 0.10
+## zero_factor(RIDRETH1)4  -0.16080 0.09
+## zero_factor(RIDRETH1)5   0.10678 0.21
+## zero_DMDEDUC            -0.20240 0.06</code></pre>
+<p>If what we care about is the mean we can just model the mean directly.</p>
+<pre><code>summary(svyglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC,design=des,family=quasipoisson))
+## 
+## Call:
+## svyglm(formula = malepartners ~ RIDAGEYR + factor(RIDRETH1) + 
+##     DMDEDUC, design = des, family = quasipoisson)
+## 
+## Survey design:
+## svydesign(id = ~SDMVPSU, strat = ~SDMVSTRA, weights = ~WTINT2YR, 
+##     nest = TRUE, data = merged)
+## 
+## Coefficients:
+##                   Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)        0.83012    0.19464    4.26  0.00210 ** 
+## RIDAGEYR          -0.00370    0.00232   -1.60  0.14472    
+## factor(RIDRETH1)2 -0.06209    0.21242   -0.29  0.77667    
+## factor(RIDRETH1)3  0.61196    0.17245    3.55  0.00623 ** 
+## factor(RIDRETH1)4  0.71514    0.12358    5.79  0.00026 ***
+## factor(RIDRETH1)5  0.42544    0.22984    1.85  0.09720 .  
+## DMDEDUC            0.06919    0.09980    0.69  0.50563    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for quasipoisson family taken to be 18.25)
+## 
+## Number of Fisher Scoring iterations: 6</code></pre>
+<p>Or we can use observed zeroes rather than the latent class to split up the data</p>
+<pre><code>summary(svyglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC,design=subset(des,malepartners&gt;0),family=quasipoisson))
+## 
+## Call:
+## svyglm(formula = malepartners ~ RIDAGEYR + factor(RIDRETH1) + 
+##     DMDEDUC, design = subset(des, malepartners &gt; 0), family = quasipoisson)
+## 
+## Survey design:
+## subset(des, malepartners &gt; 0)
+## 
+## Coefficients:
+##                   Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)        1.84314    0.13812   13.34  3.1e-07 ***
+## RIDAGEYR          -0.00735    0.00275   -2.68  0.02538 *  
+## factor(RIDRETH1)2 -0.09993    0.21956   -0.46  0.65980    
+## factor(RIDRETH1)3  0.64483    0.17210    3.75  0.00458 ** 
+## factor(RIDRETH1)4  0.62560    0.12488    5.01  0.00073 ***
+## factor(RIDRETH1)5  0.46776    0.22388    2.09  0.06625 .  
+## DMDEDUC           -0.02375    0.07981   -0.30  0.77276    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for quasipoisson family taken to be 14.2)
+## 
+## Number of Fisher Scoring iterations: 5
+summary(svyglm(I(malepartners==0)~RIDAGEYR+factor(RIDRETH1)+DMDEDUC,design=des,family=quasibinomial))
+## 
+## Call:
+## svyglm(formula = I(malepartners == 0) ~ RIDAGEYR + factor(RIDRETH1) + 
+##     DMDEDUC, design = des, family = quasibinomial)
+## 
+## Survey design:
+## svydesign(id = ~SDMVPSU, strat = ~SDMVSTRA, weights = ~WTINT2YR, 
+##     nest = TRUE, data = merged)
+## 
+## Coefficients:
+##                   Estimate Std. Error t value Pr(&gt;|t|)   
+## (Intercept)        0.67494    0.24722    2.73    0.023 * 
+## RIDAGEYR          -0.00769    0.00392   -1.96    0.081 . 
+## factor(RIDRETH1)2 -0.09831    0.26159   -0.38    0.716   
+## factor(RIDRETH1)3  0.07980    0.09234    0.86    0.410   
+## factor(RIDRETH1)4 -0.18227    0.08226   -2.22    0.054 . 
+## factor(RIDRETH1)5  0.08620    0.20444    0.42    0.683   
+## DMDEDUC           -0.20146    0.05631   -3.58    0.006 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for quasibinomial family taken to be 1.015)
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<p>Or, finally, we can maximise the pseudolikelihood (population likelihood, weighted likelihood) directly, using <code>svymle()</code> The likelihood is <span class="math display">\[f(y;p,\mu)=p\{y=0\}+(1-p)\frac{e^{-\mu}\mu^y}{y!}.\]</span> We’re going to work with models for <span class="math inline">\(\mathrm{logit} p\)</span> and <span class="math inline">\(\eta=\log mu\)</span></p>
+<pre><code>loglike = function(y,eta,logitp){
+    mu = exp(eta)
+    p = exp(logitp)/(1+exp(logitp))
+    log(p*(y==0)+(1-p)*dpois(y,mu))
+    }</code></pre>
+<p>We also need the derivatives with respect to logitp and eta</p>
+<pre><code>dlogitp = function(y,eta,logitp){
+    mu = exp(eta)
+    p = exp(logitp)/(1+exp(logitp))
+    dexpit = p/(1+p)^2
+    num = dexpit*(y==0)-dexpit*dpois(y,mu)
+    denom = p*(y==0)+(1-p)*dpois(y,mu)
+    num/denom
+    }   
+    
+deta = function(y,eta,logitp){
+    mu = exp(eta)
+    p = exp(logitp)/(1+exp(logitp))
+    dmutoy = 0*y
+    dmutoy\[y&gt;0\] = exp(-mu\[y&gt;0\])*mu\[y&gt;0\]^(y\[y&gt;0\]-1)/factorial(y\[y&gt;0\]-1)
+    num = (1-p)*(-dpois(y,mu)+dmutoy)
+    denom = p*(y==0)+(1-p)*dpois(y,mu)
+    num/denom
+    }   
+
+score = function(y,eta,logitp) cbind(deta(y,eta,logitp), dlogitp(y,eta,logitp))</code></pre>
+<p>Now, fit using svymle. We give a list of model formulas, with one for each parameter of the loglikelihood. If you just want to fit a scalar parameter used ~1 as the formula. The outcome variable malepartners should be supplied as the lefthand-side of one of the formulas.</p>
+<p>We also need a set of starting values; a good one is the weighted fit from zeroinfl.</p>
+<pre><code>nlmfit = svymle(loglike=loglike, grad=score, design=des, 
+        formulas=list(eta=malepartners~RIDAGEYR + factor(RIDRETH1) + DMDEDUC, 
+        logitp=~RIDAGEYR + factor(RIDRETH1) + DMDEDUC),
+      start=coef(wt), na.action=&quot;na.omit&quot;)
+
+summary(nlmfit)
+
+## Survey-sampled mle: 
+## svymle(loglike = loglike, gradient = score, design = des, formulas = list(eta = malepartners ~ 
+##     RIDAGEYR + factor(RIDRETH1) + DMDEDUC, logitp = ~RIDAGEYR + 
+##     factor(RIDRETH1) + DMDEDUC), start = coef(wt), na.action = &quot;na.omit&quot;)
+##                               Coef        SE p.value
+## eta.(Intercept)           1.834067 0.0221688 &lt; 0.001
+## eta.RIDAGEYR             -0.007388 0.0003664 &lt; 0.001
+## eta.factor(RIDRETH1)2    -0.107324 0.0583560 0.06590
+## eta.factor(RIDRETH1)3     0.655138 0.0312890 &lt; 0.001
+## eta.factor(RIDRETH1)4     0.635817 0.0251859 &lt; 0.001
+## eta.factor(RIDRETH1)5     0.477415 0.0351678 &lt; 0.001
+## eta.DMDEDUC              -0.023739 0.0100524 0.01820
+## logitp.(Intercept)        0.660511 0.2231099 0.00307
+## logitp.RIDAGEYR          -0.007833 0.0034823 0.02448
+## logitp.factor(RIDRETH1)2 -0.116798 0.2403620 0.62702
+## logitp.factor(RIDRETH1)3  0.101968 0.0844237 0.22712
+## logitp.factor(RIDRETH1)4 -0.160809 0.0741717 0.03015
+## logitp.factor(RIDRETH1)5  0.106776 0.1834985 0.56064
+## logitp.DMDEDUC           -0.202397 0.0505458 &lt; 0.001
+## Stratified 1 - level Cluster Sampling design (with replacement)
+## With (30) clusters.
+## svydesign(id = ~SDMVPSU, strat = ~SDMVSTRA, weights = ~WTINT2YR,
+##     nest = TRUE, data = merged)</code></pre>
+<p>The replicate-weight and svymle approaches agree well, and they give the same point estimates as the frequency-weighted analysis, but different standard errors – especially for the zero-inflation part of the model.</p>
+<p>Ignoring the weights does change the point estimates. In this particular example, nearly all the zeroes are ‘inflated’ zeroes, not Poisson zeroes, so a two-part model with two svyglm fits is also pretty comparable.</p>
+<p><strong>References</strong></p>
+<p>Partha Deb and Pravin K. Trivedi, “Demand for Medical Care by the Elderly: A Finite Mixture Approach”, Journal of Applied Econometrics, Vol. 12, No. 3, 1997, pp. 313-336. </p>
+<p> Zeileis A, Kleiber C, Jackman S. “Regression Models for Count Data in R”. <a href="http://cran.r-project.org/web/packages/pscl/index.html">Vignette for the pscl package</a>, version 1.4.9</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

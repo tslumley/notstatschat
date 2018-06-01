@@ -1,0 +1,52 @@
+---
+title: "My likelihood depends on your frequency properties"
+author: "Thomas Lumley"
+date: 2014-03-04
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+The likelihood principle states that given two hypotheses $H_0$ and $H_1$ and data $X$, all the evidence regarding which hypothesis is true is contained in the likelihood ratio $$LR=\frac{P[X|H_1]}{P[X|H_0]}.$$
+
+One of the fundamentals of scientific research is the idea of scientific publication, which allows other researchers to form their own conclusions based on your results and those of others. The data available to other researchers, and thus the likelihood on which they rely for inference, depends on your publication behaviour. In practice, and even in principle, publication behaviour for one hypothesis does depend on evidence you obtained for other hypotheses under study, so likelihood-based inference by other researchers depends on the operating characteristics of your inference.
+
+Consider an idealised situation of two scientists, Alice and Bob (who are on sabbatical from the cryptography literature). Alice spends her life collecting, analysing, and reporting on data $X$ that are samples of size $n$ from $N_p(\mu, I)$ distributions, in order to make inference about $\mu$. Bob is also interested in $\mu$ but doesn't have the budget to collect his own $N_p(\mu,I)$ data. He assesses the evidence for various values of $\mu$ by reading the papers of Alice and other researchers and using their reported statistics $Y$. [In the future](http://blogs.plos.org/everyone/2014/02/24/plos-new-data-policy-public-access-data/), he might be able to get their raw data easily, but not yet. 
+
+Alice and Bob primarily care about $\mu_1$ which is obviously much more interesting than $\left\{\mu_i\right\}_{i=2}^p$, and more likely to be meaningfully far from zero, but they have some interest in the others. Alice bases her likelihood inference on the multivariate Normal distributions $f_X(X|\mu_i)$, Bob bases his on $f_Y(Y|\mu_i)$.
+
+Compare Alice and Bob's likelihood functions for the hypotheses $\mu_i=0$ and $\mu_i=\delta$ with $\delta$ meaningfully greater than $0$ in the following scenarios. In all of them, Alice  collects data on $\mu_1$ and reports the likelihood ratio  for $\mu_1=0$ versus $\mu_1=\delta$.
+
+1. Alice collects only data on $\mu_1$ and reports the likelihood ratio  for $\mu_1=0$ versus $\mu_1=\delta$.
+
+2. Alice also collects data on $\mu_2$ and reports whether she finds strong evidence for $\mu_2=\delta$ over $\mu_2=0$ or not.
+
+3. Alice also collects data on  $\mu_2\ldots\mu_q$ for some $q\leq p$.  If she finds evidence worth mentioning in favour of $\mu_i=\delta$, she publishes her likelihood ratio, otherwise she reports that there wasn't enough evidence.
+
+4. Alice also collects data on $\mu_2\ldots\mu_q$ for some $q\leq p$.  If she finds sufficient evidence for </span><span>$\mu_i=\delta$ for any $i>1$ she reports the likelihood ratios for all $\mu_i$, otherwise only for $\mu_1$. 
+
+
+Alice's likelihood ratio is the same in all scenarios. She obtains for each $i$ $$\frac{L_1}{L_0}=\frac{L(\mu_i=\delta)}{L(\mu_i=0)}=\frac{\exp(n^2(\bar X_i-\delta)^2/2)}{\exp(n^2\bar X_i^2/2)}.$$ and because she has been properly trained in Bayesian decision theory **her** beliefs and **her** decisions about future research for any $\mu_i$ depend only on $\bar X_i$, not on $q$ or on other $\bar X_j$ or on how she decided to what to publish.
+
+Bob's likelihood ratio for $\mu_1$ is always the same as Alice's. For the other parameters, things are more complicated.
+
+1. no other parameters
+
+2. Bob's data is Alice's result, $Y_2=1$ for finding strong evidence, $Y_2=0$ for not. His likelihoods are $L_1=(1-\beta)^{Y_2}\beta^{1-Y_2}$ and $L_0=\alpha^{Y_2}(1-\alpha)^{1-Y_2}$, where $\alpha$ is the probability Alice finds strong evidence for $\mu_2=\delta$ when $\mu_2=0$ is true and $\beta$ is the probability Alice fails to find strong evidence for $\mu_2=\delta$ when $\mu_2=\delta$ is true.
+
+3. Bob has a censored Normal likelihood, which depends on $\alpha$ and $\beta$. If he ignores this and just uses Alice's likelihood ratio when it's available, he will inevitably end up believing $\mu_i=\delta$ for all $i>1$, regardless of the truth.
+
+4. Bob's likelihood ratio for the other $\mu_i$ depends on $\alpha$, $\beta$, $q$ and on the values of $\mu_j$ for $j\neq i$.
+
+In scenarios 2-4, Bob's likelihood depends on Alice's criterion for strength of evidence and on how likely she is to satisfy it -- if Alice were a frequentist, we'd call $\alpha$ and $\beta$ her Type I and Type II error rates. But it's not a problem of misuse of $p$-values. Alice doesn't use $p$-values. She would never touch a $p$-value without heavy gloves. She doesn't even like being in the same room as a $p$-value.  
+
+In scenario 4, Bob also needs to know $q$ in order to interpret papers that do not include results for $i>1$ -- he needs to know Alice's family-wise power and Type I error rate. That's actually not _quite_ true: if Bob knows Alice is following this rule he can ignore her papers that don't contain all the likelihood ratios, since he does know $q$ for the ones that do.  His likelihood for $i>1$ still depends on $\alpha$, $\beta$, $q$, and the other $\mu$s.   
+
+At least, if nearly all Alice's papers report results for all the $\mu$s, Bob knows that the bias from just using Alice's likelihood ratio when available will be small and he may be able to get by without all the detail and complication. 
+
+This isn't quite the same as publication bias, though it's related. At least if $q$ is given and we know Alice's criteria,  she always publishes information about every analysis that would be sufficient for likelihood inference not only about $\mu_i=0$ vs $\mu_i=\delta$, but even for point and interval estimation of $\mu_i$. Alice isn't being evil here. She's not hiding negative results; they just aren't that interesting.
+
+Of course, the problem would go away if Alice published, say, posterior distributions or point and interval estimates for all $\mu_i$, at least if $p$ isn't large enough that the complete set [could](http://www.stat.cmu.edu/~fienberg/Fienberg-Slavkovic-Chance-2004.pdf "official-data example in CHANCE") be [sensitive](http://www.plosgenetics.org/article/info%3Adoi%2F10.1371%2Fjournal.pgen.1000665 "Genetics example"). 
+
+**tl;dr**:  If I can't get your data or at least (approximately) sufficient statistics, _my_ conclusions may depend on details of your analysis and decision making that don't affect _your_ conclusions. And if you ever just report _"was/wasn't significant,"_ Bob will hunt you down and make you regret it.

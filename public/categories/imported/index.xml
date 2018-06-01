@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Imported on A Hugo website</title>
+    <link>/categories/imported/</link>
+    <description>Recent content in Imported on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 07 Jun 2013 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/imported/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Hello World</title>
+      <link>/2013/06/07/hello-world/</link>
+      <pubDate>Fri, 07 Jun 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/06/07/hello-world/</guid>
+      <description>Hello, world This will be my not-StatsChat blog, for things that are too technical, too political, or simply not relevant to StatsChat.</description>
+    </item>
+    
+  </channel>
+</rss>

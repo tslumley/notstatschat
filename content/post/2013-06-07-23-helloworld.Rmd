@@ -1,0 +1,12 @@
+---
+title: "Hello World"
+author: "Thomas Lumley"
+date: 2013-06-07
+categories: ["imported"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+Hello, world  This will be my not-[StatsChat](http://www.statschat.org.nz) blog, for things that are too technical, too political, or simply not relevant to StatsChat.

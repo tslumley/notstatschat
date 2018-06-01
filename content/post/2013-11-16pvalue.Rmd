@@ -1,0 +1,27 @@
+---
+title: "Moving the goalposts?"
+author: "Thomas Lumley"
+date: 2013-11-15
+output: html_document
+---
+There's a [paper in PNAS](http://www.pnas.org/content/early/2013/10/28/1313476110.full.pdf+html?with-ds=yes) suggesting that lots of published scientific associations are likely to be false, and that Bayesian considerations imply a p-value threshold of 0.005 instead of 0.05 would be good. It's had an impact outside the statistical world, eg, with a [post on the blog Ars Technica](http://arstechnica.com/science/2013/11/is-it-time-to-up-the-statistical-standard-for-scientific-results/).  The motivation for the PNAS paper is [a statistics pape](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2009.00730.x/full)r showing how to relate p-values to Bayes Factors in some tests. 
+
+Some people have asked me what I think. So. 
+
+1\. I much prefer [the other way](http://www.tandfonline.com/doi/abs/10.1198/tast.2010.09060#.UocYApT0-Fc) ([non-paywalled tech report](http://faculty.washington.edu/kenrice/testingrev2a.pdf)) to get classical p-values as part of an optimal Bayesian decision, because it's based on estimation rather than on identifying arbitrary alternatives, and it seems to correspond better to what my scientific colleagues are trying to do with p-values. Ok, and because Ken is a friend.
+
+2\. The PNAS paper starts off by talking about reproducibility in terms of scientific fraud and slides into talking about publishing results that don't meet the proposed new p<0.005. I'm not exaggerating: here's the complete first paragraph
+
+> _Reproducibility of scientific research is critical to the scientific endeavor, so the apparent lack of reproducibility threatens the credibility of the scientific enterprise (e.g., refs. 1 and 2). Unfortunately, concern over the nonreproducibility of scientific studies has become so pervasive that a Web site, Retraction Watch, has been established to monitor the large number of retracted papers, and methodology for detecting flawed studies has developed nearly into a scientific discipline of its own _
+
+That's not a rhetorical device I'm happy with, to put it mildly. 
+
+3\. If you don't use p-value thresholds as a publishing criterion, the change won't have any impact. And if you think p-value thresholds should be a publishing criterion, you've got [worse problems than reproducibility](http://www.alltrials.net/).
+
+4\. [False negatives are errors, too](http://statistically-funny.blogspot.co.nz/2013/06/studies-of-cave-paintings-have-shown.html).  People already report "there was no association between X and Y " (or worse "there was no effect of X on Y") in subgroups where the p-value is greater than 0.05.  If you have the same data and decrease the false positives you have to increase the false negatives. 
+
+5\. The problem isn't the threshold so much as the really weak data in a lot of research, especially small-sample experimental research [large-sample observational research has [different problems](http://en.wikipedia.org/wiki/Confounding)].  Larger sample sizes or better experimental designs would actually reduce the error rate; moving the threshold only swaps which kind of error you make.
+
+6\. Standards are valuable in scientific writing, but only to the extent that they reduce communication costs. That applies to statistical terminology as much as it applies to structured abstracts. Changing standards imposes substantial costs and is only worth it if there are substantial benefits. 
+
+7\. And finally, why is it a disaster that a single study doesn't always reach the correct answer? Why would any reasonable person expect it to? It's not as if we have to ignore everything except the results of that one experiment in making any decisions.  

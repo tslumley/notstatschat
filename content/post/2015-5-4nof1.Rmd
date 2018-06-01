@@ -1,0 +1,28 @@
+---
+title: "Precise answers, but not necessarily to the right question"
+author: "Thomas Lumley"
+date: 2015-05-04
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Nicholas Schork has a [commentary at Nature](http://www.nature.com/news/personalized-medicine-time-for-one-person-trials-1.17411) about precision medicine, arguing in favour of n-of-1 trials. These are the extreme version of crossover trials: you randomise each individual to a long sequence of periods on each of two treatments and see which they do better on. 
+
+The idea makes sense: you get genuinely individual-specific results for people in the study, and the ability to aggregate them to generalise to people not in the study.  In situations where the main cost of a trial is recruitment rather than follow-up, it might not even be unreasonably expensive. 
+
+However, some of the examples are seriously misleading. He talks about how drugs don’t help everyone,  
+
+> For some drugs, such as statins — routinely used to lower cholesterol — as few as 1 in 50 may benefit  
+
+To get low numbers like those you need to define ‘benefit’ to mean ‘avoid a serious clinical event such as myocardial infarction or death over 5-10 years’. That’s not a definition that makes sense in an n-of-1 trial. You can’t randomise one person to five-year periods of statin or no-statin (with washout intervals in between) and tally up the number of deaths in each arm. Deaths are one to a customer.
+
+What you can do with a statin in an n-of-1 trial is see if it reduces LDL cholesterol. The fall in cholesterol only takes a matter of weeks and is quickly reversible. If you define benefit that way, you will find that everyone benefits.
+
+In the same way, if you define benefit from aspirin as prevention of a composite of heart attack, stroke, and death, it’s true that a minority of people benefit, but it’s not possible to do an n-of-1 trial. If you define benefit as reduced platelet aggregation you can do an n-of-1 trial, but you find that most everyone benefits.
+
+There are too many settings where n-of-1 trials force you to use surrogate outcomes -- often ones where we know the surrogate is not up to the task of capturing between-medication differences, such as blood pressure or LDL cholesterol. 
+
+Where n-of-1 trials are really useful is looking at reversible symptoms: either because the drug is supposed to control them (as in asthma or heartburn) or because you want to avoid causing them (as with antidepressants). This design should have been used more even before genomics made the subgroup problem completely intractable, but it’s not a panacea. 

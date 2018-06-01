@@ -1,0 +1,31 @@
+---
+title: "Eppur si muove"
+author: "Thomas Lumley"
+date: 2015-04-02
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+*“The rules for winning the science competition focus on a small number of measures that incentivize poor practice”* Hilda Bastian quoting Ottoline Leyser.
+
+It’s all true, and more and worse besides. Researchers are driven by the incentives for high-impact publication; p-value hacking makes results seem more convincing than they are; trials use surrogate outcomes; glamour journals publish insufficiently-checked linkbait; predatory online journals will do anything for money; change and decay in all around we see.
+
+And yet it moves. 
+
+Science has always been an activity carried out by selfish, egotistical humans. In the 1990s, Gallo and Montagnier fought over credit for discovering the viral that causes AIDS. In the 1980s, thousands of patients died because the Class I antiarrhythmics were approved based on a surrogate outcome. In the 1950s, understanding of the structure of DNA was delayed by the competition between Pauling in the US and Crick and Watson in England (not to mention the treatment of Rosalind Franklin). 
+
+In earlier generations every North America species of grass received multiple scientific names, and in the `[Bone Wars](http://en.wikipedia.org/wiki/Bone_Wars)’ of the late 19th century
+
+> The efforts of the two men led to over 142 new species of dinosaurs being discovered and described, though today only 32 are valid.   
+
+Even Mendel probably tidied up his results in ways we should disapprove of. 
+
+And yet it moves.
+
+We want to crack down on predatory journals and p-value inflation. We want publication based on study design and execution, not on results. We want reproducibility and  pre-registration. We should demand adequate power for real clinical outcomes in randomised trials. We still need to remember that there was no Golden Age. 
+
+Compared to a Platonic ideal, scientific practice has always sucked. It’s important to recognise and try to fix the faults of modern-day science, but we can’t forget that the progress of past centuries happened in spite of similar faults.
+
+Imperfect scientific practice discovered wonderful things in the past, and is discovering wonderful things today.  Science is held back in many ways, and yet it moves. 

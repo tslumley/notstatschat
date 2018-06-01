@@ -1,0 +1,12 @@
+---
+title: "Problems with faithfulness and the causal Markov property (I)"
+author: "Thomas Lumley"
+date: 2013-07-02
+output: html_document
+---
+
+
+
+<p>The causal Markov property says that you can write down causal relationships between variables in a directed acyclic graph so that each variable is affected only by its parents in the graph.  The faithfulness property says that the variables will have exactly the conditional independence properties required by the graph.</p>
+<p>The first problem with these properties is measurement error.  If the only causal relations are that A affects B and C, then B and C are conditionally independent given A.  If instead of A we have A* measured with error then B and C will not be independent given A*.</p>
+<p>Note that ‘measurement error’ here is used in the statistician’s sense, meaning any difference between A and A<em>. It includes measurement error <em>sensu stricto</em>, but also the error in representing a long-term average by a single measurement (eg, blood pressure measurement), and the error due to A</em> not being quite the right variable (eg, C-reactive protein as a marker for inflammation)</p>

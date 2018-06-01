@@ -1,0 +1,19 @@
+---
+title: "Google completions and sexism"
+author: "Thomas Lumley"
+date: 2013-10-18
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+The [new ads produced by UN Women](http://mashable.com/2013/10/18/google-autocomplete-sexism/) illustrating widespread sexism using Google autocomplete are pretty chilling, eg, 
+
+![](http://media.tumblr.com/26a456e514ac98cfc3396e9bc222d7f8/tumblr_inline_muwlc78rP21s1hdxy.jpg)
+
+The ads are convincing and what they imply is true, but I'm less sure that they are actually good evidence for what they imply.
+
+Typing whole phrases into Google is not how I or people I've watched usually search. I type key words.  The only reason I would search for a phrase such as "Women should not speak in church" would be to find the source. I do this often when looking for scientific papers, and reasonably regularly when looking for quotes. And, in fact, I did just search for "Women should not speak in church" \-\- I knew it was in one of the letters traditionally attributed to Paul, but I didn't remember which one (the Google tells me it's I Corinthians, and that this is one of the ones actually he did write). 
+
+If you think about it, what phrases starting "women should " would you get in an alternate universe where sexism had been mostly vanquished? Sentences starting off that way are just not going to end well. The best you can hope for is that there aren't very many searches starting "women should ". One faint piece of support for this is that if I leave off the final space, one of the suggested completions is "women shoulder tattoos"

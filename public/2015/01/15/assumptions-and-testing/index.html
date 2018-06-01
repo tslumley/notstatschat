@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.41" />
+
+
+<title>Assumptions and testing - A Hugo website</title>
+<meta property="og:title" content="Assumptions and testing - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/notstatschat_1.png"
+         width="75"
+         height="100"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/tslumley/notstatschat">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/tslumley">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">3 min read</span>
+    
+
+    <h1 class="article-title">Assumptions and testing</h1>
+
+    
+    <span class="article-date">2015/01/15</span>
+    
+
+    <div class="article-content">
+      <p>My attention was drawn on Twitter to an <a href="http://www.jstor.org/stable/2685616">old (1999) paper</a> in The American Statistician, <em>“Different Outcomes of the Wilcoxon-Mann-Whitney Test from Different Statistics Packages.”</em> The authors looked at 11 statistics packages and found they didn’t always give the same result for the Wilcoxon/Mann-Whitney test. The big problem was handling of tied observations.</p>
+<p>Here are their example data:</p>
+<div class="figure">
+<img src="https://31.media.tumblr.com/519a4fcce4acc3503929e45f44f0c180/tumblr_inline_ni8i9uj4qY1s1hdxy.png" />
+
+</div>
+<p>The authors say <em>“It is obvious that the data resulting from the experiment could not be analyzed by the Student’s t-test.”</em> I would argue that with 19 of 24 data points identical, a test based on ranks isn’t very attractive, either.</p>
+<p>The experiment involved making rats balance on a rotating cylinder, and the treatment was a muscle relaxant. The values at 300s are really censored– the rat hadn’t fallen off after five minutes – so the problem of ties is artificial.</p>
+<p>At least this example doesn’t have the transitivity problem: it makes sense that the treatment would only make the time shorter, not longer, so the distributions in the two groups should be stochastically ordered if they are different.  But the large number of ties makes it harder to get an exact <span class="math inline">\(p\)</span>-value for the Wilcoxon/Mann-Whitney test (which is the main point of the test) and also makes the mean rank a less interesting statistic.</p>
+<p>It would make more sense either to treat the data as binary (300 or not) or, even better, as censored, which gets rid of the ties problem. With the Wilcoxon test on the measurements as given, the p-value is about 0.085 pretending it’s a continuous distribution, or about 0.015 using a correction for ties. </p>
+<p>Treating the censoring appropriately and using the <span class="math inline">\(G^\rho\)</span> weighted logrank test with <span class="math inline">\(\rho=1\)</span> (which reduces to the Wilcoxon test in uncensored data) gives a <span class="math inline">\(p\)</span>-value of 0.014. No problem with ties; no problem with software.</p>
+<p>And, while it might be “obvious” to the authors that a <span class="math inline">\(t\)</span>-test cannot be used, the only reason I’d agree is that the data are censored. The permutation distribution of the Student <span class="math inline">\(t\)</span>-statistic agrees very well with its nominal <span class="math inline">\(t_{22}\)</span> distribution. With groups of equal sizes, the <span class="math inline">\(t\)</span>-test has excellent robustness of level. Its power is not robust to outliers, but in this example that’s a feature, not a bug: you want a test that is able to notice how much smaller the values are in the treatment group.</p>
+<div class="figure">
+<img src="https://31.media.tumblr.com/cc71b88af226dd2685932ac55ee498bf/tumblr_inline_ni8j873YO11s1hdxy.png" />
+
+</div>
+<p>The paper is basically arguing for the permutation distribution in tests like this one, and says that Wilcoxon proposed his test to make permutation inference computationally simpler than it would be for, say, the difference in means.  That was true in 1945. It wasn’t true in 1999, and it certainly isn’t true now: the advantage of a permutation approach is that you get to use whatever summary of the difference between groups you want; you don’t need to choose it for mathematical convenience.</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

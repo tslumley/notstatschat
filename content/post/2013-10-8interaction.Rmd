@@ -1,0 +1,35 @@
+---
+title: 'Interaction: ''real'' and statistical'
+author: "Thomas Lumley"
+date: 2013-10-27
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Confounding is a model-independent property of nature: if doing A has a particular effect on Y, it is objectively either true or untrue that the conditional distributions of Y given A and not A match that particular effect. 
+
+Interaction or effect modification is scale-dependent: you ask _"is the effect of A on X in the presence of B the same as the effect of A on X in the absence of B."_ This requires reducing "the effect" to a single number or other low-dimensional summary.  If A and B both have an effect on X there must be summaries that show an interaction -- the effect can't be both exactly additive and exactly multiplicative, for example -- so interaction is intrinsically more statistical and model-based than confounding.
+
+Scientists often dismiss mere 'statistical interaction' and say they are interested in 'real' interaction. As they should be. But it's not that simple.
+
+Two real-world examples show that even when everything is known there may not be a good answer to whether there is "really" interaction or "really" effect modification.
+
+1\. Antifolate antibiotics.  Folate is essential for cell growth. It acts as a co-enzyme, taking part in reactions and then being recycled. There are two classes of antibiotic that act on folate: the sulfonamides prevent bacteria from synthesizing folate, and trimethoprim and its relatives prevent folate from being recycled after use. 
+
+Do these drugs interact?
+
+*   A biochemist says 'No'. They inhibit completely different enzymes and have no effect on each other
+*   A microbiologist says 'Yes'. Blocking availability of folate in two ways allows bacteria to be killed (in a Petri dish) with much lower doses of the two drugs when they are combined
+*   A clinician says "Kinda, but not really". Because of different absorption and distribution in the body, the two drugs don't really act synergistically. They are sometimes given together, but mostly to avoid resistance. 
+
+2\. Hib vaccination.  This one is even simpler.
+
+In Australia before the _Haemophilus influenzae_ type B (Hib) vaccine, the Hib meningitis rate was 4.5/100000/year in indigenous communities and 1.7/100000/year in the rest of the population.
+
+After the vaccine was introduced, the rate was 0.5/100000/year in indigenous communities and 0.1/100000/year elsewhere.
+
+Did the vaccination increase or decrease the disparity in meningitis risk? It depends how you measure: the relative risk is higher, the risk differences is lower. 
+
+In both cases there is ambiguity, but in neither case are there any facts whose addition would settle the question. 

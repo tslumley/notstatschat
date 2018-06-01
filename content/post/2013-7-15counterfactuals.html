@@ -1,0 +1,13 @@
+---
+title: "Graphs and counterfactuals"
+author: "Thomas Lumley"
+date: 2013-07-15
+output: html_document
+---
+
+
+
+<p>The two main ways of reasoning about cause and effect in statistics are causal graphs and counterfactuals.</p>
+<p>With causal graphs, you write down variables and draw arrows representing direct effects of one variable on another, and then work with a set of axioms that summarise what it means for one variable to affect another. </p>
+<p>With counterfactuals, you talk about the effect of a variable in terms of the difference between the actual outcome with the variable set one way and the ‘potential outcome’ if it had been set another way.  This is a fairly natural way to think about cause and effect – saying you have a hangover because you got drunk is saying that you have a hangover, and if you had not got drunk you would not have had a hangover.  Reasoning about potential outcomes requires assumptions about conditional independence between variables. </p>
+<p>Thomas Richardson (of UW) and James Robins (of Harvard) have <a href="http://www.csss.washington.edu/Papers/wp128.pdf">a new  working paper</a> showing that graph and potential outcome approaches to causal inference are equivalent, and that the equivalence can be constructed in a much technically simpler and metaphysically more straightforward way than was previously available.  </p>

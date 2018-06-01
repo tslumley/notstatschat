@@ -1,0 +1,19 @@
+---
+title: "Talks in the near future"
+author: "Thomas Lumley"
+date: "2013-06-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ "Filtering for rare variant tests"  CHARGE consortium workshop, Rotterdam.  Basic message: it's total count of rare alleles that matters.
+
+"R: an environment for statistical computing and graphics".  CWI, Amsterdam.  Talking about the history, design, and applications of R to a scary computer-science audience.
+
+"Testing rare DNA variants in unrelated individuals: experience from the CHARGE consortium", IARC, Lyon.  On unidirectional and omnidirectional 'burden of mutation' tests using rare DNA variants.
+
+"Analysing very large surveys with SQL generated from R" ITACOSM conference, Milan.  Message: use [MonetDB](http://www.monetdb.org/) for the big-data parts, controlled from R, which handles the complicated parts. 
+
+"Information criteria under complex sampling" ITACOSM conference, Milan.  How to construct analogues of AIC and BIC for complex survey samples.  Yes, I am aware this could be characterised as filling a much-needed gap. 

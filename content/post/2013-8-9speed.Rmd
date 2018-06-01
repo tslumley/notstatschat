@@ -1,0 +1,23 @@
+---
+title: "SPEED sessions at JSM 2013"
+author: "Thomas Lumley"
+date: 2013-08-09
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+This year, the Joint Statistical Meetings introduced a combined poster/short presentation session.  The sessions took up a half-day, twice as long as the typical session. In the first half, each presenter gave a 5-minute talk, and the second session was an electronic poster session.  
+
+I signed up for one of these sessions primarily because I think any form of innovation at the Joint Statistical Meetings should be supported. For people who haven't experienced the JSM, it's the largest gathering of statisticians in the world, but it is also characterised by rigid and apparently inexplicable rules (eg, if the chair for your session doesn't show, you are supposed to find a replacement *who isn't chairing any other session in the whole conference*) and a significant minority of astoundingly awful talks. 
+
+Overall, I think the new sessions were a Good Thing. Some issues
+
+1.  For static single-slide posters, paper is still far superior to a 42" TV screen. It would have been nice to have the option of a paper poster.
+2.  The real benefit of e-posters is interactivity. This requires the presenter to be allowed to use their own computer to drive the display.
+3.  Presenters need to be warned more clearly about the low effective resolution of the display -- I saw some posters where important chunks of text or maths were unreadable. An approximate but useful criterion is that the poster should be barely legible on an iPhone.
+4.  It wasn't clear what was supposed to happen in the oral session if a presenter was AWOL.  The ideal solution would be to just call the next presenter.
+5.  The screens were identified by poster numbers that didn't appear in the online program, though they did correspond to the order in the online program.
+
+I expected there to be a problem with keeping to time in the 5-minute talks, but I was wrong.  In two session (thirtysomething talks) only one presenter tried to go over time, and he was quickly stopped by the session chair. 

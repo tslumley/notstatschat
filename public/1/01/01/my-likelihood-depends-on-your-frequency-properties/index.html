@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.41" />
+
+
+<title>My likelihood depends on your frequency properties - A Hugo website</title>
+<meta property="og:title" content="My likelihood depends on your frequency properties - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">5 min read</span>
+    
+
+    <h1 class="article-title">My likelihood depends on your frequency properties</h1>
+
+    
+    <span class="article-date">0001/01/01</span>
+    
+
+    <div class="article-content">
+      <p>The likelihood principle states that given two hypotheses <span class="math inline">\(H_0\)</span> and <span class="math inline">\(H_1\)</span> and data <span class="math inline">\(X\)</span>, all the evidence regarding which hypothesis is true is contained in the likelihood ratio <span class="math display">\[LR=\frac{P[X|H_1]}{P[X|H_0]}.\]</span></p>
+<p>One of the fundamentals of scientific research is the idea of scientific publication, which allows other researchers to form their own conclusions based on your results and those of others. The data available to other researchers, and thus the likelihood on which they rely for inference, depends on your publication behaviour. In practice, and even in principle, publication behaviour for one hypothesis does depend on evidence you obtained for other hypotheses under study, so likelihood-based inference by other researchers depends on the operating characteristics of your inference.</p>
+<p>Consider an idealised situation of two scientists, Alice and Bob (who are on sabbatical from the cryptography literature). Alice spends her life collecting, analysing, and reporting on data <span class="math inline">\(X\)</span> that are samples of size <span class="math inline">\(n\)</span> from <span class="math inline">\(N_p(\mu, I)\)</span> distributions, in order to make inference about <span class="math inline">\(\mu\)</span>. Bob is also interested in <span class="math inline">\(\mu\)</span> but doesn’t have the budget to collect his own <span class="math inline">\(N_p(\mu,I)\)</span> data. He assesses the evidence for various values of <span class="math inline">\(\mu\)</span> by reading the papers of Alice and other researchers and using their reported statistics <span class="math inline">\(Y\)</span>. <a href="http://blogs.plos.org/everyone/2014/02/24/plos-new-data-policy-public-access-data/">In the future</a>, he might be able to get their raw data easily, but not yet.</p>
+<p>Alice and Bob primarily care about <span class="math inline">\(\mu_1\)</span> which is obviously much more interesting than <span class="math inline">\(\left\{\mu_i\right\}_{i=2}^p\)</span>, and more likely to be meaningfully far from zero, but they have some interest in the others. Alice bases her likelihood inference on the multivariate Normal distributions <span class="math inline">\(f_X(X|\mu_i)\)</span>, Bob bases his on <span class="math inline">\(f_Y(Y|\mu_i)\)</span>.</p>
+<p>Compare Alice and Bob’s likelihood functions for the hypotheses <span class="math inline">\(\mu_i=0\)</span> and <span class="math inline">\(\mu_i=\delta\)</span> with <span class="math inline">\(\delta\)</span> meaningfully greater than <span class="math inline">\(0\)</span> in the following scenarios. In all of them, Alice <span>collects data on <span class="math inline">\(\mu_1\)</span> and reports the likelihood ratio </span><span>for <span class="math inline">\(\mu_1=0\)</span> versus <span class="math inline">\(\mu_1=\delta\)</span>.</p>
+<ol style="list-style-type: decimal">
+<li><p>Alice collects only data on <span class="math inline">\(\mu_1\)</span> and reports the likelihood ratio </span><span>for <span class="math inline">\(\mu_1=0\)</span> versus <span class="math inline">\(\mu_1=\delta\)</span>.</p></li>
+<li><p>Alice also collects data on <span class="math inline">\(\mu_2\)</span> and reports whether she finds </span><span>strong evidence for <span class="math inline">\(\mu_2=\delta\)</span> over <span class="math inline">\(\mu_2=0\)</span> or not.</p></li>
+<li><p>Alice also collects data on <span> <span class="math inline">\(\mu_2\ldots\mu_q\)</span> for some <span class="math inline">\(q\leq p\)</span>.</span><span> </span> If she finds evidence worth mentioning in favour of <span class="math inline">\(\mu_i=\delta\)</span>, she publishes her likelihood ratio, otherwise she reports that there wasn’t enough evidence.</p></li>
+<li><p>Alice also collects data on <span class="math inline">\(\mu_2\ldots\mu_q\)</span> for some <span class="math inline">\(q\leq p\)</span>.</span><span> If she finds sufficient evidence for </span><span><span class="math inline">\(\mu_i=\delta\)</span> for any <span class="math inline">\(i&amp;gt;1\)</span> she reports the likelihood ratios for all <span class="math inline">\(\mu_i\)</span>, otherwise only for <span class="math inline">\(\mu_1\)</span>.</p></li>
+</ol>
+<p>Alice’s likelihood ratio is the same in all scenarios. She obtains for each <span class="math inline">\(i\)</span> <span class="math display">\[\frac{L_1}{L_0}=\frac{L(\mu_i=\delta)}{L(\mu_i=0)}=\frac{\exp(n^2(\bar X_i-\delta)^2/2)}{\exp(n^2\bar X_i^2/2)}.\]</span> and because she has been properly trained in Bayesian decision theory her beliefs and her decisions about future research for any <span class="math inline">\(\mu_i\)</span> depend only on <span class="math inline">\(\bar X_i\)</span>, not on <span class="math inline">\(q\)</span> or on other <span class="math inline">\(\bar X_j\)</span> or on how she decided to what to publish.</p>
+<p>Bob’s likelihood ratio for <span class="math inline">\(\mu_1\)</span> is always the same as Alice’s. For the other parameters, things are more complicated.</p>
+<ol style="list-style-type: decimal">
+<li><p>no other parameters</p></li>
+<li><p>Bob’s data is Alice’s result, <span class="math inline">\(Y_2=1\)</span> for finding strong evidence, <span class="math inline">\(Y_2=0\)</span> for not. His likelihoods are <span class="math inline">\(L_1=(1-\beta)^{Y_2}\beta^{1-Y_2}\)</span> and <span class="math inline">\(L_0=\alpha^{Y_2}(1-\alpha)^{1-Y_2}\)</span>, where <span class="math inline">\(\alpha\)</span> is the probability Alice finds strong evidence for <span class="math inline">\(\mu_2=\delta\)</span> when <span class="math inline">\(\mu_2=0\)</span> is true and <span class="math inline">\(\beta\)</span> is the probability Alice fails to find strong evidence for <span class="math inline">\(\mu_2=\delta\)</span> when <span class="math inline">\(\mu_2=\delta\)</span> is true.</p></li>
+<li><p>Bob has a censored Normal likelihood, which depends on <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span>. If he ignores this and just uses Alice’s likelihood ratio when it’s available, he will inevitably end up believing <span class="math inline">\(\mu_i=\delta\)</span> for all <span class="math inline">\(i&amp;gt;2\)</span>, regardless of the truth.</p></li>
+<li><p>Bob’s likelihood ratio for the other <span class="math inline">\(\mu_i\)</span> depends on <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span>, <span class="math inline">\(q\)</span> and on the values of <span class="math inline">\(\mu_j\)</span> for <span class="math inline">\(j\neq i\)</span>.</p></li>
+</ol>
+<p>In scenarios 2-4, Bob’s likelihood depends on Alice’s criterion for strength of evidence and on how likely she is to satisfy it – if Alice were a frequentist, we’d call <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> her Type I and Type II error rates. But it’s not a problem of misuse of <span class="math inline">\(p\)</span>-values. Alice doesn’t use <span class="math inline">\(p\)</span>-values. She would never touch a <span class="math inline">\(p\)</span>-value without heavy gloves. She doesn’t even like being in the same room as a <span class="math inline">\(p\)</span>-value.</p>
+<p>In scenario 4, Bob also needs to know <span class="math inline">\(q\)</span> in order to interpret papers that do not include results for <span class="math inline">\(i&amp;gt;1\)</span> – he needs to know Alice’s family-wise power and Type I error rate. ’s actually not <em>quite</em> true: if Bob knows Alice is following this rule he can ignore her papers that don’t contain all the likelihood ratios, since he does know <span class="math inline">\(q\)</span> for the ones that do. His likelihood for <span class="math inline">\(i&gt;1\)</span> still depends on <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span>, <span class="math inline">\(q\)</span>, and the other <span class="math inline">\(\mu\)</span>s.</p>
+<p>At least, if nearly all Alice’s papers report results for all the <span class="math inline">\(\mu\)</span>s, Bob knows that the bias from just using Alice’s likelihood ratio when available will be small and he may be able to get by without all the detail and complication.</p>
+<p>This isn’t quite the same as publication bias, though it’s related. At least if <span class="math inline">\(q\)</span> is given and we know Alice’s criteria, she always publishes information about every analysis that would be sufficient for likelihood inference not only about <span class="math inline">\(\mu_i=0\)</span> vs <span class="math inline">\(\mu_i=\delta\)</span>, but even for point and interval estimation of <span class="math inline">\(\mu_i\)</span>. Alice isn’t being evil here. She’s not hiding negative results; they just aren’t that interesting.</p>
+<p>Of course, the problem would go away if Alice published, say, posterior distributions or point and interval estimates for all <span class="math inline">\(\mu_i\)</span>, at least if <span class="math inline">\(p\)</span> isn’t large enough that the complete set <a href="http://www.stat.cmu.edu/~fienberg/Fienberg-Slavkovic-Chance-2004.pdf" title="official-data example in CHANCE">could</a> be<a href="http://www.plosgenetics.org/article/info%3Adoi%2F10.1371%2Fjournal.pgen.1000665" title="Genetics example">sensitive</a>. </p>
+<p><strong>tl;dr</strong>:  If I can’t get your data or at least (approximately) sufficient statistics, <em>my</em> conclusions may depend on details of your analysis and decision making that don’t affect <em>your</em> conclusions. And if you ever just report <em>“was/wasn’t significant,”</em> Bob will hunt you down and make you regret it.</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

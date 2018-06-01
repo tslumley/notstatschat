@@ -1,0 +1,16 @@
+---
+title: "Do you know where it's been?"
+author: "Thomas Lumley"
+date: 2013-10-10
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ Again this week on the bus I passed the annoying [Phoenix Organics](http://www.phoenixorganics.co.nz/content/why-we-do-it/default.aspx) delivery van that says _Don't drink science, you don't know where it's been_ [ Phoenix are also notable for their [aspartame scare page](http://www.donotlink.com/bF9). ]
+
+One of the things they don't write up as glowingly is that they add the synthetic version of a natural antioxidant to their [juices](http://www.phoenixorganics.co.nz/what-we-do/browse/organic-juices.aspx) and their (naturally high-fructose) [juice drinks](http://www.phoenixorganics.co.nz/what-we-do/browse/organic-sparkling-juice-drinks.aspx), in unnaturally high concentrations. That's perfectly legal by organic labelling rules, and the compound, ascorbic acid, is the same molecule as vitamin C -- but we're talking about an industry where 'the same molecule' doesn't usually cut it as an excuse. 
+
+And it's not just that the ascorbic acid is synthetic. Almost all [commercial vitamin C](http://en.wikipedia.org/wiki/Vitamin_C#Industrial_synthesis) is made by Chinese chemical companies,with just one [Scottish chemical company](http://www.dsm.com/corporate/home.html) remaining in competition. Again, that's not something I have a problem with, but customers of Phoenix Organics might well feel differently if they knew.

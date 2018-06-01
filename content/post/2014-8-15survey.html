@@ -1,0 +1,20 @@
+---
+title: "Survey package update"
+author: "Thomas Lumley"
+date: 2014-08-15
+output: html_document
+---
+
+
+
+<p>There’s a new version, 3.30-3, of the ‘survey’ package for R.  It’s got quite a lot of new stuff:</p>
+<ul>
+<li>AIC and BIC for generalised linear models</li>
+<li>Rank tests for more than two groups</li>
+<li>Logrank and generalised logrank tests</li>
+</ul>
+<p>Since I’m known for a lack of enthusiasm about any of these techniques, why are they in the package? Am I just enabling?</p>
+<p>Well, AIC and BIC are interesting, and I’ll say more below. For all these techniques, though, the lack of versions that account for the sampling design hasn’t stopped people using them. They’re probably even worse off using versions that assume independent sampling than versions that handle weights and clustering. If we’re going to give the Kruskal-Wallis test the unmarked grave it so richly deserves, we clearly aren’t going to do it by restricting implementations.  Instead, we need to teach people what it really does, and show them that isn’t what they want. </p>
+<p>AIC turns out to be relatively straightforward: Jon Rao and Alastair Scott worked out the sampling distribution of the likelihood ratio back when I was learning how to solve simultaneous equations. The expected value of the log likelihood ratio when the smaller model fits as well as the larger model is the trace of a matrix. That matrix would be the identity under iid sampling and correctly-specified models, giving the <span class="math inline">\(p\)</span> penalty in AIC; under complex sampling the matrix isn’t the identity, but is easily estimated.</p>
+<p>BIC is harder, because the likelihood can’t just be a convenience. However, if all the models you consider can be nested in some Big Ugly Model and obtained by setting specific parameters to specific values in that Big Ugly Model, we can use the (approximate) Gaussian likelihood of the parameter estimates in the Big Ugly Model.  Each submodel also has a Gaussian likelihood, and we can work out the honest, traditional, entirely Bayesian BIC for those Gaussian models.  The result is a penalised Wald statistic, with a penalty that is the number of parametris times a sort of effective log sample size</p>
+<p>I should also note that the generalised logrank tests are the work of Kevin Rader and Stuart Lipsitz, who presented them at the Joint Statistical Meetings in San Diego two years ago.  They were on my to-do list, but the Harvard folks got to them first, and I just implemented what they presented.</p>

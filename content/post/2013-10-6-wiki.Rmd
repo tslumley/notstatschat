@@ -1,0 +1,52 @@
+---
+title: 'Today we have shaming of prats'
+author: "Thomas Lumley"
+date:  2013-10-06 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+_Background: [Revenge, ego, and corruption in Wikipedia](http://www.salon.com/2013/05/17/revenge_ego_and_the_corruption_of_wikipedia/)_
+
+Today we have shaming of prats. Yesterday,   
+we had unclear sources, and tomorrow morning  
+we may have original research. But today,   
+Today we have shaming of prats. _The [Flame Robin](http://en.wikipedia.org/wiki/Flame_robin) _  
+_is a small passerine bird native to Australia_,  
+and today we have shaming of prats
+
+This is the anonymous editor. And this  
+is the revenge edit, whose use you will see  
+when you are snubbed by an author.  
+And this is the appeals process.  
+Which in your case you have not got. [_Final Fantasy XI_](http://en.wikipedia.org/wiki/Final_fantasy_XI)  
+_is a massively multiplayer online role-playing game, _  
+which in my case I do not get.     
+
+This is the revision process, which maintains  
+the history of each page. And please do not let me  
+ catch any user editing his own page. It is perfectly easy  
+ if you sign in as a different user. _[A Journey](http://en.wikipedia.org/wiki/A_Journey)   
+_ _is a 2010 memoir by Tony Blair_ _discussing   
+_ _his tenure as leader of the British Labour Party.  
+_ You wouldn't catch him editing his own pages.
+
+And this you can see is the talk page. The purpose of this  
+is to clear the air, as you see. We can argue  
+rapidly backwards and forwards: we say this   
+raises the standards. _When [the Oriflamme](http://en.wikipedia.org/wiki/Oriflamme#Significance_on_the_battlefield) was _  
+_displayed on the battlefield it indicated  
+that no quarter was to be given_.   
+They called this raising the standard.
+
+They call it raising the standard: it is perfectly easy   
+if you sign in as a different user: like the revenge edit,   
+and the anonymous editor, and the appeals process   
+(which in our case we have not got), and the massive  
+online role-playing games, and the Oriflamme  
+displayed on the battlefield, for today  
+we have shaming of prats.
+
+(after [Henry Reed](http://www.solearabiantree.net/namingofparts/namingofparts.html))

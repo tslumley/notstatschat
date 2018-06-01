@@ -1,0 +1,52 @@
+---
+title: "Science and statistical inference"
+author: "Thomas Lumley"
+date: 2015-02-17
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ Q: There have been a lot of papers recently about the spike in p-values just below 0.05, haven't there?
+
+A: Yes. A bit depressing. But there's a new analysis that says it's ok.
+
+Q: Really? That's great!
+
+A: Yes, [Daniel Lakens shows](http://daniellakens.blogspot.nl/2015/02/a-peculiar-surge-of-incorrect.html?m=1) that you can explain the recent increase in just-significant p-values, and that _"data does not provide any indication of an increase in questionable research practices"_
+
+Q: And is his modelling correct?
+
+A: It certainly looks plausible.
+
+Q: So what does explain the 0.04 spike, if it's not 'questionable research practices'
+
+A: Let's see...Ah. A decrease in power and increase in publication bias.
+
+\ 
+
+\ 
+
+\ 
+
+\ 
+
+\ 
+  
+ _\*\* crickets \*\*_
+
+\ 
+
+\ 
+
+\ 
+
+\ 
+
+\ 
+  
+
+Q: Sorry, I got nothing.
+
+A: Well, better go, grant proposals aren't going to write themselves.

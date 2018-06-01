@@ -1,0 +1,34 @@
+---
+title: "Taking meta-analysis heterogeneity seriously"
+author: "Thomas Lumley"
+date: 2014-08-24 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ In fixed-effects meta-analysis of a set of trials the goal is to find a weighted average of the true treatment effects in those trials (whatever they might be). The results are summarised by the weighted average and a confidence interval reflecting its sampling uncertainty.
+
+In random-effects meta-analysis the trials are modelled as an exchangeable sample, implying that they can be treated as coming independently from some latent distribution of true treatment effects. That's attractive in some situations. What doesn't make sense to me is summarising the results just by the mean of this latent distribution and a confidence interval for that mean. 
+
+That is, the model for individual study estimates $\Delta_i$ is  
+$$\Delta_i\sim N(\mu_i,\sigma^2_i)$$  
+$$\mu_i\sim N(\mu_0, \tau^2)$$  
+and we usually report a confidence interval for $\mu_0.$
+
+If you take seriously the idea of modelling heterogeneity in the true treatment effect, a confidence interval for the mean isn't enough. In order to make decisions you need a prediction interval for the the true treatment effect in a new population that might include you. 
+
+The difference between these intervals can be pretty large. Today, I saw [a paper](http://www.nature.com/srep/2014/140822/srep06161/pdf/srep06161.pdf) (open-access) in the new Nature _Scientific Reports_ journal, a meta-analysis of observational studies of vitamin C and lung cancer.  Their Table 3 presents study-specific estimates and a random-effects meta-analysis for the risk ratio per extra 100mg/day vitamin C. 
+
+The point estimate is 0.93 and the confidence interval is 0.88-0.98, but the $I^2$ heterogeneity statistic is 75%.  That is, the heterogeneity in the estimates is about three times the sampling uncertainty.  Putting the data into my rmeta package in R I can reproduce their output (apart from their summary $p$-value, which I think must be a typo), and I get an estimate of $\tau=0.23$.
+
+Combining that with the mean, the simple heterogeneity model says that the true effect on the relative risk scale of an extra 100mg/day vitamin C varies enormously depending on context, with 95% limits from 0.58 to 1.47.  The true effect is beneficial in 62% of trials and harmful in 48%. This is without adding in the sampling uncertainty, which would expand the bounds slightly for a true prediction interval. 
+
+If we take the heterogeneity model seriously, this meta-analysis is telling us we have almost no clue about the effect of vitamin C on lung cancer in a new population that wasn't one of the studies that went into the analysis.  Averaging over all populations, vitamin C is estimated to be slightly beneficial, but in **your** population we can't tell.  Since the data are all observational and are visibly inconsistent, that's not terribly surprising, and is most likely due to different confounding patterns.
+
+I think reporting suitable upper and lower quantiles of the latent treatment effect distribution in addition to a confidence interval for the mean would be an improvement for random-effects meta-analysis.  In particular, it would help with the 'how much is too much' question about $I^2$, since a highly-heterogeneous set of studies would always end up with a wide treatment effect distribution. 
+
+It would be even better to report confidence intervals for the upper and lower quantiles, but that would take a little theoretical work, and the simple solution is probably good enough. 
+
+![](https://31.media.tumblr.com/f7215fe4f0ab3d0cc9c438344aa3e95d/tumblr_inline_naujsf5etE1s1hdxy.png)

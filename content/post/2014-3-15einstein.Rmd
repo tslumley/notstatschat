@@ -1,0 +1,37 @@
+---
+title: "Einstein, Wikiquote, and fact checking"
+author: "Thomas Lumley"
+date:  2014-03-14
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ It's not only Pi Day in the USA (3/14, they write dates backwards), it's Einstein's 135th birthday. Einstein, like Mark Twain, 孔夫子, Churchill, Disraeli, and the [Chinese proverbs](http://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=11219648), is a quote magnet. He said many quotable things, and even more are attributed to him.
+
+The NZ Herald [has a list of ten Einstein quotes](http://www.nzherald.co.nz/world/news/article.cfm?c_id=2&objectid=11219746). Annoyingly, none of them say where or when they were said. So I did the absolutely minimal level of fact checking. I looked on Wikiquote's [Albert Einstein page](http://en.wikiquote.org/wiki/Albert_Einstein) and the [talk page](http://en.wikiquote.org/wiki/Talk:Albert_Einstein).
+
+All ten quotes appear on Wikiquote. Five have reliable sources originating with Einstein. One more is something Einstein said, but that he didn't claim was original. One has long been attributed to him but is disputed. Two look like recent inventions. One is definitely from someone else.
+
+1. E. F. Schumacher "Small is Beautiful"  
+
+2. Quoted by Einstein but not original to him. A popular saying in French before his time _"La culture est ce qui reste lorsque l’on a tout oublié"_  
+
+3. Einstein. From a speech to the New History Society (14 December 1930), reprinted in "Militant Pacifism" in Cosmic Religion (1931)  
+
+4. No reliable source known, not attributed to him before 1990s  
+
+5. From Science and Religion (1941)  
+
+6. Not Einstein. Apparently first attributed to him by Ram Dass in 1970.  
+
+7. Einstein. Attributed in The Encarta Book of Quotations to an interview on the Belgenland (December 1930), which was the ship on which he arrived in New York that month.  
+
+8. Einstein. Speech made in honor of Thomas Mann in January 1939, when Mann was given the Einstein Prize given by the Jewish Forum.  
+
+9. Disputed. No reliable attributions. Similar quotes in French reliably sourced to 1880s  
+
+10. Einstein: said to Samuel J Woolf, Berlin, Summer 1929. Cited with additional notes in The Ultimate Quotable Einstein by Alice Calaprice and Freeman Dyson, Princeton UP (2010) p 230
+
+Not a terribly good record for a serious newspaper. 

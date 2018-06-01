@@ -1,0 +1,21 @@
+---
+title: "Statins and the causal Markov property"
+author: "Thomas Lumley"
+date: 2013-09-23
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+A real example: there is developing uncertainty that the statin class of cholesterol-lowering drugs really works by lowering LDL cholesterol. This is partly because other drugs (eg, ezetimibe) that lower LDL cholesterol don't have the same impact on heart attacks, and also because statins seem to have beneficial effects on too many other conditions. 
+
+In principle, you could control for achieved cholesterol levels and see if statin use was then conditionally independent of heart disease [adjust and see if the effect goes away]. That's based on this causal graph
+
+![image](http://media.tumblr.com/3b45f6bb428b4195c3fb7f5c7daa2524/tumblr_inline_mtkm9ixrnO1s1hdxy.png)
+
+This doesn't really work.  The big problem is that the actual mediating variable for **all** the potential effects of statins is the extent of inhibition of hydroxymethylglutaryl-coenzyme A reductase, so that most of the variation in effects will be common to all the mechanisms.  This is combined with measurement error, so that measured cholesterol levels don't capture all the effect of statins and do introduce other variation.  The causal graph actually looks more like this
+
+![image](http://media.tumblr.com/f690b03f5ae924afb6e380f254f174f8/tumblr_inline_mtkmf8Rwcr1s1hdxy.png)
+
+Much of the true variation in statin effect occurs upstream of the enzyme-inhibition bottleneck, and variation downstream of this is largely measurement error. 

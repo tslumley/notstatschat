@@ -1,0 +1,28 @@
+---
+title: "Call me, Ishmael"
+author: "Thomas Lumley"
+date: 2015-05-20
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Making small changes in text to escape plagiarism-detection software is challenging but not really difficult. The relationship between your text and the urtext in the software is precise and syntactic; the software doesn’t know about ideas. Making small changes in a text that change or obscure the meaning is also easy, and is why copyeditors exist. Making small changes in a text that give an interesting new meaning is enormously harder, as in the opening of Peter de Vries’ “The Vale of Laughter”, quoted as the title of this post.
+
+A similar distinction connects two recent science stories.  A Berkeley-Montreal [biochemistry collaboration](http://www.nature.com/news/drugs-regulate-home-brew-opiates-1.17563)  has made large steps towards GMO yeast that produces morphine. A US-German collaboration discovered a [new candidate antibiotic, teixobactin](http://sciblogs.co.nz/infectious-thoughts/2015/01/08/will-new-antibiotic-teixobactin-save-us-all-umm-not-quite/), and claimed it was resistant to antibiotic resistance.
+
+Engineering yeast to produce morphine sounds like it should be easy. After all, morphine is a hugely simpler molecule than insulin, and recombinant insulin is older than [“Y.M.C.A”](http://en.wikipedia.org/wiki/Y.M.C.A._(song)) or Space Invaders.  The distinction is that insulin is a protein, and morphine isn’t.
+
+The Central Dogma of Molecular Biology is that DNA is transcribed to RNA and translated to protein, and that (for protein-coding parts of the genome) this is a precise one-to-one copying process. Like all dogmas, this isn’t quite true — splicing matters, as does all the bling attached after translation (formally, post-translational modification). It’s still a good approximation. Making a protein such as insulin is almost as simple as sticking the insulin gene into a cell and running the transcription/translation program on it.
+
+Morphine isn’t a protein. Proteins (enzymes) are the machinery that manufacture morphine. Getting a yeast cell to produce morphine means getting it to produce a whole series of enzymes, but that’s not enough. In order to produce morphine, this set of machinery must get assembled to a properly connected production line that takes in the right raw materials and spits out morphine at the end. That’s not easy.
+
+Most targets of antibiotics are protein or RNA. Penicillins, cephalosporins, and carbapenems target the penicillin-binding proteins that construct the bacterial cell wall. Macrolides, lincosamides, streptogramins, and tetracyclines attack the RNA/protein machinery of the ribosome. Fluoroquinolines such as Cipro block the protein DNA gyrase. Enzymes make good drug targets because the cell produces only small amounts; you don’t need much drug.  Teixobactin is an exception, as are the current last-resort antibiotic vancomycin and teicoplanin. These block the construction of cell walls as penicillin does, but bind to non-protein construction materials rather than protein machinery.  
+
+To evolve resistance to antibiotics with protein targets, bacteria need to make lots of random changes to the proteins until they find a version that does pretty much the same job but doesn’t bind to the antibiotic. That was hard, but there are a lot of bacteria and they reproduce very fast, so we got MRSA.
+
+[Resistance to vancomycin](http://en.wikipedia.org/wiki/Vancomycin#Antibiotic_resistance) took a lot longer to develop. A because a vancomycin-resistant germ has to find mutated versions of enzymes that do a **different job**. Vancomycin-resistant enterococci make a new enzyme that strips off one end of the target construction material and replaces it with a new piece that still works for cell wall construction but won’t bind to the antibiotic.
+
+Proteins are incredibly complicated molecules. Morphine and vancomycin-resistance are much simpler, but they are new ideas for the cell rather than just edits to the same text.   

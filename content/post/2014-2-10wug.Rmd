@@ -1,0 +1,19 @@
+---
+title: "This is a wug. Now you have two of them."
+author: "Thomas Lumley"
+date: 2014-02-09
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Three words that used to be plurals, and are changing in three different ways:
+
+_Candelabra_ used to be the plural of _candelabrum_, a multiple-armed candlestick holder. There are very few other English words ending in 'brum', and most of the words ending in 'bra' are singular (e.g. _vertebra_, _penumbra_, _cobra_, _zebra_, _sabra, bra_). Over time, _candelabra_ has been used more and more often as the singular, perhaps most famously in the biographical movie "Behind the Candelabra" about Liberace; the corresponding plural is _candelabras_. This change presumably started as a simple error; some authorities would say it still is.
+
+_Agenda_ used to be the plural of _agendum_, from the Latin "which ought to be done". People would write lists of things which ought to be done, and write "Agenda" at the top of the lists rather than "Things to do", because they were pretentious and British.  Over time, _agenda_ became the name of the list itself, rather than the items, and specifically the name of a list of things to be done at a meeting; the corresponding plural is _agendas_. There's no error involved, just metonymy.
+
+_Data_ used to be the plural of _datum_, from the Latin "was given". In statistics, you usually need a set of data, and the numbers are only really meaningful in context, not on their own. The new use has been to treat _data_ as a mass noun, like _information_, something for which singular and plural are not relevant. There's no error involved; there is a change of meaning.
+
+Mass nouns take the same verb forms as singular nouns, so underinformed pedant wannabes sometimes claim _data_ is being treated as singular. The simplest way to see that this claim is wrong is that _data_ has no plural. No-one regards _datas_ as correct English, although new singular count nouns [very reliably form plurals with 's'](http://www.pbs.org/wgbh/nova/blogs/secretlife/blogposts/whats-a-wug/).

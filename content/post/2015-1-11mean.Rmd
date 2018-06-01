@@ -1,0 +1,25 @@
+---
+title: "Different questions can have different answers"
+author: "Thomas Lumley"
+date:  2015-01-11
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+The Slate Money [podcast](http://www.slate.com/articles/podcasts/slate_money.html) [1] had an item on Manhattan apartment prices. The mean price last quarter was \$1.7 million and the median was \\$0.98 million. 
+
+Firstly, that's a lot of money. Secondly, the mean is a lot bigger than the median. The real point, though, is that the mean is a record, up on  the previous peak (in 2008) by \$120,000. The median is down from 2008, by \$15,000.
+
+Suppose someone asks whether Manhattan apartments are more expensive now than in 2008. There isn't a simple answer. The mean is up, the median is down, other summary statistics could also go either way. 
+
+You could try arguing that because the distribution is skewed, the mean is inappropriate. Unfortunately, this is just wrong. Non-normal distributions still have means, and there can be perfectly good reasons to be interested in them. For example, the total property tax and transfer tax collected by the city government are proportions of the market value and so depend on the mean, not the median. 
+
+There isn't any simple fact as to whether apartments are more or less expensive than in 2008. Some are more expensive. Some are less expensive. Some apartments that exist now didn't exist in 2008. Some that existed in 2008 don't exist now. 
+
+Different uses of the data call for summarising the prices in different ways. You can get different answers to different questions, and that's fine. But if there isn't a simple, unique, objective answer when your data are  measured essentially without error on an interval scale, you've got no hope that there will be a simple, unique, objective answer for merely ordinal measurements.  
+
+An ordering on measurements is not enough to give you an ordering on distributions. That's true in theory, and it's even true in practice. 
+
+[1] *I know, but it's much better than it sounds. Honestly.*

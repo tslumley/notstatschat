@@ -1,0 +1,23 @@
+---
+title: "Auckland's top news story"
+author: "Thomas Lumley"
+date: 2013-10-03
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+  _Background: The Herald has had a whole [sequence](http://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=11133832) of [stories](http://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=11134384), including two on the [front](http://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=11133160) [page](http://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=11133907), about the decision of the city council to stop mowing the 'berms', the strips of grass between the road and sidewalk. _
+
+_Additional background: the Mayor of Auckland is one Len Brown_.
+
+O Lenny Boy, the berms, the berms need mowing  
+From Glen to Lynn, and down Mt Eden side  
+The winter's gone, and all the grass is growing  
+'Tis you, 'tis you must mow, and let us bide
+
+And come ye back, at two or three week intervals  
+Or when the weeds and clover start to show  
+The grass will grow, in sunshine or in shadow  
+O Lenny Boy, we pay our rates, and you must mow

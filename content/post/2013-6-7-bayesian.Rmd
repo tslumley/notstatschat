@@ -1,0 +1,20 @@
+---
+title: "When is Bayesian introductory statistics better?"
+author: "Thomas Lumley"
+date: 2013-06-27
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ For the sort of statistics taught in introductory courses, competent Bayesian and frequentist analysis are going to agree -- point and interval estimates will be similar, and similar conclusions will be drawn.  Computation isn't seriously hard for either approach, though prepackaged pointy-clicky software is more available for frequentist inference. 
+
+There are going to be pedagogical differences.  The big one, in favour of Bayesian statistics, is not having to explain p-values. Another benefit of the Bayesian approach is that it gives you a good reason not to talk about rank tests. Against this are some disadvantages.
+
+Firstly, you are more or less forced to work with simple parametric models for the data -- you could just do what we do with the t-test and ANOVA and say that group means are Normally distributed, but I've never seen this approach used. Of course, a lot of frequentist introductory courses use simple parametric models for the data, but that doesn't stop it being a somewhat dodgy idea, and it is well known to lead to students behaving as if non-Normal distributions don't really have means. 
+
+Secondly, and more importantly, it's harder to explain why random sampling and randomization are important. The reason is to do with independence between exposures and **unmeasured** confounders, but you usually wouldn't include the unmeasured confounders in your model at an introductory level. 
+
+In practice, though, the introductory course is a service course and the deciding issues is that the consumers wouldn't like it to be Bayesian. 
+

@@ -1,0 +1,18 @@
+---
+title: "In defense of theory"
+author: "Thomas Lumley"
+date:  2013-08-08
+output: html_document
+---
+
+
+
+<p>The statistical community, and even more so the statistical curriculum, hasn’t yet adapted fully to the improvements in computing over the past few decades, and so still gives too much priority to mathematical approaches and too little to computational approaches to many problems. That’s one reason for the popularity of the term ‘data science’, and for the mixed feelings about Nate Silver’s comment at his JSM address that ‘data scentist is just a sexed-up term for statistician’.</p>
+<p>On the other hand, theory is important for people using statistics and computing to work on non-trivial scientific problems. The theory doesn’t have to be developed by the same people that work on the scientific problems, but it does have to be developed.</p>
+<p>Here are two simple examples where apparently pointless abstract theory has been relevant to applied medical research for me and my coworkers:</p>
+<p>1.  <strong>The case-crossover design and air pollution.</strong> One of the <a href="http://onlinelibrary.wiley.com/doi/10.1002/1099-095X(200011/12)11:6%3C689::AID-ENV439%3E3.0.CO;2-N/citedby">most-cited papers</a> in the journal <em>Environmetrics</em> is my work with Drew Levy on the case-crossover design.  We showed that the standard approach to analysis, using a conditional likelihood based on analogies with matched case-control designs, was wrong.  The objective function isn’t actually a conditional likelihood, and for some popular designs the true conditional likelihood is free of the parameters of interest.  </p>
+<p>The key to our realisation of the problem was the fact that the score, the derivative of a log-likelihood always has zero mean under the true parameters.  Not asymptotically zero. Zero.  This let us be sure from finite-sample simulations that there was something wrong with the likelihood, by looking at the distribution of the score, where other researchers had looked at the distribution of the parameter estimates and found them inconclusive.</p>
+<p>Once we knew that the ‘conditional likelihood’ couldn’t possibly be right, it was much easier to find what was wrong with it. </p>
+<p>2. The <a href="http://www.americanscientist.org/issues/pub/the-bootstrap/1"><strong>bootstrap</strong></a> is a fantastically useful tool for data science, since it lets you generate uncertainty estimates for pretty much anything. It’s easy to understand the bootstrap from a heuristic viewpoint – so much so that it’s now how interval estimation is introduced in the New Zealand high-school curriculum.  </p>
+<p>On the other hand, the bootstrap doesn’t work for every statistic, and I’ve encountered two cases recently where people had proposed bootstrapping for a statistic where it doesn’t work.  The first was the <a href="http://www.ncbi.nlm.nih.gov/pubmed/21673124">IDI statistic</a> for improvements in predictive accuracy; the second was a proposed test for pleiotropy in genetic association analysis (ie, does a genetic variant affect more than one phenotype).</p>
+<p> In both cases the problem was that the statistic was not regular at the null hypothesis. Simulations would show that the bootstrap failed (and led to the discovery of the problem in the IDI case), but it’s useful to understand why it failed and to have a taxonomy of the possible reasons for failure. These come most reliably, I think, from the characterisation of the bootstrap as a plug-in estimator of the empirical CDF, and the use of the functional delta method.</p>

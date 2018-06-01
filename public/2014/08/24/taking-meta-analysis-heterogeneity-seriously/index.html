@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.41" />
+
+
+<title>Taking meta-analysis heterogeneity seriously - A Hugo website</title>
+<meta property="og:title" content="Taking meta-analysis heterogeneity seriously - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/notstatschat_1.png"
+         width="75"
+         height="100"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/tslumley/notstatschat">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/tslumley">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">3 min read</span>
+    
+
+    <h1 class="article-title">Taking meta-analysis heterogeneity seriously</h1>
+
+    
+    <span class="article-date">2014/08/24</span>
+    
+
+    <div class="article-content">
+      <p>In fixed-effects meta-analysis of a set of trials the goal is to find a weighted average of the true treatment effects in those trials (whatever they might be). The results are summarised by the weighted average and a confidence interval reflecting its sampling uncertainty.</p>
+<p>In random-effects meta-analysis the trials are modelled as an exchangeable sample, implying that they can be treated as coming independently from some latent distribution of true treatment effects. That’s attractive in some situations. What doesn’t make sense to me is summarising the results just by the mean of this latent distribution and a confidence interval for that mean. </p>
+<p>That is, the model for individual study estimates <span class="math inline">\(\Delta_i\)</span> is<br />
+<span class="math display">\[\Delta_i\sim N(\mu_i,\sigma^2_i)\]</span><br />
+<span class="math display">\[\mu_i\sim N(\mu_0, \tau^2)\]</span><br />
+and we usually report a confidence interval for <span class="math inline">\(\mu_0.\)</span></p>
+<p>If you take seriously the idea of modelling heterogeneity in the true treatment effect, a confidence interval for the mean isn’t enough. In order to make decisions you need a prediction interval for the the true treatment effect in a new population that might include you. </p>
+<p>The difference between these intervals can be pretty large. Today, I saw <a href="http://www.nature.com/srep/2014/140822/srep06161/pdf/srep06161.pdf">a paper</a> (open-access) in the new Nature <em>Scientific Reports</em> journal, a meta-analysis of observational studies of vitamin C and lung cancer.  Their Table 3 presents study-specific estimates and a random-effects meta-analysis for the risk ratio per extra 100mg/day vitamin C. </p>
+<p>The point estimate is 0.93 and the confidence interval is 0.88-0.98, but the <span class="math inline">\(I^2\)</span> heterogeneity statistic is 75%.  That is, the heterogeneity in the estimates is about three times the sampling uncertainty.  Putting the data into my rmeta package in R I can reproduce their output (apart from their summary <span class="math inline">\(p\)</span>-value, which I think must be a typo), and I get an estimate of <span class="math inline">\(\tau=0.23\)</span>.</p>
+<p>Combining that with the mean, the simple heterogeneity model says that the true effect on the relative risk scale of an extra 100mg/day vitamin C varies enormously depending on context, with 95% limits from 0.58 to 1.47.  The true effect is beneficial in 62% of trials and harmful in 48%. This is without adding in the sampling uncertainty, which would expand the bounds slightly for a true prediction interval. </p>
+<p>If we take the heterogeneity model seriously, this meta-analysis is telling us we have almost no clue about the effect of vitamin C on lung cancer in a new population that wasn’t one of the studies that went into the analysis.  Averaging over all populations, vitamin C is estimated to be slightly beneficial, but in <strong>your</strong> population we can’t tell.  Since the data are all observational and are visibly inconsistent, that’s not terribly surprising, and is most likely due to different confounding patterns.</p>
+<p>I think reporting suitable upper and lower quantiles of the latent treatment effect distribution in addition to a confidence interval for the mean would be an improvement for random-effects meta-analysis.  In particular, it would help with the ‘how much is too much’ question about <span class="math inline">\(I^2\)</span>, since a highly-heterogeneous set of studies would always end up with a wide treatment effect distribution. </p>
+<p>It would be even better to report confidence intervals for the upper and lower quantiles, but that would take a little theoretical work, and the simple solution is probably good enough. </p>
+<div class="figure">
+<img src="https://31.media.tumblr.com/f7215fe4f0ab3d0cc9c438344aa3e95d/tumblr_inline_naujsf5etE1s1hdxy.png" />
+
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

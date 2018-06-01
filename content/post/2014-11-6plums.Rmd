@@ -1,0 +1,51 @@
+---
+title: "This is just to say"
+author: "Thomas Lumley"
+date: 2014-11-06
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+_The plums, which you stored there on ice,_  
+_I have eaten; they went in a trice._  
+_If you meant them to last_  
+_For a morning repast_  
+_Then I'm sorry, but boy were they nice._
+
+or
+
+_Some say the plums will end in tarts_  
+_Some say on ice_  
+_From what I've eaten 'round these parts_  
+_I hold with those who favor tarts_  
+_But if they had to vanish first_  
+_I think I know enough of guilt_  
+_To say that for consumption, chilled_  
+_is also good, and would suffice_
+
+or
+
+_Plums by here, my dear, plums by here_  
+_plums by here, my dear, plums by here_  
+_plums by here, my dear, plums by here_  
+_In the icebox, plums by here_  
+  
+_Someone's hungry, dear, plums by here_  
+_Someone's hungry, dear, plums by here_  
+_Someone's hungry, dear, plums by here_  
+_In the icebox, plums by here_  
+  
+_Cold and sweet, my dear, plums by here_  
+_Cold and sweet, my dear, plums by here_  
+_Cold and sweet, my dear, plums by here_  
+_In the icebox, plums by here_  
+  
+_Someone's sorry, dear, no plums here_  
+_Someone's sorry, dear, no plums here_  
+_Someone's sorry, dear, no plums here_  
+_No breakfast, no plums here_
+
+[Update: after [Williams](http://en.wikipedia.org/wiki/This_Is_Just_To_Say), of course]

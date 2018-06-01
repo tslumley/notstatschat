@@ -1,0 +1,20 @@
+---
+title: "What I said on StatsChat only shorter and with more swearing"
+author: "Thomas Lumley"
+date: 2013-09-04 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Stealing a [Keith Ng](http://publicaddress.net/onpoint/what-andrew-geddis-said-but-shorter-and-with/) title, to do a post motivated by his criticism of my [StatsChat post](http://www.statschat.org.nz/2013/09/04/nz-taxbenefit-system-is-moderately-progressive/) as a 'generous interpretation' of Bill English.
+
+English said that households with income below $110000 collectively paid no net income tax. This assumes that all benefits are paid solely from income tax, not GST, and even then has to lump together people who receive more in benefits than they pay in income taxes with a lot of people who pay much more in income tax than they receive in benefits. Not fucking helpful when it comes to informed public debate. 
+
+You could do this lumping in other ways: I'm pretty sure all of these would be just as true if you ran the numbers:
+
+*   "MPs and unemployed collectively pay no net income tax"
+*   "Famers and beneficiaries collectively pay no net income tax" 
+*   "Members of the National Party and beneficiaries collectively pay no net income tax"
+*   "Beneficiaries and residents of [Clutha-Southland](http://en.wikipedia.org/wiki/Clutha-Southland) collectively pay no net income tax"

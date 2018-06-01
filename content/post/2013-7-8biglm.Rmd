@@ -1,0 +1,17 @@
+---
+title: "Big data linear models"
+author: "Thomas Lumley"
+date: 2013-07-08
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+The biglm package for R currently uses incremental QR decomposition, which fits linear models to big data in linear time and bounded memory, but doesn't parallelize.
+
+It turns out that parallel computation is easy (and has been studied by Dongarra and the LAPACK folks).  If you have two data chunks reduced to $R_1$ and $Q_1^TY_1$, and $R_2$ and $Q_2^TY_2$, just treat each $R$ as an $X$ and each $Q^TY$ as a $Y$ to merge the QR decompositions.
+
+So, if you have a file system that can feed $M$ separate QR decomposition processes, you can do the QR decomposition in $M$ parallel processes and then $\log M$ sets of parallel merges.  
+
+Coming to the biglm package Real Soon Now. 

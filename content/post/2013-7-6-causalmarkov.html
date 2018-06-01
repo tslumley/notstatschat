@@ -1,0 +1,13 @@
+---
+title: "Problems with faithfulness and the causal Markov property (II)"
+author: "Thomas Lumley"
+date: 2013-07-06
+output: html_document
+---
+
+
+
+<p>This one I got from reading Nancy Cartwright’s <em>Hunting Causes, and using them</em>, though it isn’t exactly the point she’s making. It’s also related to points made by Hofstadter, Dennett, and others about reductionist reasoning. </p>
+<p>The idea of causal graphs is that you have variables and some prior knowledge of possible causal relationships between them – the prior knowledge could be as weak as ‘future cannot cause past’ or could incorporate a lot of domain-specific knowledge.  Given enough data, you can observe conditional-independence relationships between the variables.  Assuming that there are no conditional independence relationships beyond those implied by direct causal connections, you can often figure out the causal relationships. </p>
+<p>The problem is that the level of explanation at which the graph assumptions are true may not be the same as the level of explanation where your variables and domain knowledge operate.  If you measure clouds and the colour of sunsets you can predict some things about weather, but there’s no reason to expect the graph assumptions to hold. If you measure temperature, pressure, and humidity at enough weather stations, the causal graph assumptions will hold, but the variables in the graph won’t include things like clouds and sunsets.</p>
+<p>In the same way ‘poverty’ or ‘racism’ or even ‘dietary fat’ or ‘oxidative stress’ may be too high-level a variable to satisfy simple causal relations. </p>
