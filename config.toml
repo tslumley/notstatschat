@@ -1,4 +1,4 @@
-baseurl = "/"
+baseurl = "http://notstatschat.netlify.com/"
 languageCode = "en-us"
 title = "Biased and Inefficient"
 theme = "hugo-lithium"
