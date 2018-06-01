@@ -1,9 +1,9 @@
 baseurl = "/"
 languageCode = "en-us"
-title = "A Hugo website"
+title = "Biased and Inefficient"
 theme = "hugo-lithium"
 googleAnalytics = ""
-disqusShortname = ""
+disqusShortname = "notstatschat"
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
 [permalinks]
