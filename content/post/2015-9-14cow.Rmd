@@ -1,0 +1,31 @@
+---
+title: "Good reasons for assuming a spherical cow"
+author: "Thomas Lumley"
+date: 2015-09-14
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Talks and papers in statistics often have what purports to be an application but with assumptions that look implausible. That can be fine, but you need to know, and tell us, why you’re making those assumptions.
+
+If I ask “Why are you assuming a spherical cow?”, here are some possible good answers:
+
+*   Honest theory: “It’s not really about cows. Greeble’s Conjecture is the leading open question in heterotrophic morphon theory. Cows are the traditional example because Greeble grew up on a dairy farm”
+*   Toy problem, theoretical: “Realistic cows are much too hard, but we hope that if we can understand the case of spherical cows we will at least get an idea of where to start”  
+    
+*   Toy problem, computational: “Computations for spherical cows are a million times faster, but when we have the parameters optimised we’ll do it for realistic cows”  
+    
+*   Toy problem, back-compatibility: “Of course we’re using realistic cows for the actual data analysis, but the literature has focused on spherical cows so we need that for method comparisons”  
+    
+*   Modelling, universality: “There’s a theoretical result that says the shape of the cow doesn’t affect the gravitational attraction”  
+    
+*   Modelling, approximation: “Cows don’t lose much heat through their legs, so the spherical approximation is pretty good”  
+    
+*   Modelling, budget: “We didn’t have funding to build a 3-d cow model, and the client was happy with spherical cows”  
+    
+*   Realism, surprising: “I asked my collaborators about that and these cows actually are spherical.”  
+    
+
+There’s absolutely nothing wrong with abstract theory or toy problems in their place. If that’s what you’re doing, make sure we know that you know it. 

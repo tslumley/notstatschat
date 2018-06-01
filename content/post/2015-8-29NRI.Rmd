@@ -1,0 +1,45 @@
+---
+title: 'Net Reclassification Index: surprisingly weird.'
+author: "Thomas Lumley"
+date:  2015-08-29
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ _Attention Conservation Notice: Long. Really long. No, longer than that. Here: read the [original](http://biostats.bepress.com/uwbiostat/paper392/) instead_.
+
+The Net Reclassification Index (NRI) is a summary of improvement in prediction when new information is added, and an intuitively plausible one. Suppose that we’re trying to predict $Y=1$ vs $Y=0$, and that for person $i$ we have an old predicted probability $\hat p_{\textrm{old}}(i)$ and a new predicted probability $\hat p_{\textrm{new}}(i)$.  We’d hope that the probabilities for cases ($Y=1$) go up and the probabilities for controls ($Y=0$) go down when more information is used.
+
+Suppose the test set has $N_1$ cases and $N_0$ controls. The NRI is defined by  
+$$\frac{1}{2}\textrm{NRI}=\frac{1}{N_1}\sum_{Y_i=1} I\{\hat p_{\textrm{new}}(i)>\hat p_{\textrm{old}}(i)\} - \frac{1}{N_0}\sum_{Y_i=0} I\{\hat p_{\textrm{new}}(i)>\hat p_{\textrm{old}}(i)\}$$  
+The definition avoids evaluating tradeoffs about how much the probabilities go up, and is standardised to be (at least apparently) comparable between data sets with different case:control ratios. 
+
+As any schoolchild knows, evaluating the NRI on the same data used to estimate the probabilities will make it biased upwards: you’re basically asking “Do the probabilities in these data change in the same ways as the probabilities in the data where the estimation was done?” This isn’t hard. They do. 
+
+Basically everyone except Margaret Pepe assumed that using an independent test dataset would make this bias go away, as it does for other measures of predictiveness, good or bad. That’s not what happens. [The [paper by Pepe and co-workers](http://link.springer.com/article/10.1007%2Fs12561-014-9118-0) is behind a paywall, but their [working paper](http://biostats.bepress.com/uwbiostat/paper392/) is available.]  After hearing talks about the bias I still didn’t understand why it happened. This post is an attempt to explain. My conclusion for what’s actually going on is a bit different from theirs, but the implications are similar. 
+
+First, looking at a silly example shows that NRI can behave badly. Suppose $X$ is also binary and is predictive of $Y$, and that $$\hat p_{\textrm{old}}=P[Y=1|X=x_i].$$ The prediction rule divides people into ‘high risk’ and ‘low risk’. Now define $\hat p_{\textrm{new}}$ to be larger than $\hat p_{\textrm{old}}$ for ‘high-risk’ people and to be smaller than $\hat p_{\textrm{old}}$ for ‘low-risk’ people. You can do this any way you like. 
+
+Since high-risk people are more likely to be cases than low-risk people, a greater proportion of cases than controls will have their probabilities go up. Conversely, a greater proportion of controls than cases will have their probabilities go down. The NRI will be positive, even though the old prediction rule is the best possible one based on $X$ and the new rule is strictly worse. 
+
+Since this is a silly example, it doesn’t necessarily mean there is a problem with NRI, but it isn’t encouraging. Under the same definitions of $X$ and $Y$, if we defined  
+$$\hat p_{\textrm{new}}(i)=\hat p_{\textrm{old}}(i)+\epsilon_i$$  
+with $\epsilon_i$ having zero mean, independent of $X$ and $Y$, NRI would be zero. That’s still not ideal, since the predictions are worse rather than the same, but it’s certainly better than NRI being positive. 
+
+Can we get NRI to be positive (on average) without doing something silly? Yes, in fact. Pepe and co-workers looked at a very simple continuous case, where Normal $X$  predicts (binary) $Y$, and (Normal) $Z$ is independent of $X$ and $Y$.  If $\hat p_{\textrm{old}}$ is based on logistic regression with $X$, and $\hat p_{\textrm{new}}$ on logistic regression with $X$ and $Z$, their simulations showed the NRI will be positive (on average) even though the predictions are slightly worse using $Z$. I’ve put an [example up as a GitHub gist.](https://gist.github.com/tslumley/77d3653b5a43fc129d15)
+
+The simulation shows that NRI is weird, but it still doesn’t explain why.  When confusing things happen with logistic regression, a useful trick is to try the same problem with linear regression. Either the same confusing things will happen, but will be easier to analyse, or they won’t happen, meaning that the non-linearity is important. 
+
+In a [linear version](https://gist.github.com/tslumley/6d3aeb0a8148c0f03028) of the simple problem with Normal predictors, the NRI averages very close to zero. That’s still probably not right -- it should be negative -- but it is different from logistic regression. Non-linearity is important.
+
+Because logistic regression is an exponential-family model, the maximum likelihood estimators are moment estimators. We have $E[\hat p_{\textrm{old}}-\hat p_{\textrm{new}}]\approx 0$ both overall and conditional on $X$. Since $\textrm{logit} \hat p_{\textrm{new}}-\textrm{logit} \hat p_{\textrm{old}}$ has a symmetric distribution, $\hat p_{\textrm{new}}-\hat p_{\textrm{old}}$ will have an asymmetric, skewed distribution. Specifically, it will be positively skewed when $p$ is small, symmetric when $p\approx 0.5$, and negatively skewed when $p$ is large; that’s the only way to force it into $[0,\,1]$. 
+
+A positively-skewed, mean-zero distribution (typically) has a negative median, and a negatively-skewed mean-zero distribution (typically) has a positive median; the ‘typical’ behaviour holds for these logit-Normal distributions. The change in $\hat p$ will be positively skewed and have negative median when $\hat p$ is small; it will be negatively skewed and have positive median when $\hat p$ is large. Since $X$ is predictive, $\hat p$ is larger for cases than for controls, so $P[\hat p_{\textrm{new}}>\hat p_{\textrm{old}}]$ is greater than 1/2 for cases and less than 1/2 for controls and the NRI will be positive on average.
+
+The silly example shows that NRI can behave very badly for arbitrary prediction rules. For rules that are well calibrated in the sense of means, the non-linearity of the data-to-probability transformation and the use of ordering rather than differences in NRI makes it tend positive when useless variables are added. Even with a linear model, though, the NRI doesn’t pick up the degradation of performance from irrelevant variables.
+
+  
+
+[**tl;dr:**  NRI? Just say “No, thank you.”]

@@ -1,0 +1,35 @@
+---
+title: Colour names from XKCD in R
+author: Thomas Lumley
+date: '2015-08-20'
+slug: colour-names-from-xkcd-in-r
+categories: []
+tags: []
+---
+
+ ![](https://40.media.tumblr.com/1641bb3eeceb333b0996186d8ce60d2a/tumblr_inline_ntdcccuEhl1s1hdxy_540.png)
+
+Randall Munroe at XKCD did a color names survey a few years ago, and [published a list](http://xkcd.com/color/rgb.txt) of about a thousand colour names whose RGB values (averaged across his readers’ monitors) could be fairly reliably estimated.
+
+I have finally got around to turning them into [an R package](https://github.com/tslumley/xkcdcolors). It’s only on GitHub so far. The functions are
+
+*  `xcolors(max_rank=-1)`: List the top (most commonly given) max\_rank color names; analogous to colors()  
+    
+*   `name2color(name, exact = TRUE, hex_only = TRUE, n = -1)`: Find colours exactly or partly matching a given name, reporting just the hex color string or the full data, optionally only using the top n colours.
+*   `nearest_named(color, hex_only = FALSE, max_rank = -1, Lab = TRUE)`: given a matrix of RGB or a vector of color hex strings, report the nearest colours with names, optionally restricting to the top n colors, and using either Lab or R’s RGB colour space to define ‘nearest’. 
+
+For example, the nearest named colors to the standard palette are 
+
+```
+> [1] "black"           "fire engine red" "vibrant green"   "primary blue"    
+> [5] "cyan"            "bright magenta"  "bright yellow"   "silver"          
+```
+
+Restricted to the top 100 colours they are
+
+```
+> [1] "black"         "red"           "green"         "violet"        "cyan"          
+> [6] "bright purple" "yellow"        "grey"          
+```
+
+The picture at the top of this post shows the ColorBrewer “Dark2″ palette, with the nearest named colors in both RGB and Lab space. 

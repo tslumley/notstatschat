@@ -1,0 +1,21 @@
+---
+title: "A conservation tragedy"
+author: "Thomas Lumley"
+date: 2015-08-20
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ The [NZ Herald is reporting](http://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=11500322) that hunters taking part in a pūkeko cull on one of the islands near Auckland killed four takahē. 
+
+Pūkeko (Porphyrio porphyrio) are the closest relatives of takahē (Porphyrio hochstetteri), but they aren’t all that close. Takahē are New Zealand natives, which were forced out of their wetland habitat to alpine grasslands by the Māori, and then nearly wiped out by the stoats and red deer introduced by Europeans. Pūkeko are a relatively recent introduction -- they arrived in New Zealand either with or after humans.
+
+Pūkeko are common in New Zealand and around the world; takahē are critically endangered. The four birds killed in the cull represent 20% of the population on that island, and more than 1% of the total population of the species. It’s like losing 25 pandas or 70 black rhinos in one day.
+
+![image](https://40.media.tumblr.com/c2273f6e57ac37ad3849fda140a21776/tumblr_inline_ntdi8uuCgE1s1hdxy_540.png)
+
+The two species are moderately similar. On Tiritiri island I’ve seen the well-fed local pūkeko and wondered if they were takahē, but when I saw the real thing the differences were obvious. Pūkeko are black and dark blue, smooth and sleek, and all legs and knees. Takahē are the defensive forwards of the rail family, stolid and broad, with thick legs, big beaks, and gauzy green back feathers.   
+
+I can understand people confusing the two, but anyone who could make that mistake shouldn’t have been shooting large blue rails in a Hauraki Gulf bird sanctuary.

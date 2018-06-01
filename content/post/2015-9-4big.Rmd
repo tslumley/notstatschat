@@ -1,0 +1,54 @@
+---
+title: "(high-dimensional) Space is Big."
+author: "Thomas Lumley"
+date: 2015-09-14
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Space is big. Really big. You just won't believe how vastly, hugely, mind-bogglingly big it is. I mean, you may think it's a long way down the road to the chemist, but that's just peanuts to space. _Hitchhikers Guide to the Galaxy_
+
+There’s a [simple simulation](https://gist.github.com/tslumley/373e3759a766af106a4e) that I used in stat computing class last year and for Rob Hyndman’s working group last week. Simulate data uniformly on a $p$-dimensional hypercube $[0,\,1]^p$ and compute nearest-neighbour distances. 
+
+Obviously these distances increase with $p$, since the squared Euclidean distance is a sum of non-negative terms. The mean distance between two random points is $\sqrt{p}/3$.  How does this compare to the nearest-neighbour distance?
+
+```
+> x1<-runif(5e4)  
+> x2<-matrix(runif(5e4*2),ncol=2)  
+> x10<-matrix(runif(5e4*10),ncol=10)  
+> x100<-matrix(runif(5e4*100),ncol=100)  
+  
+system.time(d1<-knn.dist(x1,k=1))  
+   user  system elapsed  
+  0.044   0.002   0.045  
+> system.time(d2<-knn.dist(x2,k=1))  
+   user  system elapsed  
+  0.066   0.002   0.088  
+> system.time(d10<-knn.dist(x10,k=1))  
+   user  system elapsed  
+  4.005   0.010   3.993  
+> system.time(d100<-knn.dist(x100,k=1))  
+   user  system elapsed  
+ 705.281   0.996 702.481  
+> mean(d1/sqrt(1)/(1/3))  
+ [1] 2.994883e-05  
+> mean(d2/sqrt(2)/(1/3))  
+ [1] 0.004764815  
+> mean(d10/sqrt(10)/(1/3))  
+[1] 0.306989  
+> mean(d100/sqrt(100)/(1/3))  
+[1] 0.9269603
+```
+
+The typical nearest-neighbour distance for 50,000 uniform points in $[0,\,1]$ is 0.00003 times the mean interpoint distance, which is sort of what you’d expect. In $[0,\,1]^2$ it’s 0.005 times the mean distance, which is not too surprising. 
+
+In $[0,\,1]^{100}$, though, the nearest-neighbour distance is over 90% of the mean distance. If you haven’t seen this sort of computation before, that seems outrageous. Roughly speaking, in 100-dimensional space, if you have 50,000 points in a unit cube they are all about equidistant from each other!
+
+If you think of the interpoint distance as a sum, that makes sense in terms of the Law of Large Numbers and Central Limit Theorem. The squared Euclidean distance is a sum of $p$ approximately independent things, so it should be close to its expected value; differing from it by a relative amount $O_p(1/\sqrt{p})$. If we have $n$ independent random variables like that, and they don’t have heavier tails than a Gaussian (which they  don’t), the worst departure from the expected value should scale like $$O_p\left(\sqrt{\frac{\log n}{p}}\right).$$ In other words, nearest-neighbours can’t be very much closer than the average interpoint distance.
+
+Many ‘black-box’ prediction methods are based on using outcome values from nearby points to predict outcome values for new points. This can’t work in high-dimensional space; there are no nearby points. 
+
+In a sense, everyone knows this. Statisticians call it the ‘curse of dimensionality’, and modern sparse regression methods are aimed at bypassing it by not working in high-dimensional spaces. It’s still more dramatic that most people realise, and it’s hard for our intuition to cope, to think of a high-dimensional unit cube or sphere and ‘believe how vastly, hugely, mind-bogglingly big it is’.

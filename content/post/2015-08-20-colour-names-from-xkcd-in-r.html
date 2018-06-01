@@ -1,0 +1,29 @@
+---
+title: Colour names from XKCD in R
+author: Thomas Lumley
+date: '2015-08-20'
+slug: colour-names-from-xkcd-in-r
+categories: []
+tags: []
+---
+
+
+
+<div class="figure">
+<img src="https://40.media.tumblr.com/1641bb3eeceb333b0996186d8ce60d2a/tumblr_inline_ntdcccuEhl1s1hdxy_540.png" />
+
+</div>
+<p>Randall Munroe at XKCD did a color names survey a few years ago, and <a href="http://xkcd.com/color/rgb.txt">published a list</a> of about a thousand colour names whose RGB values (averaged across his readers’ monitors) could be fairly reliably estimated.</p>
+<p>I have finally got around to turning them into <a href="https://github.com/tslumley/xkcdcolors">an R package</a>. It’s only on GitHub so far. The functions are</p>
+<ul>
+<li><p><code>xcolors(max_rank=-1)</code>: List the top (most commonly given) max_rank color names; analogous to colors()</p></li>
+<li><code>name2color(name, exact = TRUE, hex_only = TRUE, n = -1)</code>: Find colours exactly or partly matching a given name, reporting just the hex color string or the full data, optionally only using the top n colours.</li>
+<li><p><code>nearest_named(color, hex_only = FALSE, max_rank = -1, Lab = TRUE)</code>: given a matrix of RGB or a vector of color hex strings, report the nearest colours with names, optionally restricting to the top n colors, and using either Lab or R’s RGB colour space to define ‘nearest’. </p></li>
+</ul>
+<p>For example, the nearest named colors to the standard palette are </p>
+<pre><code>&gt; [1] &quot;black&quot;           &quot;fire engine red&quot; &quot;vibrant green&quot;   &quot;primary blue&quot;    
+&gt; [5] &quot;cyan&quot;            &quot;bright magenta&quot;  &quot;bright yellow&quot;   &quot;silver&quot;          </code></pre>
+<p>Restricted to the top 100 colours they are</p>
+<pre><code>&gt; [1] &quot;black&quot;         &quot;red&quot;           &quot;green&quot;         &quot;violet&quot;        &quot;cyan&quot;          
+&gt; [6] &quot;bright purple&quot; &quot;yellow&quot;        &quot;grey&quot;          </code></pre>
+<p>The picture at the top of this post shows the ColorBrewer “Dark2″ palette, with the nearest named colors in both RGB and Lab space. </p>
