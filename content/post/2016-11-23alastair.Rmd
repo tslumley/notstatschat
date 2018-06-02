@@ -1,0 +1,28 @@
+---
+title: "Making survey statistics boring and inefficient"
+author: "Thomas Lumley"
+date: 2016-11-23
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Last night, Alastair Scott [was awarded](http://www.royalsociety.org.nz/2016/11/23/jones-medal-statistics-for-sampling-and-public-health/) the Jones Medal by the Royal Society of New Zealand. The medal, named after [Vaughan Jones](https://en.wikipedia.org/wiki/Vaughan_Jones), is for lifetime achievement in the mathematical sciences. 
+
+Alastair made contributions to both theoretical and applied statistics in two main areas, as the title of this post indicates.  With Jon Rao and others (including me), he worked on making design-based inference boring, and with Chris Wild and others, on making it inefficient. 
+
+At one time, design-based inference was a significant challenge.  Complex surveys needed to be designed and analysed by specialists, and the available estimators and models were quite limited. That’s not really an issue now. There’s wide range of exploratory techniques, summary statistics, and models available even in standard software. It’s easy to add more as needed. The only real exception is models for relationships between individuals-- mixed models are still hard if the clusters in the model don’t line up with the sampling units in the design.  Survey statisticians can now focus on the interesting and difficult aspects of survey research, not on mere computation. 
+
+Lots of people (notably, at Statistics Canada) worked on making survey statistics boring. Alastair’s biggest single contribution was the analysis of what we would now call [‘working score’ tests and ‘working likelihood ratio’ tests](https://www.jstor.org/stable/2241033?seq=1#page_scan_tab_contents) under complex sampling.  In the early 1980s, with Jon Rao, he studied the statistics you’d get by treating categorical data as a simple random sample and fitting log-linear models. They worked out the actual sampling distribution of these statistics, which isn’t the usual chi-squared distribution, and also found simple approximations to these distributions.  The ‘first-order’ and ‘second-order’ Rao-Scott tests are now standard.  After I moved to Auckland, he and I also applied the same idea to generalised linear models and the Cox model. 
+
+The other research contribution Alastair is best known for, this time in biostatistics, is his work with Chris Wild on s[emiparametric maximum likelihood estimation for generalised linear models under case-control sampling](http://www.jstor.org/stable/2532141) (and other two-phase sampling).  We’ve known since the 1970s that you can fit a logistic regression model to a case-control sample by just ignoring the sampling.  For other models or for sampling based on predictors as well as outcome it’s more complicated. Chris and Alastair worked out a semiparametric likelihood, and showed that it was much less complicated than you might have guessed, so that estimation was actually feasible.  It’s fairly routine for people to rediscover special cases of this estimator without knowing about the original; Alastair is nicer about this than many of us would be. 
+
+The Scott-Wild estimator ‘makes survey statistics inefficient’ in the sense that it provides feasible estimators that are more efficient than the design-based estimator.  As readers of this blog know, I’m attempting to problematise this concept of efficiency, but even if I turn out to be right it’s still an important criterion. 
+
+Getting a ‘mathematics’ award like this for a statistician requires some significant theoretical contributions. It also doesn’t hurt to have a national and international reputation for being friendly and helpful. 
+
+**Update**: from the [local newspaper](https://www.teawamutu.nz/courier/archive/2016/2016-11-29.pdf) in the town where Alastair grew up
+
+![](https://67.media.tumblr.com/80a44e21f6c4026d18c4c05c3b3cadcb/tumblr_inline_ohh2gkte8W1s1hdxy_540.png)

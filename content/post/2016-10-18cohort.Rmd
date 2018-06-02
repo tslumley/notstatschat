@@ -1,0 +1,22 @@
+---
+title: "Cuts to ‘Growing Up in New Zealand’"
+author: "Thomas Lumley"
+date: 2016-10-18
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ The NZ cohort study ‘Growing Up in New Zealand’ is being cut from 7000 children to 2000, [according to a story on Stuff](http://www.stuff.co.nz/science/85464263/Government-cuts-5000-children-from-Growing-up-in-NZ-longitudinal-study?utm_source=dlvr.it&utm_medium=twitter) today.  That’s unfortunate -- birth cohort studies are something New Zealand has done well in the past, and this is a cohort for the modern New Zealand. 
+
+Obviously, the top priority for the study will have been to fight the cuts or at least try to moderate them. The news story is presumably part of this effort, so we can still hope. 
+
+If maintaining the study turns out not to be allowed, the next step is to work out the most informative way to continue it. 
+
+First of all, there has never existed any other childhood cohort study with a substantial Māori sample. Retaining the majority of these children should be a high priority.
+
+Second, even if **complete** data are collected only for 2000 children it should be possible to collect **some** information from the remaining kids. Every bit helps.
+
+From a statistical viewpoint there’s then a tension between simplicity and informativeness.  Taking a simple random sample of the participants is a simple design choice leading to simple and transparent analyses in the future, but it would be more informative to over-sample children at higher risk of adverse social and heath outcomes.  Personally, I’d favour a carefully stratified subsample to make the most use of the information collected so far, but complicated subsampling from existing studies is one of my research areas, so I’m biased.

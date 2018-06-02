@@ -1,0 +1,34 @@
+---
+title: "Changes in turnout and preference"
+author: "Thomas Lumley"
+date: 2016-11-10
+output: html_document
+---
+
+
+
+<p>So, as you know, Hillary Clinton narrowly lost the Electoral College and probably narrowly won the popular vote. And there’s lots of theorising about how these huge swings came about and what they mean. An important first step is to think about how big the swings really were.</p>
+<p>Here are some graphs of county-level votes in 2012 and 2016.  In all the graphs, the number of votes for the candidate is <strong>scaled by the 2012 tota</strong>l for the county, and is then <strong>weighted by that same 2012 total.</strong>  </p>
+<p>Scaling is necessary because otherwise LA County dominates the map and all the smaller counties are crushed down towards the origin.  However, using the same total for both years lets us distinguish to a limited extent between swings from one party to the other and changes in turnout.  And using weights lets us get a better visual idea of the actual number of votes involved – a small proportion of LA County is a lot more votes than the same small proportion of Glynn County, GA.</p>
+<p>You know how scaling is done. Weighting is done by making the hexagons bigger.  In these scatterplots, the area of a hexagon is proportional to the total number of 2012 votes in the hexagonal grid cell. </p>
+<p>First, change in the individual parties</p>
+<div class="figure">
+<img src="https://65.media.tumblr.com/2b991caedff19321b2e5f3fbf9d05f6e/tumblr_inline_oggly9I9Rp1s1hdxy_540.png" />
+
+</div>
+<div class="figure">
+<img src="https://67.media.tumblr.com/4eee30390fd6c3bab01ab9af24c08272/tumblr_inline_ogglyxvDGe1s1hdxy_540.png" />
+
+</div>
+<p>Turnout was down – and down more among Democrats. But there wasn’t a huge swing.</p>
+<p>Now the changes for the two parties. First, colored according to the partisan preference of the county itself:</p>
+<div class="figure">
+<img src="https://65.media.tumblr.com/8d17e0a8b8e23f033771992add163940/tumblr_inline_oggm0whr3h1s1hdxy_540.png" />
+
+</div>
+<p>Republican counties tended to increase Republican turnout and decrease Democratic turnout. Democratic counties were split, but overall went down more than up.</p>
+<p>Now, coloured by the partisan preference of the state as a whole – which is relevant, because the Electoral College makes states matter a lot.</p>
+<div class="figure">
+<img src="https://66.media.tumblr.com/510d55e5cc200e13430dd31b31d136f9/tumblr_inline_oggm6i8FhK1s1hdxy_540.png" />
+
+</div>
