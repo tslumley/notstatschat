@@ -1,0 +1,33 @@
+---
+title: "Superfood sourcing"
+author: "Thomas Lumley"
+date: 2015-12-30
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ Because reasons, I ended up looking at a website for a new superfood,  [“The Hawaiian Coffeeberry ®”](https://www.konared.com/the-hawaiian-coffeeberry/).  ““The Hawaiian Coffeeberry ®”, of course, isn’t a Hawaiian plant -- it’s coffee, orginally from Ethiopia -- but at least the marketing is Hawaiian. Well, the parts that aren’t unsourced copying from various internet sites.
+
+Here’s a description of what they think the dominant nutrients are:
+
+![](https://41.media.tumblr.com/4d226d6dd84a0be6d193ba6ded910d3b/tumblr_inline_o0605isYzc1s1hdxy_540.png)
+
+The chlorogenic acid bit is ok, though they don’t mention it’s also found in, eg, peaches, and eggplant, and potatoes. 
+
+For quinic acid, the first sentence is repeated verbatim at [coffeechemistry.com](http://www.coffeechemistry.com/chemistry/acids). More importantly, the second sentence is a warped version of Wikipedia
+
+> This acid is a versatile chiral starting material for the synthesis of new pharmaceuticals. A medication for the treatment of [influenza A](https://en.wikipedia.org/wiki/Influenza "Influenza") and [B](https://en.wikipedia.org/wiki/Influenza "Influenza") strains called [Tamiflu](https://en.wikipedia.org/wiki/Tamiflu "Tamiflu") has been successfully developed and launched into the market.  
+
+Here it is pretty clear which is the original: the Wikipedia claim about Tamiflu is true (quinic acid was a starting material) and the “The Hawaiian Coffeeberry ®” claim is false (quinic acid is **not** marketed as Tamiflu).
+
+For the third 'nutrient', the second spelling “ferulic acid” is the correct one. The second sentence is a [very close match](https://en.wikipedia.org/wiki/Ferulic_acid#In_food) to Wikipedia. What’s really interesting is the first sentence, with the numbers that look like references but aren’t. Teachers will recognise free-floating reference markers as a sign of plagiarism. Teachers will also know the Google reveals all (or at least ‘most’). 
+
+There are a [few](http://www.digood.com/product/c/aHR0cDovL3d3dy5tYWRlLWluLWNoaW5hLmNvbS9zaG93cm9vbS9sZWFkZXJjaGVtZ3JvdXAvcHJvZHVjdC1kZXRhaWxpZVdKdkt0eG5acHcvQ2hpbmEtRmVydWxpYy1BY2lkLUNBUy1Oby0xMTM1LTI0LTYtRmFjdG9yeS5odG1s.html) places where the phrase "contributes to the antibacterial \[1\] and antioxidant \[2\] properties" appears. In those places, the full sentence is
+
+>  “It is one of the phenolic compounds found in the invasive plant species carpobrotus edulis and contributes to the antibacterial\[1\] and antioxidant\[2\] properties of the plant.”
+
+Searching on that sentence gives a Wikipedia entry, but for [rutin](https://en.wikipedia.org/wiki/Rutin#Occurrences), not for ferulic acid. 
+
+Fail. 

@@ -1,0 +1,20 @@
+---
+title: "Poetry visualisation"
+author: "Thomas Lumley"
+date: 2015-11-14
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+So, I was trying to write something serious last night about communicating probabilities for my talk to journalists next weekend, but it was a depressing day, so instead I did something frivolous that was vaguely related.
+
+
+
+<iframe width="400" height="225"  id="youtube_iframe" src="https://www.youtube.com/embed/bQ895ccz2rc?feature=oembed&amp;enablejsapi=1&amp;origin=http://safe.txmblr.com&amp;wmode=opaque" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+
+Wisława Szymborska won the 1996 Nobel Prize for Literature. I first encountered this poem when mathematician Evelyn Lamb linked to it at JoAnne Growney’s blog [Poetry with Mathematics](http://poetrywithmathematics.blogspot.co.nz/2012/02/szymborska-1921-2012-on-statistics.html).

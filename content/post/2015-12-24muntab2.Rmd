@@ -1,0 +1,26 @@
+---
+title: "The Muntab Question Strikes Back"
+author: "Thomas Lumley"
+date: 2015-12-24
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Public Policy Polling, which is known for adding questions in surveys to exploit Republicans who are less informed, recently found that 30% of Republican voters would support bombing Agrabah, a fictional country in the Disney film Aladdin. On December 20, 2015, [WPA Research fielded](http://www.wparesearch.com/uncategorized/44-percent-of-democrats-support-taking-refugees-from-a-fictional-country/) a national survey of 1,132 registered voters that found 44% of Democrats would support .....  
+
+As you know, I think the Agrabah bombing question was misleading and unhelpful to public political discourse. It’s only slightly interesting that a [Republican polling firm](https://en.wikipedia.org/wiki/Wilson_Perkins_Allen_Opinion_Research) wants to play the same trick. 
+
+The `bombing Agrabah’ question made a good story because on both moral and international-law grounds you shouldn’t bomb other countries unless you have a very good reason. You need to trick people into saying they want to bomb somewhere they haven’t heard of. 
+
+So, what can you trick lefties into saying about Agrabah? Something about taxes or gay marriage or abortion? Well, no.
+
+Article 3 of the  UN Convention Relating to the Status of Refugees says
+
+> The Contracting States shall apply the provisions of this Convention to refugees without discrimination as to race, religion or country of origin.  
+
+And, according to Wilson Perkins Allen Research the scandalous opinion you can  trick 44% of Democratic-leaning into stating: they would **support** accepting refugees from somewhere they’ve never heard of. 
+
+I think someone’s got that backwards.

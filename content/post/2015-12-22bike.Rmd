@@ -1,0 +1,49 @@
+---
+title: "Potential energy and kinetic energy"
+author: "Thomas Lumley"
+date: 2015-12-22
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ Q: So, I hear you have a new bike?
+
+A: Yes, it’s electric.
+
+Q: One you don’t need to pedal?
+
+A: No, you do still need to pedal, but the motor helps
+
+Q: Doesn’t that defeat the purpose of cycling?
+
+A: Well, that rather depends on what you think the purpose of cycling is. 
+
+Q: Do you want to expound?
+
+A: Why, yes, thank you! Cycling is a great way to travel moderate distances on flat ground. As my learned colleague Richard Easther [notes](http://excursionset.com/blog/?offset=1438198000662),  you can go about three times as fast as walking with roughly the same effort, if the road is flat and the air is still, but in Auckland, it isn’t.  Here’s my commute home:
+
+![](https://41.media.tumblr.com/d6a4fd687c99d4d419cffeca17e28d3d/tumblr_inline_nzhst6xpEe1s1hdxy_540.png)
+
+Power-assisted bikes make cycling in Auckland like cycling in Melbourne. 
+
+Q: It still means less exercise, surely.
+
+A: Power-assisted cycling up Symonds St burns lot fewer calories than cycling unassisted, yes. On the other hand, it burns a lot more than taking the bus, which is the real alternative. 
+
+Q: Ok, how often does it need to be charged?
+
+A: About every 40km, so not every night. That’s with the smallest battery pack; there’s one that lasts about twice as long. 
+
+Q: How fast is it?
+
+A: Depends on how fast you pedal, just like an ordinary bike. The top gear on mine isn’t very high, so not dangerously fast unless I’m going downhill. 
+
+Q: How expensive is all of this?
+
+A: There’s a range of options, and it depends on the exchange rate.  I’ve got the boring version, with three gears and a small battery, at about NZ\$2100. You can get a nice city bike with derailleur and front suspension, and a larger battery for about NZ\$2800. Or if you’re a [Dutch millennial](https://www.bikeauckland.org.nz/flykly-like-the-wind-a-magic-electric-wheel-reviewed/) who needs to look cool, you can get a bike wheel with no gears but with regenerative breaking for US\$1000 and make an electric fixie.
+
+Q: What happens if all the expensive technology is horribly unreliable?
+
+A: Then I have a sad. However, the place I bought it is close enough to a train station that I can take a sick bike in for treatment without too much problem. And they use the bikes as rentals on Waiheke Island, so they can’t be too fragile.

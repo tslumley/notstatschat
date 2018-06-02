@@ -1,0 +1,28 @@
+---
+title: "What does ‘design-consistent’ even mean?"
+author: "Thomas Lumley"
+date: 2016-01-13 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ In classical survey statistics you have a fixed finite population of size $N$ and a (possibly unequal-probability, multistage) sample of size $n$. Useful asymptotics requires an infinite sequence of populations and samples chosen so that approximation errors from neglecting terms that decrease in $n$ and $N$ are practically unimportant in the real data when they are asymptotically negligible in the infinite sequence. 
+
+For ‘model consistency’ this is easy.  An estimator $\hat\theta_n$ is model consistent if $\hat\theta_n\stackrel{p}{\to}\theta_0$ when the population of size $N$ is a sample from a model $P_\theta$ with parameter $\theta=\theta_0$, for all designs obeying regularity conditions to be described in the proof. 
+
+For design consistency the heuristic is that $\hat\theta_n$ is close to the ‘census parameter’ $\tilde\theta_N$, the result of estimating $\theta$ using the complete population. So, roughly, we want $\hat\theta_n-\tilde\theta_N\stackrel{p}{\to}0$ for any sequence of populations. The problem with using this as a definition is that there are no design-consistent estimators. For example, if $\tilde\theta$ is the mean of a variable $X$ and $\hat\theta$ the Horvitz-Thompson estimator, we will not get design consistency if the spread of $X$ increases too fast with $N$ and $n$. “Any sequence of populations” is too broad a condition.
+
+One approach is to put explicit conditions on the sequence of fixed populations. For example, in the case of the mean, we could require  
+$$\limsup\frac{1}{N}\sum_{i=1}^N \left(x_{N,i} - \frac{1}{N}\sum_{j=1}^N x_{N,j}\right)^2<\infty$$  
+where $x_{N,i}$ is the $i$th observation in the population of size $N$ and the double-sum expression is the thing that would be the variance if $x_{N,i}$ were random variables, which they aren’t.
+
+If you take this approach, you end up writing down a lot of conditions that look like moments or tail bounds for random variables, but aren’t because the things aren’t random variables. I think it’s simpler to just write design-consistency in terms of model consistency for misspecified models. 
+
+That is, we consider the event $\hat\theta_n-\tilde\theta_n\stackrel{p}{\to}0$ and require it to occur for almost all sequences of populations drawn from any fixed distribution $P$ in a `large enough’ set ${\cal P}$.  
+
+So, ‘large enough’? At the minimum we want a ‘nonparametric’ set of distributions: one that may satisfy tail conditions but whose tangent space is all zero-mean square-integrable functions. The interesting question is about dependence: when is it sufficient to consider only sequences of populations generated iid from some distribution $P$ and when is this an important loss of generality? The reason this isn’t obvious is that the population data vector can contain variables such as ‘latitude’ and ‘longitude’, which can be related in arbitrarily complex ways to the variables of interest. 
+
+My feeling is that iid sampling of populations is fine when you are only interested in marginal models or in small-area estimation, but that explicit consideration of large-scale spatial structure requires putting population structure into the generating model. But I don’t know. 

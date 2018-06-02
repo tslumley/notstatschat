@@ -1,0 +1,21 @@
+---
+title: "Another view of the ‘nearly true’ model"
+author: "Thomas Lumley"
+date: 2016-01-13
+output: html_document
+---
+
+
+
+<p>Ok, so to recap, we have a large model (such as ‘we know the marginal sampling probabilities’) and a small model (such as the subset of the large model with <span class="math inline">\(\mathrm{logit}\,P[Y=1]=x\beta\)</span>).  Under the large model, we would use the estimator <span class="math inline">\(\hat\beta_{L}\)</span>, but under the small model there is a more efficient estimator <span class="math inline">\(\hat\beta_S\)</span>. That is, under the small model<br />
+<span class="math display">\[\sqrt{n}(\hat\beta_S-\beta_0)\stackrel{d}{\to}N(0,\sigma^2)\]</span><br />
+and<br />
+<span class="math display">\[\sqrt{n}(\hat\beta_L-\beta_0)\stackrel{d}{\to}N(0,\sigma^2+\omega^2)\]</span></p>
+<p>We’re worried that the small model might be slightly misspecified. One test of model misspecification is based on <span class="math inline">\(D=\hat\beta_S-\hat\beta_L\)</span>.  Under the small model, <span class="math inline">\(\sqrt{n}D\stackrel{d}{\to}N(0,\tau^2)\)</span> for some <span class="math inline">\(\tau^2\)</span>. This test isn’t a straw man – for example, DuMouchel and Duncan recommended it in the context of survey regression in a <a href="http://www.stat.cmu.edu/~brian/905-2008/papers/DumouchelDuncan-JASA-1983.pdf">1983 JASA paper</a>.</p>
+<p>If we assume that <span class="math inline">\(\hat\beta_S\)</span> is (locally, semiparametric) efficient in the small model then <span class="math inline">\(\tau=\omega\)</span>.  Now suppose the small model is slightly untrue so that <span class="math inline">\(\sqrt{n}D\stackrel{d}{\to}N(\Delta,\omega^2)\)</span> with <span class="math inline">\(\Delta&gt;0\)</span>. If, say, <span class="math inline">\(\Delta=\omega\)</span>, then approximately<br />
+<span class="math display">\[\hat\beta_S\sim N(\omega, \sigma^2)\]</span><br />
+and<br />
+<span class="math display">\[\hat\beta_L\sim N(0, \sigma^2+\omega^2)\]</span><br />
+so the two estimators have the same asymptotic mean squared error. Since <span class="math inline">\(\hat\beta_L\)</span> is asymptotically unbiased it would probably be preferred, but the test based on <span class="math inline">\(D\)</span> has noncentrality parameter 1 and very poor power. If we relied on the test, we would probably end up choosing <span class="math inline">\(\hat \beta_S\)</span></p>
+<p>So the test based on <span class="math inline">\(D\)</span> is not very useful if we want to protect against small amounts of model misspecification. We should use a better test. </p>
+<p>But sometimes the test based on <span class="math inline">\(D\)</span> is the most powerful test or not far from it. Since we know what <span class="math inline">\(\hat\beta_S\)</span> and <span class="math inline">\(\hat\beta_L\)</span> look like as functionals of the distribution, we could try to maliciously arrange for the model misspecification to be in the direction that maximised <span class="math inline">\(\hat\beta_S-\hat\beta_L\)</span>, and <span class="math inline">\(D\)</span> would then be the Neyman-Pearson most powerful test – that’s what UMP tests look like for Gaussian shift alternatives. We can’t quite do that, but in large enough sample sizes we can come as close as we need.</p>

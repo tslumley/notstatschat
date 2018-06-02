@@ -1,0 +1,33 @@
+---
+title: "Herd Immunity simulations"
+author: "Thomas Lumley"
+date: 2014-06-01
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ Especially for vaccines that are not 100% effective, a large chunk of the benefit comes from 'herd immunity', the fact that incomplete vaccination makes it harder for an epidemic to get started and spread. Increasing the proportion of people vaccinated helps those people, and it also helps the people who aren't vaccinated.
+
+Here's a set of simulations ([code](https://gist.github.com/anonymous/7e80257348c0a340b364), needs FNN package and R) that show the effect. There is a simulated population of 10,000 people living on a square (actually, a doughnut, since it wraps around).  Vaccinated people are green, unvaccinated are black. 
+
+Each day there is a 1/30 chance of a new disease case arriving. 
+
+If you are near a disease case you have a chance of being infected (red) which is lower, but still not zero, if you are vaccinated. The disease lasts four days and then you are immune (blue). Everyone moves slowly around, except that each day 1% of people get on a plane and move a long way.
+
+With 10% vaccinated there is no herd immunity. As soon as an epidemic gets going, it spreads everywhere.
+
+<iframe frameborder="0" height="315" src="//www.youtube.com/embed/KkMD6KGgltU" width="420"></iframe>
+
+With 50% vaccinated, the epidemics still spread, but more slowly, and there's a lower chance of starting one when a case arrives.
+
+<iframe frameborder="0" height="315" src="//www.youtube.com/embed/uw93SdC-ouo" width="420"></iframe>
+
+With 70% vaccinated, the epidemics burn out before covering the population
+
+<iframe frameborder="0" height="315" src="//www.youtube.com/embed/ivRBM03gPwM" width="420"></iframe>
+
+With 90% vaccinated, the epidemics don't even get started.
+
+<iframe frameborder="0" height="315" src="//www.youtube.com/embed/xTmHUegqcrA" width="420"></iframe>

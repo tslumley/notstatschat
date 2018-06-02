@@ -1,0 +1,27 @@
+---
+title: "Case-control estimation is more complicated than you think"
+author: "Thomas Lumley"
+date: 2015-12-20
+output: html_document
+---
+
+
+
+<p>Well, obviously I don’t know how complicated you think it is, but it’s more complicated than <strong>I</strong> thought, and more complicated than my colleagues thought.</p>
+<p>In a case-control design you sample all the cases (<span class="math inline">\(Y=1\)</span>) and a fraction <span class="math inline">\(\pi_0\)</span> of the controls (<span class="math inline">\(Y=0\)</span>) from a cohort.  You could fit a logistic regression with sampling weights (<span class="math inline">\(1\)</span> for cases, <span class="math inline">\(1/\pi_0\)</span> for controls). Or, you can fit an unweighted logistic regression, which should be biased except that all the bias ends up in the intercept term and doesn’t affect the regression coefficients. </p>
+<p>The unweighted analysis is maximum likelihood, so you’d expect it to be fully efficient (and it is). The weighted analysis is typically not fully efficient. Lots of people will tell you that the loss of efficiency is due to the variation in the weights, which makes sense but is not actually true.</p>
+<p>When you have a regression model with weighted and unweighted estimators both consistent for the same parameters, it’s true that the loss of efficiency from weighting basically just depends on the coefficient of variation of the weights.  There are two ways we can tell this isn’t what’s happening with case-control logistic regression. The first is that the unweighted estimator is fully efficient in some situations: eg, in a saturated model, or when all the regression parameters are zero. The second is that the weighted and unweighted estimators aren’t actually consistent for the same thing, it’s just that the bias is in the intercept term. The inefficiency of weighted estimation for case-control logistic regression is real, but it isn’t simple. </p>
+<p>Another aspect of efficiency being more complicated than you would probably think is multiple imputation. Suppose you have a single continuous covariate <span class="math inline">\(X\)</span>, with Normal distribution in controls and a (different) Normal distribution in cases. Suppose you impute <span class="math inline">\(X\)</span> for non-sampled controls using <span class="math inline">\(X\)</span> for sampled controls multiple times to give multiple full cohorts, and do the Rubin analysis. Does this give the same efficiency as weighted logistic regression on the sample or as unweighted logistic regression on the sample? </p>
+<p>Both. </p>
+<div class="figure">
+<img src="https://41.media.tumblr.com/b85a99589a9a0b7f8c89dad16d476f02/tumblr_inline_nzotb39lrH1s1hdxy_540.png" />
+
+</div>
+<p>In the boxplots above,  based on 1000 simulations with 100 cases and a cohort of 1000, “ML” is the unweighted logistic regression coefficient, “WL” is the weighted logistic regression coefficient, and the other two are both multiple imputation.  The “Normal” box imputes <span class="math inline">\(X\)</span> for non-sampled controls from <span class="math inline">\(N(m, s^2)\)</span> with <span class="math inline">\(m\)</span> and <span class="math inline">\(s^2\)</span> the mean and variance of <span class="math inline">\(X\)</span> in sampled controls.  The “Resampled” box imputes non-sampled controls by resampling <span class="math inline">\(X\)</span> from sampled controls (aka hot-deck imputation). </p>
+<p>Imputing with the Normal distribution gives essentially full efficiency; hot-deck imputation gives essentially the same efficiency as weighted estimation. If you could see this coming, you get a gold star.</p>
+<div class="figure">
+<img src="https://40.media.tumblr.com/dd0578718976ddf64d6584666afa6092/tumblr_inline_nzotirmSg71s1hdxy_540.png" />
+
+</div>
+<p>Once I saw this, I could work out why it happened. It isn’t quite the issue of models for imputation and analysis being ‘compatible’ or ‘congenial’ – the distribution of the imputed <span class="math inline">\(X\)</span> by hot-deck imputation converges uniformly to the true distribution of <span class="math inline">\(X|Y=0\)</span> – but it’s a sort of second-order version of the same thing.</p>
+<p>The extra information used by the maximum likelihood estimator that isn’t used by the weighted estimator comes from the relationship between the case and control densities of <span class="math inline">\(X\)</span>, especially in the tails. Resampling from control <span class="math inline">\(X\)</span> loses the case information, but since the control distribution actually is Normal, the parametric imputation gets this information back. The Right Thing is to impute from a mixture of the control distribution and an exponentially tilted version of the case distribution, but to do this you need to know the true parameter value so it’s an iterative process and involves different iterative sets of imputations for each model you fit. </p>

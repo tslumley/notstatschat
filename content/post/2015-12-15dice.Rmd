@@ -1,0 +1,29 @@
+---
+title: "A simple probability problem"
+author: "Thomas Lumley"
+date: 2015-12-14
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ Amy Hogan, a stats and maths teacher who blogs at [A Little Stats](http://alittlestats.blogspot.co.nz/), posted the following quiz on twitter:
+
+> (Assuming fair dice) which has the highest probability:
+> 
+> 1 six from 6 dice
+> 
+> 2 sixes from 12 dice
+> 
+> 3 sixes from 18 dice
+
+The calculations aren’t too hard even by hand, and we have pbinom() available (if we remember to check $<$ vs $\le$ conditions). In that sense the question is easy, but I was looking for an intuitive argument. 
+
+Obviously, the probability of exactly $n$ sixes from $6n$ dice is decreasing in $n$, because the distribution is becoming less discrete. On the other hand, the probability of more than $n$ sixes is increasing towards 1/2, since the distribution is becoming more symmetric. It isn’t obvious to me which one wins. 
+
+Although I’d never encountered this before, it turns out to be a real classic. Isaac Newton answered it for Samuel Pepys, and got the brute-force calculations right, but then came up with an incorrect heuristic argument. Stephen Stigler has a [paper](http://arxiv.org/pdf/math/0701089.pdf), Joe Blitzstein pointed me to it before I wasted too much time. 
+
+The neatest relevant fact is that the difference between the median and mean of a Binomial distribution is strictly less than 1, and so when the mean is an integer the two are equal. That implies the sequence $P[\mathrm{Bin}(nk,1/k)\ge n]$ will tend to decrease with increasing $n$ for any $k$, but even that doesn’t quite prove the sequence is strictly monotone: we only know the probability is between $0.5$ and $0.5+P[\mathrm{Bin}(nk,1/k)=n]$. Also, there’s apparently no simple intuition behind the bound on the difference between mean and median. 
+
+In the end, it turns out to be true that $P[\mathrm{Bin}(nk,1/k)\ge n]$ is decreasing in $n$ for any integer $k$,  but (pretty obviously) $\mathrm{Bin}(nk,p)$  doesn’t have to be decreasing with $n$ for general $p$. Any valid intuition has to take advantage of $p=1/k$. Stigler seems to think that’s an important barrier; I’m not convinced. Perhaps more off-putting,  any valid intuitive argument would probably have to make it obvious that the mean and median were equal when the mean is an integer. 

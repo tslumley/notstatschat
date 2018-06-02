@@ -1,0 +1,27 @@
+---
+title: "Another view of the ‘nearly true’ model"
+author: "Thomas Lumley"
+date: 2016-01-13
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ Ok, so to recap, we have a large model (such as ‘we know the marginal sampling probabilities’) and a small model (such as the subset of the large model with $\mathrm{logit}\,P[Y=1]=x\beta$).  Under the large model, we would use the estimator $\hat\beta_{L}$, but under the small model there is a more efficient estimator $\hat\beta_S$. That is, under the small model  
+$$\sqrt{n}(\hat\beta_S-\beta_0)\stackrel{d}{\to}N(0,\sigma^2)$$  
+and  
+$$\sqrt{n}(\hat\beta_L-\beta_0)\stackrel{d}{\to}N(0,\sigma^2+\omega^2)$$
+
+We’re worried that the small model might be slightly misspecified. One test of model misspecification is based on $D=\hat\beta_S-\hat\beta_L$.  Under the small model, $\sqrt{n}D\stackrel{d}{\to}N(0,\tau^2)$ for some $\tau^2$. This test isn’t a straw man -- for example, DuMouchel and Duncan recommended it in the context of survey regression in a [1983 JASA paper](http://www.stat.cmu.edu/~brian/905-2008/papers/DumouchelDuncan-JASA-1983.pdf).
+
+If we assume that $\hat\beta_S$ is (locally, semiparametric) efficient in the small model then $\tau=\omega$.  Now suppose the small model is slightly untrue so that $\sqrt{n}D\stackrel{d}{\to}N(\Delta,\omega^2)$ with $\Delta>0$. If, say, $\Delta=\omega$, then approximately  
+$$\hat\beta_S\sim N(\omega, \sigma^2)$$  
+and  
+$$\hat\beta_L\sim N(0, \sigma^2+\omega^2)$$  
+so the two estimators have the same asymptotic mean squared error. Since $\hat\beta_L$ is asymptotically unbiased it would probably be preferred, but the test based on $D$ has noncentrality parameter 1 and very poor power. If we relied on the test, we would probably end up choosing $\hat \beta_S$
+
+So the test based on $D$ is not very useful if we want to protect against small amounts of model misspecification. We should use a better test. 
+
+But sometimes the test based on $D$ is the most powerful test or not far from it. Since we know what $\hat\beta_S$ and $\hat\beta_L$ look like as functionals of the distribution, we could try to maliciously arrange for the model misspecification to be in the direction that maximised $\hat\beta_S-\hat\beta_L$, and $D$ would then be the Neyman-Pearson most powerful test -- that’s what UMP tests look like for Gaussian shift alternatives. We can’t quite do that, but in large enough sample sizes we can come as close as we need.

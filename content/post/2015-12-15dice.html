@@ -1,0 +1,21 @@
+---
+title: "A simple probability problem"
+author: "Thomas Lumley"
+date: 2015-12-14
+output: html_document
+---
+
+
+
+<p>Amy Hogan, a stats and maths teacher who blogs at <a href="http://alittlestats.blogspot.co.nz/">A Little Stats</a>, posted the following quiz on twitter:</p>
+<blockquote>
+<p>(Assuming fair dice) which has the highest probability:</p>
+<p>1 six from 6 dice</p>
+<p>2 sixes from 12 dice</p>
+<p>3 sixes from 18 dice</p>
+</blockquote>
+<p>The calculations aren’t too hard even by hand, and we have pbinom() available (if we remember to check <span class="math inline">\(&lt;\)</span> vs <span class="math inline">\(\le\)</span> conditions). In that sense the question is easy, but I was looking for an intuitive argument. </p>
+<p>Obviously, the probability of exactly <span class="math inline">\(n\)</span> sixes from <span class="math inline">\(6n\)</span> dice is decreasing in <span class="math inline">\(n\)</span>, because the distribution is becoming less discrete. On the other hand, the probability of more than <span class="math inline">\(n\)</span> sixes is increasing towards 1/2, since the distribution is becoming more symmetric. It isn’t obvious to me which one wins. </p>
+<p>Although I’d never encountered this before, it turns out to be a real classic. Isaac Newton answered it for Samuel Pepys, and got the brute-force calculations right, but then came up with an incorrect heuristic argument. Stephen Stigler has a <a href="http://arxiv.org/pdf/math/0701089.pdf">paper</a>, Joe Blitzstein pointed me to it before I wasted too much time. </p>
+<p>The neatest relevant fact is that the difference between the median and mean of a Binomial distribution is strictly less than 1, and so when the mean is an integer the two are equal. That implies the sequence <span class="math inline">\(P[\mathrm{Bin}(nk,1/k)\ge n]\)</span> will tend to decrease with increasing <span class="math inline">\(n\)</span> for any <span class="math inline">\(k\)</span>, but even that doesn’t quite prove the sequence is strictly monotone: we only know the probability is between <span class="math inline">\(0.5\)</span> and <span class="math inline">\(0.5+P[\mathrm{Bin}(nk,1/k)=n]\)</span>. Also, there’s apparently no simple intuition behind the bound on the difference between mean and median. </p>
+<p>In the end, it turns out to be true that <span class="math inline">\(P[\mathrm{Bin}(nk,1/k)\ge n]\)</span> is decreasing in <span class="math inline">\(n\)</span> for any integer <span class="math inline">\(k\)</span>,  but (pretty obviously) <span class="math inline">\(\mathrm{Bin}(nk,p)\)</span>  doesn’t have to be decreasing with <span class="math inline">\(n\)</span> for general <span class="math inline">\(p\)</span>. Any valid intuition has to take advantage of <span class="math inline">\(p=1/k\)</span>. Stigler seems to think that’s an important barrier; I’m not convinced. Perhaps more off-putting,  any valid intuitive argument would probably have to make it obvious that the mean and median were equal when the mean is an integer. </p>

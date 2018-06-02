@@ -1,0 +1,34 @@
+---
+title: "Is it that time of day?"
+author: "Thomas Lumley"
+date: 2016-01-20
+output: html_document
+---
+
+
+
+<p><a href="http://mindingdata.com/2016/01/21/analyzing-the-rock-playlist/">Wade at Minding Data wrote</a> about a local NZ radio station</p>
+<blockquote>
+<p>One of the main criticisms of The Rock, is that even if it doesn’t play the same song between 9 – 5, it still plays the same song everyday, often at the same time. To be fair to them, it’s probably no different to the criticism hurled at any popular radio station really. Anecdotal, I used to listen to the radio as I was getting up in the morning, and I used to swear that for weeks on end, I would be getting up to the same song.</p>
+</blockquote>
+<p>He scraped <a href="http://mindingdata.com/2016/01/21/analyzing-the-rock-playlist/">data</a> from their website and did some analysis, but didn’t end up answering the original question. So I thought I’d have a go. My code is <a href="https://gist.github.com/tslumley/040749c559bb71d1921b">here</a>.</p>
+<p>The first step is to get the time of day for each song, which is just string processing. Next, I turned it into an angle, like the hour hand of a 24-hour clock. Midnight is straight up, the morning is on the right, noon is straight down, the afternoon is on the left. </p>
+<p>Each song play is then represented by a point on the unit circle, or more usefully by a vector from the center to that point. You can add up plays of the same song to get a longer vector. If they tend to be at the same time of day, the vector will be long and point in the direction of that time of day; if they are spread evenly across the day, the vectors will cancel and the resulting total vector will be short. Actually I did this for groups, not individual songs, so the sample sizes would be more useful. The darkness of each point is proportional to the number of plays for songs from that group</p>
+<div class="figure">
+<img src="https://40.media.tumblr.com/4830e310e7528ccc218514683ac986c3/tumblr_inline_o1akx6s7iR1s1hdxy_540.png" />
+
+</div>
+<p>There looks to be a pattern. Unfortunately, the data aren’t complete and aren’t spread uniformly through 24 hours anyway. The big splurge of data to the mid-afternoon is because there are more songs there in the data set – that’s why the colour scale matches the distance so neatly.</p>
+<p>I can subtract off the mean vector from each individual song or group vector to remove the bias and recenter the distribution</p>
+<div class="figure">
+<img src="https://41.media.tumblr.com/24c7a7ef2756033b2ca2740a4e7e8642/tumblr_inline_o1al2bFz2M1s1hdxy_540.png" />
+
+</div>
+<p>This is less interesting, though there still look to be some patterns.  At this point I did a set of per-group t-tests, and didn’t understand the results. The problem with this second graph is that groups with lots of plays will tend to have points that are further out – the sum of <span class="math inline">\(n\)</span> mean-zero variables has standard deviation proportional to <span class="math inline">\(\sqrt{n}\)</span>. </p>
+<p>As the next step, I scaled by <span class="math inline">\(1/\sqrt{n}\)</span> for each group</p>
+<div class="figure">
+<img src="https://40.media.tumblr.com/11f6dfc54d85db9c4d681d36b320a16e/tumblr_inline_o1al7yoB4a1s1hdxy_540.png" />
+
+</div>
+<p>There’s a lot less going on.  The signal for INXS may be real: they were played just three times, but at 5:12am, 5:27am, and 7:22am (on different days). Otherwise, the phrase “robustly null” springs to mind.</p>
+<p>If I had to invent a moral for this exercise to justify it being a blog post, it might be the importance of subtracting off the uninteresting signals, even in drawing a graph, to let you see the interesting signal</p>
