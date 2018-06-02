@@ -1,0 +1,21 @@
+---
+title: "On permuting all the things"
+author: "Thomas Lumley"
+date: 2016-09-06
+output: html_document
+---
+
+
+
+<p>I wanted to list all the numbers whose digits were some permutation of 2,2,5,5,9,9, and find how many of them were multiples of 11, and how many were prime. (Because of Evelyn Lamb’s comment on the prime number 295259 produced by the <a href="https://twitter.com/_primes_">prime numbers twitter bot</a>)</p>
+<p>It takes some thought to work out how to list those numbers exactly once (because of the duplicated digits) but no thought at all to work out how to generate a random sample of them and discard duplicates.</p>
+<p>So:</p>
+<pre><code>nn&lt;-unique(replicate(10000,
+  {
+    as.integer(paste0(sample(c(2,2,5,5,9,9)),collapse=&quot;&quot;))
+    }
+ ))</code></pre>
+<p>Now, there can’t be more than, say, 200 such numbers, so the expected number of copies of each one is at least 50, and the probability of missing a number is at most <span class="math inline">\(200\times e^{-50}\)</span>, which is less than <span class="math inline">\(200\times 2^{-50}\)</span>, which is tiny.</p>
+<p>The code takes a small fraction of a second to run, and less time to check for divisibility by 11.  Finding the primes takes a bit longer, because I have to realise that my list of small primes (used in the survey package to construct Hadamard matrices) doesn’t include 2. But it’s still pretty fast.</p>
+<p>There are 90 distinct numbers. 40% of them are divisible by 11, and 11 of them are prime.</p>
+<p>Random generation and discarding duplicates is a useful technique for smallish discrete problems. </p>

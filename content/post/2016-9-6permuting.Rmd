@@ -1,0 +1,32 @@
+---
+title: "On permuting all the things"
+author: "Thomas Lumley"
+date: 2016-09-06
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+I wanted to list all the numbers whose digits were some permutation of 2,2,5,5,9,9, and find how many of them were multiples of 11, and how many were prime. (Because of Evelyn Lamb’s comment on the prime number 295259 produced by the [prime numbers twitter bot](https://twitter.com/_primes_))
+
+It takes some thought to work out how to list those numbers exactly once (because of the duplicated digits) but no thought at all to work out how to generate a random sample of them and discard duplicates.
+
+So:
+
+```
+nn<-unique(replicate(10000,
+  {
+ 	as.integer(paste0(sample(c(2,2,5,5,9,9)),collapse=""))
+ 	}
+ ))
+```
+
+Now, there can’t be more than, say, 200 such numbers, so the expected number of copies of each one is at least 50, and the probability of missing a number is at most $200\times e^{-50}$, which is less than $200\times 2^{-50}$, which is tiny.
+
+The code takes a small fraction of a second to run, and less time to check for divisibility by 11.  Finding the primes takes a bit longer, because I have to realise that my list of small primes (used in the survey package to construct Hadamard matrices) doesn’t include 2. But it’s still pretty fast.
+
+There are 90 distinct numbers. 40% of them are divisible by 11, and 11 of them are prime.
+
+Random generation and discarding duplicates is a useful technique for smallish discrete problems. 

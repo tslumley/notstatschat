@@ -1,0 +1,24 @@
+---
+title: "“The” multiple comparisons problem"
+author: "Thomas Lumley"
+date: 2016-08-27
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Andrew Gelman posted recently with the title “[Bayesian inference completely solves the multiple comparisons problem](http://andrewgelman.com/2016/08/22/bayesian-inference-completely-solves-the-multiple-comparisons-problem/ "Permanent Link to Bayesian inference completely solves the multiple comparisons problem")”. Bayesians have been making a claim that sounds like this for many years, so it would be easy to misunderstand and think he was making a much weaker claim than he actually is. 
+
+There are at least two multiple comparisons problems, andI’d like to suggest some terminology:
+
+*   The first-person multiple comparisons problem: I have data relevant to a collection of parameters $\{\theta_i\}_{i=1}^N$ and I want to make sure I arrive at sensible beliefs or take sensible decisions even if $N$ is quite large  
+    
+*   The second-person multiple comparisons problem: You want me to publish my findings in such a way that **you** arrive at sensible beliefs or take sensible decisions even if $N$ is quite large
+
+The first-person problem is, fairly uncontroversially, solved automatically by Bayesian inference.  Frequentists aren’t bad at it either.
+
+The second-person problem isn’t **automatically** solved by Bayesian inference, I’ve [written about this](https://notstatschat.netlify.com/2014/03/04/my-likelihood-depends-on-your-frequency-properties/) (and as a commenter points out, Xiao-Li Meng has written related things). Andrew Gelman has said as much, in his ‘Garden of Forking Paths’ metaphor for researcher degrees-of-freedom. 
+
+The new claim is for a particular (important) case of the problem: Prof Gelman shows that a fairly strong but reasonable prior will ensure that badly-underpowered studies almost never draw false positive conclusions at 95% posterior probability. In that sense, if everyone switched to Bayesian inference there would be a lot fewer bogus newspaper stories.  There would be a higher rate of false negatives, but in the fields he cares most about there’s a huge asymmetry between underclaiming and overclaiming, so it doesn’t matter. 

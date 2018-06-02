@@ -1,0 +1,21 @@
+---
+title: "Terms to eschew"
+author: "Thomas Lumley"
+date: 2016-10-12
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+>“I have discovered something else,” I continued. “By flipping the pages at random, and putting my finger in and reading the sentences on that page, I can show you what’s the matter – how it’s not science, but memorizing, in _every_ circumstance. Therefore I am brave enough to flip through the pages now, in front of this audience, to put my finger in, to read, and to show you.”  *Richard Feynman, at a public lecture in Brazil*
+
+Twitter polls are, admittedly, almost useless as a data-gathering technique because of selection bias. However, if I ask my Twitter follower about definitions of basic statistical terms, the selection bias should work in favour of correct answers. I asked about terms for skewness and kurtosis.
+
+Consider a unimodal distribution with a short tail on the left and a long tail on the right, such as a Poisson or Gamma distribution. It’s unambiguous that these distributions are positively skewed, but a lot of intro stats courses don’t use this terminology: they describe distributions as ‘right’ or ‘left’ skewed. Are the Poisson and Gamma distributions ‘left’ skewed because the bulk of the distribution is shifted left relative to symmetry, or ‘right’ skewed because the long tail is on the right? You probably know this one. And there’s a reasonable chance you’re wrong. About 1/3 of respondents said ‘left’ and 2/3 said ‘right’. 
+
+Consider a $t$ distribution or the logistic distribution.  It’s unambiguous that these distributions are ‘heavy-tailed’, but a lot of courses use the terms ‘platykurtic’ and ‘leptokurtic’.  The former is from the Greek πλατύς, wide; the latter from the Greek λεπτός, light or thin.  I asked which was which. Again, you probably know this one, and again there’s a reasonable chance you’re wrong.  About 1/3 of respondents said ‘leptokurtic’ and 2/3 said ‘platykurtic’.
+
+The correct answers are ‘right skewed’ and ‘leptokurtic’, but what the poll illustrates is that these are bad terms. You can’t derive them from first principles, all you can do is remember how their creators derived them. That’s a convenient property for setting easy-to-mark exams, but less so when teaching people to think about data. 

@@ -1,0 +1,25 @@
+---
+title: "Like a crossword"
+author: "Thomas Lumley"
+date: 2016-08-20
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ The philosopher of science Susan Haack has a lovely analogy for the interconnectedness of scientific ideas: the crossword puzzle.  We’re talking something along the lines of the New York Times crossword, not a British-style cryptic: the clues for each entry are often insufficient taken one at a time, but a false answer is likely to be revealed by its failure to fit with crossing answers.
+
+Chris McDowall recently reminded me of the [Phantom Time Hypothesis](https://en.wikipedia.org/wiki/Phantom_time_hypothesis), my favourite engagingly batshit historical theory.  The ‘hypothesis’ says the years 614CE to 911CE didn’t exist: the calendar was adjusted from the early 7th century CE to the year 1000, by a conspiracy involving the Holy Roman Emperor, the Pope, and possibly the Byzantine Emperor.  As Wikipedia dryly notes “The proposal has found no favour among mainstream medievalists.”
+
+The Phantom Time Hypothesis rises above many conspiracy theories by leading to testable (falsifiable) predictions.  An interesting exercise for a science class would be to come up with a list. Here are some suggestions:
+
+*   Halley’s comet, solar eclipses, and other recurring astronomical events: times of these would be out by 297 years
+*   The prophet Muḥammad was born about forty years before the missing centuries, and events such as the Hijra and the conquest of Arabia occurred early in the phantom time. It’s one thing to say that a relatively boring part of European history didn’t happen; it takes ... um, chutzpah is probably the wrong word... something more to delete nearly the first three centuries of Islam.
+*   Tree rings: wooden objects created in the sixth and tenth centuries CE would have incompatible tree ring histories, as would world-wide cooling events due to large volcanic eruptions.
+*   Chinese history: The Tang dynasty and the An Lushan rebellion (the second-deadliest war in history) are going to take some effort to paper over -- and they interacted with the Arab Caliphates in Central Asia.
+*   Radiocarbon dating 
+*   Paper: the Middle East developed paper making (probably from the Chinese) during the period
+*   Scientific development in the Arabic world: Muhammad ibn Musa al-Khwarizmi, after whom the algorithm is named, was just one of the scientists and scholars of the early Islamic Golden Age
+*   The slippage between the Gregorian and Julian calendars, which were set to agree at the time of the Council of Nicea (325CE). Under the hypothesis, they would have agreed in the first century CE instead. 

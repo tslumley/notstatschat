@@ -1,0 +1,74 @@
+---
+title: "The lithium-powered space bike"
+author: "Thomas Lumley"
+date:  2016-09-04
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ Q: So, it’s been about 11 months since you got your fancy electric-assist bike
+
+A: Yes, that’s right
+
+Q: Have you given up yet?
+
+A: No, it’s still fun.
+
+Q: Even with the rain?
+
+A: Combining Doppler radar and the detailed weather forecasts has mostly kept me dry
+
+Q: And getting killed by cars?
+
+A: So far, still at less than 1 event. 
+
+Q: How do you feel about busy two-lane roundabouts?
+
+A: I have a Theory. 
+
+Q: Do tell!
+
+A: Busy roundabouts rely on informal negotiation over the details of the ‘give way to the right’ rule. Since cyclists are excluded from the negotiation, we inevitably offend either the drivers to the right or those behind us.
+
+Q: Can’t they just four-letter-word themselves?
+
+A: They are driving deadly weapons.
+
+Q: Ah. Yes.
+
+A: It’s not so bad most of the time. Sometimes, though...
+
+Q: Ok. What else
+
+A: You know those orchids that are designed to attract insects..
+
+Q: To trap them for pollination? Yes.
+
+A: Some intersections have things that look like safe green bike boxes, but on lanes with induction loops
+
+Q: So you’re trapped there until a ‘real’ vehicle comes along?
+
+A: That’s right. There’s one on the Grafton bridge!
+
+Q: But that’s bus-only on weekdays!
+
+A: I think cyclists are supposed to sit there until  the weekend. 
+
+Q; You should come up with a cute name for that sort of thing
+
+A; “trollbooths”?
+
+Q: Very droll
+
+A: Seriously, if electric bikes were cheaper, they’d be really useful for younger people.
+
+Q: But isn’t the speed dangerous?
+
+A: There are plenty of roads in my neighbourhood where I can go faster than that just from gravity.
+
+Q: So, what’s the advantage?
+
+A: Better acceleration makes it easier to deal with traffic. You wobble less going up steep hills, and you’ve got more attention to give to traffic.
