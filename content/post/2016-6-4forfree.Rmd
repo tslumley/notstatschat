@@ -1,0 +1,37 @@
+---
+title: "Computing the (simplest) sandwich estimator incrementally"
+author: "Thomas Lumley"
+date: 2016-06-04
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ The `biglm` package in R does {incremental, online, streaming} linear regression for data potentially larger than memory. This isn’t rocket science: accumulating $X^TX$ and $X^TY$ is trivial; the package just goes one step better than this by using Alan Miller’s incremental $QR$ decomposition code to reduce rounding error in ill-conditioned problems. 
+
+The code also computes the Huber/White heteroscedasticity-consistent variance estimator (sandwich estimator). Someone wants a reference for this. There isn’t one, because it’s too minor to publish, and I didn’t have a blog ten years ago.  But I do now. So:
+
+The Huber/White variance estimator $A^{-1}BA^{-1}$, where $A^{-1}=(X^TX)^{-1}$ and $B=\left(X^T(Y-\hat\mu)\right)^{\otimes 2}$
+
+The $(i,j)$ element of $B$ is  
+$$\sum_{k=1}^N x_{ki}(y_{k}-x_{k}\hat\beta)x_{kj}(y_{k}-x_{k}\hat\beta)$$
+
+Multiplying this out, we get  
+$$\sum_{k=1}^N x_{ki}x_{kj}y_k^2$$  
+and about $2p$ terms that look like  
+$$\sum_{k=1}^N x_{ki}x_{kj}x_{k\ell}y_k\hat\beta_{\ell}$$  
+and about $p^2$ terms that look like  
+$$\sum_{k=1}^N x_{ki}x_{kj}x_{k\ell}x_{km}\hat\beta_{\ell}\hat\beta_m$$  
+
+We can move the $\beta$s outside the sums, so the second sort of terms look like
+$$\hat\beta_{\ell}\left(\sum_{k=1}^N x_{ki}x_{kj}x_{k\ell}y_k\right)$$
+and the third sort look like
+$$\hat\beta_{\ell}\left(\sum_{k=1}^N x_{ki}x_{kj}x_{k\ell}x_{km}\right)\hat\beta_m$$
+
+Now if we define $Z$ to have columns $x_ix_j$ and $x_iy$ (for all $i,\,j$), the matrix $Z^TZ$ contains all the $x$ and $y$ pieces needed for $B$.  The obvious thing to do is just to accumulate $Z^TZ$ in R code, one chunk at a time.
+
+If you were too convinced of your own cleverness you might realise that $(X,Z)$ could be fed into the $QR$ decomposition as if it were $X$, and that you’d get $Z^TZ$ For Free! Where ‘for free’ means at $O((p^2)^3)$ extra computing time plus the mental anguish of reconstructing $Z^TZ$ from the $QR$ decomposition.  It’s not a big deal, since the computation is dominated by the $O(np)$ cost of reading the data, but it does look kinda stupid in retrospect.
+
+I suppose that means I’ve learned something in ten years.

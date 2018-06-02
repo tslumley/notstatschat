@@ -1,0 +1,24 @@
+---
+title: "Computing the (simplest) sandwich estimator incrementally"
+author: "Thomas Lumley"
+date: 2016-06-04
+output: html_document
+---
+
+
+
+<p>The <code>biglm</code> package in R does {incremental, online, streaming} linear regression for data potentially larger than memory. This isn’t rocket science: accumulating <span class="math inline">\(X^TX\)</span> and <span class="math inline">\(X^TY\)</span> is trivial; the package just goes one step better than this by using Alan Miller’s incremental <span class="math inline">\(QR\)</span> decomposition code to reduce rounding error in ill-conditioned problems. </p>
+<p>The code also computes the Huber/White heteroscedasticity-consistent variance estimator (sandwich estimator). Someone wants a reference for this. There isn’t one, because it’s too minor to publish, and I didn’t have a blog ten years ago.  But I do now. So:</p>
+<p>The Huber/White variance estimator <span class="math inline">\(A^{-1}BA^{-1}\)</span>, where <span class="math inline">\(A^{-1}=(X^TX)^{-1}\)</span> and <span class="math inline">\(B=\left(X^T(Y-\hat\mu)\right)^{\otimes 2}\)</span></p>
+<p>The <span class="math inline">\((i,j)\)</span> element of <span class="math inline">\(B\)</span> is<br />
+<span class="math display">\[\sum_{k=1}^N x_{ki}(y_{k}-x_{k}\hat\beta)x_{kj}(y_{k}-x_{k}\hat\beta)\]</span></p>
+<p>Multiplying this out, we get<br />
+<span class="math display">\[\sum_{k=1}^N x_{ki}x_{kj}y_k^2\]</span><br />
+and about <span class="math inline">\(2p\)</span> terms that look like<br />
+<span class="math display">\[\sum_{k=1}^N x_{ki}x_{kj}x_{k\ell}y_k\hat\beta_{\ell}\]</span><br />
+and about <span class="math inline">\(p^2\)</span> terms that look like<br />
+<span class="math display">\[\sum_{k=1}^N x_{ki}x_{kj}x_{k\ell}x_{km}\hat\beta_{\ell}\hat\beta_m\]</span></p>
+<p>We can move the <span class="math inline">\(\beta\)</span>s outside the sums, so the second sort of terms look like <span class="math display">\[\hat\beta_{\ell}\left(\sum_{k=1}^N x_{ki}x_{kj}x_{k\ell}y_k\right)\]</span> and the third sort look like <span class="math display">\[\hat\beta_{\ell}\left(\sum_{k=1}^N x_{ki}x_{kj}x_{k\ell}x_{km}\right)\hat\beta_m\]</span></p>
+<p>Now if we define <span class="math inline">\(Z\)</span> to have columns <span class="math inline">\(x_ix_j\)</span> and <span class="math inline">\(x_iy\)</span> (for all <span class="math inline">\(i,\,j\)</span>), the matrix <span class="math inline">\(Z^TZ\)</span> contains all the <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> pieces needed for <span class="math inline">\(B\)</span>.  The obvious thing to do is just to accumulate <span class="math inline">\(Z^TZ\)</span> in R code, one chunk at a time.</p>
+<p>If you were too convinced of your own cleverness you might realise that <span class="math inline">\((X,Z)\)</span> could be fed into the <span class="math inline">\(QR\)</span> decomposition as if it were <span class="math inline">\(X\)</span>, and that you’d get <span class="math inline">\(Z^TZ\)</span> For Free! Where ‘for free’ means at <span class="math inline">\(O((p^2)^3)\)</span> extra computing time plus the mental anguish of reconstructing <span class="math inline">\(Z^TZ\)</span> from the <span class="math inline">\(QR\)</span> decomposition.  It’s not a big deal, since the computation is dominated by the <span class="math inline">\(O(np)\)</span> cost of reading the data, but it does look kinda stupid in retrospect.</p>
+<p>I suppose that means I’ve learned something in ten years.</p>

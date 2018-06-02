@@ -1,0 +1,29 @@
+---
+title: "The Great Kiwi Cherry Ripe Scandal"
+author: "Thomas Lumley"
+date: 2016-03-29
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+_In which I unnecessarily calculate a simple probability by maths when I’ve already done it by simulation._
+
+You can just see it on a maths teaching blog as a Bad Example
+
+> 1. A company is making packs of eight chocolate bars chosen independently and with equal probability from five types: “Cherry Ripe","Dairy Milk","Crunchie", "Caramello", and "Flake". 
+> 
+> (a) What is the probability that a pack will contain seven or more Cherry Ripes?
+> 
+> (b) What is the probability that a pack will contain seven or more of the same type of bar?
+
+New Zealand currently [has](http://www.stuff.co.nz/business/78315308/cadbury-says-its-random-we-say-its-a-one-in-ten-thousand-lottery) a [case](http://www.stuff.co.nz/national/78298099/cadbury-customers-not-happy-with-favourites-easter-egg) of Nature imitating Bad Art.  There were two answers given in the media, which differed by two orders of magnitude.  I used [simulation](http://rpubs.com/tslumley/166331) to try to settle the problem reliably and fairly comprehensibly.
+
+But there’s still the maths exam question angle. So. 
+
+(a) The number $N$ of Cherry Ripes in a pack is distributed as $Binomial(8,1/5)$, independently for each pack.  We want $$P(N\geq 7)=P(N=7)+P(N=8)= (8\times 0.8^1\times 0.2^7)+0.2^8=33\times 5^{-8}$$  
+or,  $P(N\geq 7)\approx 8.5\times 10^{-5}$
+
+(b) Getting 7 or more of two types of bar in the same package is impossible, so the five events ‘7 or more Cherry Ripe”, “7 or more Flake” etc are mutually exclusive. Their union is the event “7 or more of the same type”, so this has probability $5\times 33\times 5^{-8}= 165\times 5^{-8}\approx 4\times 10^{-4}$. 
