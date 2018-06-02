@@ -1,0 +1,15 @@
+---
+title: "Simulations and modes of convergence"
+author: "Thomas Lumley"
+date: 2016-08-14
+output: html_document
+---
+
+
+
+<p>We often have theory that says <span class="math display">\[\sqrt{n}(\hat\theta_n-\theta)\stackrel{d}{\to}N(0,\sigma^2),\]</span><br />
+and then do simulations to see how well the asymptotic approximation applies. After doing so, we often present tables of the empirical mean and standard deviation of <span class="math inline">\(\hat\theta_n.\)</span> This doesn’t make a lot of sense.</p>
+<p>Knowing that <span class="math inline">\(\sqrt{n}(\hat\theta_n-\theta)\stackrel{d}{\to}N(0,\sigma^2)\)</span> doesn’t tell us anything about the moments of <span class="math inline">\(\hat\theta_n\)</span> for any finite <span class="math inline">\(n\)</span>. Convergence in distribution does not imply convergence in mean. For example,  <span class="math inline">\(\hat\theta_n\)</span> could be maximum likelihood estimates in a logistic regression model. These  have no finite moments for any finite <span class="math inline">\(n\)</span>, because they are infinite with positive probability.</p>
+<p>However, the asymptotic result does tell us that the quantiles of <span class="math inline">\(\hat\theta_n\)</span>, suitably scaled, should converge to those of the approximating Normal distribution. The median of <span class="math inline">\(\hat\theta_n\)</span> should converge to <span class="math inline">\(\theta\)</span>; the MAD of <span class="math inline">\(\hat\theta_n\)</span> (after scaling by <span class="math inline">\(\sqrt{n}\)</span>) should converge to <span class="math inline">\(\sigma\)</span>, and the probability that <span class="math inline">\((\hat\theta_n-1.96\times\widehat{se}[\hat\theta_n],\,\hat\theta_n+1.96\times\widehat{se}[\hat\theta_n])\)</span> includes <span class="math inline">\(\theta\)</span> should converge to 95%.</p>
+<p>Knowing how good the asymptotic approximation is for these quantile-based statistics is usually sufficient to tell us if the approximation is useful in practice. We usually don’t care about the <strong>mean</strong> of <span class="math inline">\(\hat\theta_n\)</span> in any substantive way, since if we did, we’d be more worried when it didn’t have one.</p>
+<p>I think the usefulness of ‘robust statistics’ gets oversold a lot, but this really is a case where it’s meaningful and true to say that the median of an approximately-Normal variable is a better summary of the location parameter than the mean is.  We should be presenting robust (ie, weakly continuous) summaries of the results of simulations motivated by asymptotics unless there’s a specific reason to care about moments.</p>

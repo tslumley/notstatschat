@@ -1,0 +1,12 @@
+---
+title: "Etymology"
+author: "Thomas Lumley"
+date: 2016-08-02
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ **Penguin**: the name is supposed to come from the Welsh *pen gwyn*, meaning ‘white head’. Since penguins have **black** heads, and do not live within 10,000 km of Wales, it is difficult to see how this theory arose.

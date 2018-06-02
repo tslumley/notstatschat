@@ -1,0 +1,35 @@
+---
+title: 'A modest proposal: Lazy Ambiguous Single Transferable Vote'
+author: "Thomas Lumley"
+date: 2016-07-29
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ We’re about to have another outbreak of voting here in NZ as well. The local government elections use STV, and Graeme Edgeler [explains it here](http://publicaddress.net/legalbeagle/stv-qa/). In particular, he explains how indicating preferences for all the candidates, even ones you don’t want to win, is desirable.
+
+Because Twitter is Twitter,  a discussion of this came up with Rob Salmond’s proposal that you should be able to vote 1,2, 3, <meh>, 35,36 for, say, the District Health Board elections where there are a few good candidates who are worth voting for, a couple of antifluoride or antivax extremists who need to be voted against, and a lot of boring and irrelevant candidates.  Or, Michael Calhoun suggested 1,2,3, blank, -2, -1 with negative numbers indexing from last.
+
+Can this actually be done? What would it look like? Could a system allow a voter to indicate negative preferences without even a first preference? 
+
+As a service to democracy I present **LAST Vote**: Lazy Ambiguous Single Transferable Vote. 
+
+*   Voters may rank candidates 1,2,3,.. as far as they want,with 1 being the first preference  
+    
+*   Voters may rank candidates -1,-2,-3 as far as they want, with -1 being the last preference
+*   Candidates with no ranking are less preferred than those with positive rankings but more preferred than those with negative rankings. 
+
+_The goal for the counting system is that your vote is equivalent to a set of fractional votes with all the possible permutations of the unranked candidates._
+
+With computers this is directly feasible.  When your voting paper has exhausted its set of positive rankings, your vote is distributed evenly across all the unranked candidates still being considered. When none of your unranked candidates are still being considered, your paper goes to the least-negative of your negative rankings. 
+
+You wouldn’t want to do it by hand.  The number of possible sets of unranked candidates is large -- for more than 21 candidates there are more possible sets than eligible NZ voters. Can we get a simpler approximation?
+
+If there were more statisticians in the world, a useful approximation might be to pick a single ordering at random, independently for each voting paper, perhaps using the [Official Electoral Pseudorandom Number Generator](https://notstatschat.netlify.com/2015/09/22/nz-flag-referendum-pseudorandom-numbers/), and rely on the Law of Large Numbers. The approximation also scales up smoothly to full accuracy -- you can generate two orders at random, or ten, for each voting paper.  But generating random numbers by hand at that scale isn’t feasible.
+
+With a single random ordering, the random numbers could be printed on the voting paper -- a set of numbers or letters that gives the default ordering for candidates you don’t rank. Postal ballots already have unique information on them, so this is possible in principle. Arguably it also complies with the intent of the voter better, since the voter can see where their 4th preference would go and change it if necessary.
+
+It’s tempting to think, as I originally did, that you can collapse together all the voting papers that have exhausted their positive rankings and not got to their negative rankings, but that doesn’t preserve the stated aims. I think a better crude approximation would be to allocate the papers that have exhausted their positive preferences to candidates at random, and then go through and re-allocate at random any that were given to a candidate who had a negative preference. This doesn’t give the same results even in some average sense, but it would be feasible to do by hand, in parallel across voting booths.

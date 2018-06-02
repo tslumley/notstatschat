@@ -1,0 +1,18 @@
+---
+title: "How do we prove the Central Limit Theorem?"
+author: "Thomas Lumley"
+date:  2016-07-04
+output: html_document
+---
+
+
+
+<p>More precisely, in a course in mathematical statistics that’s trying not to assume more mathematics than necessary, how do we prove it?  </p>
+<p>A (Weak) Law of Large Numbers is easy: Markov’s inequality, then Chebyshev’s Inequality, not needing anything more than the simplest manipulation of expectations.  The CLT is hard.</p>
+<p>The standard approach is to use characteristic functions: prove Levy’s Continuity Theorem, work out what the characteristic function of an iid sum looks like, and then work out the characteristic function of a Normal.  Clean and simple, but it requires dragging in complex numbers.  If you’re a time-series person you might think every statistician needs to understand Fourier transforms, and you might even have a point, but it seems like overkill for the CLT.</p>
+<p>David Pollard (<em>A User’s Guide to Measure-Theoretic Probability</em>) uses the Lindeberg trick. If you have a sequence <span class="math inline">\(X_n\)</span> that you want to show the CLT for, start with a sequence <span class="math inline">\(Z_n\)</span> of Normal random variables that have the same means and variances as <span class="math inline">\(X_n\)</span>.  The CLT for <span class="math inline">\(Z_n\)</span> is trivial, and the Lindeberg trick lets you swap <span class="math inline">\(X_n\)</span> for <span class="math inline">\(Z_n\)</span> one term at a time.</p>
+<p>If what you want is a rigorous, elementary proof, that’s the way to go. The only thing I don’t like about it is shared with the Fourier approach: it doesn’t seem to show you what’s actually happening. </p>
+<p>If you want to motivate the CLT, you show the distributions of sums of increasing numbers of random variables.  Each convolution rubs some of the individuality off the distribution, and asymptotically there’s nothing left but some generic shape.  That doesn’t happen at all with the Lindeberg trick, and you can’t really see it happening with the Fourier approach. </p>
+<p>Two approaches that do seem to show what’s going on are based on entropy and on moments:</p>
+<p>The Normal distribution has the highest entropy of any continuous distribution with given mean and variance; a precise characterisation of its boringness. Since convolutions increase entropy (and enough convolutions increase entropy even after rescaling to constant variance),  the distribution of a sum has to keep getting closer to a Normal distribution.  There’s a <a href="http://www.stat.yale.edu/~arb4/publications_files/EntropyAndTheCentralLimitTheoremAnnalsProbability.pdf">proof by Andrew Barron</a>, for example.</p>
+<p>Another tempting approach is to prove that the moments of your centered and scaled sum converge to the moments of a Normal distribution. This, again, fits what is going on nicely, and for the first few moments is straightforward. The problem is that you need to know the moments of a Normal distribution uniquely determine the distribution. While that’s true, I haven’t been able to find an elementary proof of it. You could probably cobble something together with a truncation argument and the Weierstrass approximation theorem, but it might be messy. </p>
