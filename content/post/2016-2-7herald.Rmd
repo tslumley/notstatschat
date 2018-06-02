@@ -1,0 +1,26 @@
+---
+title: "No-one’s forcing you to read the Herald"
+author: "Thomas Lumley"
+date: 2016-02-07
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+“No-one’s forcing you to read the Herald”  
+_(various sources on the internet)_
+
+It’s true. No-one is forcing me to read the *NZ Herald*. In fact, I went forty years without reading it and no-one criticised at all.  
+
+No-one forced me to move to New Zealand, either.
+
+You probably wouldn’t want the *Herald* to be your only source of news, but for someone living, working, and voting in Auckland, the *Herald* is the best available paper. In many ways it’s not as good as the *New York Times* or the *Independent*, the *Grauniad* or the *Washington Post*, but the New Zealand coverage in those papers really sucks.
+
+The *Herald* has Harkanwal Singh’s data journalism. It has important reporting by David Fisher and Matt Nippert, Kirsty Johnston, Martin Johnston and Jamie Morton, and probably other people I’d know to mention if I read bylines more carefully.
+
+It also has a tendency to re-print the worst British ‘science news’ clickbait, to ignore inflation and population size in comparisons, to believe what the Government says, and to alternate between celebration and pearl-clutching about Auckland housing prices.
+
+I rarely complain online about the *Seattle Times*, the *South China Morning Post*, or *L’Osservatore Romano,* because, basically, I don’t care about them and they don’t care about me. The *Herald*, I do care about. It’s what we’ve got, it has good and bad days, and  I’d like there to be more good days.    

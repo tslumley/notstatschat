@@ -1,0 +1,16 @@
+---
+title: "Cheap tricks"
+author: "Thomas Lumley"
+date: 2016-02-28
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ If you’re interested in thinking about evidence and belief and rhetoric, it’s convenient to have uncontroversial examples of ‘cheap tricks’ that directly affect attitudes. Ian Gordon has provided one, with his [translation of the ‘Imperial March’ from Star Wars into a major key.](https://soundcloud.com/laztozia/vaders-redemption-the-imperial-march-in-a-major-key)
+
+The tune is recognisably still film music by John Williams in a military style, but it’s happy, and lively, and on the edge of self-parody: somewhere between ‘The Great Escape’ and ‘Chicken Run’.
+
+As an experiment in music, it’s pure fun. As an example of how easy it is to press certain mental buttons, it’s a bit scary. 

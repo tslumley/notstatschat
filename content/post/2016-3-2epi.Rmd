@@ -1,0 +1,28 @@
+---
+title: "Truthy and Sciency"
+author: "Thomas Lumley"
+date: 2016-03-02
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There was a story at the [New Zealand Herald](http://www.nzherald.co.nz/health-wellbeing/news/article.cfm?c_id=1501238&objectid=11596733), republished without attribution from [TheConversation](https://theconversation.com/people-in-their-nineties-reveal-the-secrets-to-ageing-well-52237), under the headline **“People in their 90s reveal secret to ageing well”**.  
+
+By and large, it’s pretty good example of what The Conversation is trying to do, but there are some strange bits, such as
+
+> Regular exercise changes our epigenome, activating genes that improve muscle function 
+
+and
+
+> Few participants smoked, avoiding the known epigenetic effects of cigarette smoke including lung damage, increased risk of dementia and cancer.  
+
+The first is basically true, but “Regular exercise improves muscle function” seems more natural and is much more strongly supported by research. For smoking it’s even worse: it’s well established that some of the carcinogenic effects of tobacco smoke are mutagenic rather than epigenetic. 
+
+In something that’s supposed to be about healthy ageing, phrasing everything in terms of epigenetics makes it sound more like a [Troy Maclure](https://en.wikipedia.org/wiki/Troy_McClure) video:
+
+> You might remember me from posts such as “Genomics: salvation of millions”, “Interferon: Take that, viruses”, and “Humours: Are yours balanced?”
+
+Exercise, a good diet, and not smoking are excellent strategies for a long and healthy life, but almost none of the supporting evidence comes from epigenomics, even though that makes it sound more sciencey

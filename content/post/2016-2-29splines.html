@@ -1,0 +1,26 @@
+---
+title: "Coding linear splines"
+author: "Thomas Lumley"
+date: 2016-02-29
+output: html_document
+---
+
+
+
+<p><em>Attention conservation notice: anyone who would actually use this could just sit down and do the algebra almost as quickly.</em></p>
+<p>The best-known splines are cubic: a cubic spline with knots <span class="math inline">\(x_1,\;x_2,\dots,\;x_m\)</span> is a piecewise-cubic polynomial <span class="math inline">\(f(x)\)</span> where <span class="math inline">\(f\)</span>, <span class="math inline">\(f’\)</span>, and <span class="math inline">\(f’’\)</span> are continuous at the knots.  The name is from the engineer’s drafting tool, a flexible metal strip that – in the infinitely-thin, uniformly flexible asymptote – will form a curve held down at the knots and otherwise minimising bending energy <span class="math inline">\(\int f’’(x)^2\,dx\)</span> to give a cubic spline.</p>
+<p>Polynomial splines of degree <span class="math inline">\(k\)</span> generalise the cubic spline: they are piecewise polynomial, with <span class="math inline">\(f\)</span> and <span class="math inline">\(k-1\)</span> derivatives continuous at the knots. They have the nice feature of being expressible as linear combinations of a set of basis functions, so that the best-fitting spline with a given set of knots can be computed by ordinary regression. The degenerate case with <span class="math inline">\(k=1\)</span> is the linear spline, a continuous piecewise-linear function[1].</p>
+<p>Linear splines don’t fit as well as quadratic or cubic, and don’t look as pretty: they have visible corners at the knots.  However, they fit a lot better than step functions, and the linear coefficients are easily interpreted. </p>
+<p>There are two useful parametrisations for linear regression spline bases. In the first, the coefficients are the slopes in the segments <span class="math inline">\([-\infty,\,x_1]\)</span>, <span class="math inline">\([x_1,x_2]\)</span> and so on.  Alternatively, we can take the first coefficient to be the slope in <span class="math inline">\([-\infty, x_1]\)</span>, the second to be the difference in slope at <span class="math inline">\(x_1\)</span>, the third to be the difference in slope at <span class="math inline">\(x_2\)</span>, and so on. </p>
+<p>For the first parametrisation, the basis is</p>
+<pre><code>&gt; z1(t) = min(t, x1)  
+&gt; z2(t) = max(x1, min(t, x2))  
+&gt; z3(t) = max(x_2, min(t, x3))  </code></pre>
+<p>and so on</p>
+<p>For the second, the basis is</p>
+<pre><code>&gt; z1(t) = t  
+&gt; z2(t) = max(0, t-x1))  
+&gt; z3(t) = max(0, t-x2))  </code></pre>
+<p>and so on</p>
+<p>Neither of these is the b-spline basis given by the R function <code>bs()</code>, but both are probably more useful in practice. </p>
+<p>[1] One could make a case for step functions as 0-degree splines, where 0 of <span class="math inline">\(f\)</span>, <span class="math inline">\(f’\)</span>, <span class="math inline">\(f’’\)</span>,<span class="math inline">\(\dots\)</span> are continuous. Mathematicians might agree or might think this was trolling. </p>

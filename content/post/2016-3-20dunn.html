@@ -1,0 +1,16 @@
+---
+title: "The conservative Bonferroni correction"
+author: "Thomas Lumley"
+date: 2016-03-20
+output: html_document
+---
+
+
+
+<p>It seems to be a surprise to most people (certainly to me) how sharp the Bonferroni correction is when the number of tests is large. Unless the correlation between tests is really, high, the actual family-wise Type I error rate is very close to the nominal rate <span class="math inline">\(\alpha/k\)</span>.</p>
+<p>Part of the issue is confusing prior distributions on effect sizes (which can be quite strongly correlated) with null sampling distributions (which tend to be weakly correlated in the extreme tails). But part of it is just that the correction looks like it should be too strong. </p>
+<p>I was reminded of this by Hilda Bastian’s tweet saying that the use of the Bonferroni Inequality for confidence intervals was due to Olive Jean Dunn, and reading her <a href="https://en.wikipedia.org/wiki/Olive_Jean_Dunn">Wikipedia entry</a>. Dunn says:</p>
+<blockquote>
+<p>“In working on the various confidence intervals for <span class="math inline">\(k\)</span>means, I thought of the Bonferroni inequality ones quite early, but since they were so simple I thought they couldn’t possibly be of any use. I spent a long time trying to prove that the confidence intervals which would be used in the case of independent variables could also be used or dependent variables. After failing to find a general proof for this, I finally noticed that the simple Bonferroni intervals were nearly as short”.</p>
+</blockquote>
+<p>The Bonferroni correction is conservative because controlling family-wise Type I error is a conservative goal, but (usually) not because it comes from an inequality. But you’re in good company if that surprises you.</p>

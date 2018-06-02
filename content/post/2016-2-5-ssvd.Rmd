@@ -1,0 +1,22 @@
+---
+title: "Stochastic SVD"
+author: "Thomas Lumley"
+date: 2016-02-05
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Suppose you have an $m\times n$ matrix $A$ of rank $k$. If $\Omega$ is an $n\times k$ matrix with iid standard Gaussian entries, then $\Omega$ will have rank $k$ with probability 1,  $A\Omega$ will have rank $k$ with probability 1, and so $A\Omega$ spans the range of $A$. That’s all easy.
+
+More impressively, if $A=\tilde A+\epsilon$ where $\tilde A$ has rank $k$ and $\epsilon$ has small norm, and if $\Omega$ has $k+p$ columns, $A\Omega$ spans the range of $\tilde A$ with high probability, for surprisingly small values of $p$.  If $Q$ comes from a $QR$ decomposition of $A\Omega$, then $Q^TA$ has approximately the same $k$ largest singular values as $A$ (or, equivalently, as $\tilde A$). 
+
+The same trick works with lots of other random $\Omega$, for fixed $p$. If we are prepared to take $p=\log k$ it even works for a ‘structured’ random $\Omega=SHR$ where $R$ applies random signs to each row, $H$ does the Hadamard Transform, and $S$ takes a random sample of $k\log k$ rows of a matrix.  The point of this choice of $\Omega$ is that $\Omega A$ can be computed in $mn\log n$ time  (with a small constant, and for any $k$) using the Fast Hadamard Transform, rather than the $mnk$ time of explicit matrix multiplication.   
+
+The reference you want is [here](http://arxiv.org/abs/0909.4061): “Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions” by Halko, Martinsson, and Tropp. 
+
+One way to think about what’s happening is a combination of [“Space is Big. Really Big.”](http://notstatschat.tumblr.com/post/129047372011/high-dimensional-space-is-big) with a version of the Law of Large Numbers. The columns of $A$ are $n$ points in $m$-dimensional space, and if $m\gg\log n$ they are really sparse. Because they are really sparse, capturing one eigenvector of $A$ is pretty much independent of capturing another one. $\Omega$ doesn’t have any preferences for whether it captures eigenvectors with large or small eigenvalues, but $A\Omega$ magnifies the larger ones. As the paper notes, multiplying by $(AA^T)^q$ for some small $q$ improves things even further.  If you only took $k$ dimensions you’d still have a good chance of missing some of the $k$ main eigenvectors, but using $k+p$ dimensions decreases that chance -- more or less exponentially in $p$ because independence. <waves hands> The actual proofs, of course, are more complicated and use some fairly deep facts.
+
+The stochastic SVD is no faster on average than Lanczos-type algorithms, but it’s _enormously_ easier to program correctly and comes with simple probabilistic error bounds that are known to be sharp. As with the Lanczos-type algorithms, it can be made much faster if $A$ is sparse or otherwise structured so that multiplication by $A$ is fast.  The stochastic algorithm is also easier to parallelize and can be modified to scan $A$ only a few times, or even only once.   

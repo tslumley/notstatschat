@@ -1,0 +1,28 @@
+---
+title: "Trace estimators and impact factors"
+author: "Thomas Lumley"
+date:  2016-03-15
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ For a Secret Project™, I needed a quick estimator of the trace of a matrix. To be precise, I have a rectangular matrix $A$ and I needed $\mathop{tr}(B)$ and $\mathop{tr}(B^2)$ where $B=A^TA$. That sounds easy, but $A$ is big enough that you don’t want to compute $A^TA$. 
+
+The first one actually is easy: $$\mathop{tr}(B)=\sum_{ij}(A_{ij})^2.$$ The second one is harder.  I tried a sampling approach: estimating a sample of the entries of $B$ and using $$\mathop{tr}(B^2)=\sum_{ij} (B_{ij})^2.$$  The performance was not great, even when I tried stratified sampling -- getting all the diagonal entries of $B$ and a random sample of the off-diagonal entries.
+
+I should have Googled before thinking, rather than after thinking. There is a standard solution: Hutchinson’s randomised trace estimator. If $z$ is a vector whose entries are independent, mean zero, unit variance, then $$E[z^TBz]=\mathop{tr}(B).$$   
+So, if you have $k$ random vectors $z_1,\dots,z_k$, a trace estimator is   
+$$\widehat{\mathop{tr}}(B^2)=\frac{1}{k} \sum_i z_i^TB^2z_i=\frac{1}{k} \sum_i z_iA^TAA^TAz_i=\frac{1}{k} \sum_i \left\|A^TAz_i\right\|_2^2$$  
+
+Hutchinson used Rademacher (random $\pm 1$) variables for the entries of $z$. You could also use standard Normals and it wouldn’t make much difference -- it would affect what theoretical tools you could use to get tail bounds.  There’s a slight benefit in having the $z_i$ be uncorrelated, so in one application where it was convenient I used vectors $Az$ produced by the subsampled randomised Hadamard transform, but when $A$ is sparse and that isn’t convenient I just used standard Normals. You don’t get high accuracy -- the central limit theorem says the error is of order $k^{-1/2}$ -- but you get a reasonable estimator quickly.
+
+The Hutchinson trace estimator has also been influential in thinking about degrees of freedom for semiparametric smoothers, as Grace Wahba mentions in her [chapter](http://arxiv.org/abs/1303.5153) of “Past, Present, Future of Statistical Science”.
+
+Since I knew $\mathop{tr}(B)$ I could improve on the Hutchinson estimator by ratio estimation from survey sampling. If you estimate $\mathop{tr}(B)$ using the same $z$, a better estimator of $\mathop{tr}(B^2)$ is  
+$$\widehat{\mathop{tr}}_{\mathrm{ratio}}(B^2)= \widehat{\mathop{tr}}(B^2) \frac{\mathop{tr}(B)}{ \hat{\mathop{tr}}(B)}$$  
+The sampling errors in the two estimators are correlated, so the error in the ratio is smaller -- by about 50\% in my case. 
+
+So, impact factors? Hutchinson’s [paper](http://www.tandfonline.com/doi/abs/10.1080/03610919008812866) “A stochastic estimator of the trace of the influence matrix for laplacian smoothing splines” is in the journal ‘Communications in Statistics - Simulation and Computation’, well known for not being especially picky or well read. It still has quite a few gems, such as Hutchinson’s paper and Pepe & Anderson’s [paper](http://www.tandfonline.com/doi/abs/10.1080/03610919408813210#.Vuj8wBiriko) about conditioning on $X$ at all times or just the current time in longitudinal data analysis.  “This paper is crap because it’s in a crap journal” has the same form as the classical *argumentum ad hominem*. It saves effort, but it’s still a fallacy.  
