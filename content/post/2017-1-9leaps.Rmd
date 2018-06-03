@@ -1,0 +1,26 @@
+---
+title: "Fixing an infelicity in ‘leaps’"
+author: "Thomas Lumley"
+date: 2017-01-09
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The `leaps` package for R is ancient -- this is its tenth twentieth year on CRAN.  It uses old Fortran code by the Australian computational statistician Alan Miller. The Fortran 90 versions are [on the web](http://jblevins.org/mirror/amiller/), but Fortran 90 compilation with R wasn’t portable back then, so I used the older Fortran 77 version. 
+
+The main point back in 1997 was to provide a version of the `leaps()` function in S, which uses a branch-and-bound algorithm to do exhaustive search for the best (smallest residual-sum-of-squares) model of each size.  I was interested in exhaustive search back then as a step towards multi-model inference -- either formal modelling averaging, as Adrian Raftery had taught us in BIOST572, or visualisation of what variables were substitutes or complements for each other.  For example, did systolic and diastolic blood pressure tend to be in together (so maybe their difference, pulse pressure, was important), or did they tend to substitute for each other. The `plot` method in the package lets you look at this sort of thing, inspired by a talk I saw Merlise Clyde give.
+
+However, exhaustive search isn’t as popular today -- despite the clever algorithm, it takes a long time. It has to; it’s an NP-complete problem.  People have started using the forward and backward search algorithms in the package. I included them mostly because they were there in the Fortran code.  You’d think that would all be straightforward, but it resulted in what is either a bug in the code, or a bug in the documentation and a feature in the code that’s less useful than it was.  
+
+If you look at efficient construction of an exhaustive-search algorithm, the working step is rotations to swap variables in and out of the model.  It’s convenient to start off with a preprocessing step that fits a model with the first variable, a model with the first two variables, a model with the first three variables, and so on.  Everything ends up getting initialised; it’s basically free; you then go on to do the search. 
+
+If you’re doing exhaustive search, those models would eventually be considered anyway. If you’re doing forward or backward selection they might not be. However, if you think of forward or backward selection just as a computationally-cheap approximation to exhaustive search, since you’ve got those models anyway, you might as well look at them.  That’s what the code does. It’s possible for, say, the model with the first three variables to be better than the three-variable model found by forward selection. If it is, you get the better model. 
+
+In the modern world we don’t really think of forward and backward selection that way. They’re specific fitting algorithms you might use as part of a selection/regularisation strategy. They’re also things you might teach for historical reasons.  In either case, it may matter that the sequence of models you get out is nested; you don’t want a better model, even for free.
+
+So. Bug reports. Attempts to debug twenty-year old Fortran code written by someone else. Attempts to tweak twenty-year old Fortran code written by someone else. Searches for work-arounds. Swearing. Finally,  version 3.0 of the leaps package, now on CRAN. 
+
+If you have `nbest=1` (asking for just one model of each size), they will be nested properly for forward or backward selection.  If you have `nbest`>1 I can’t see how to avoid the extra models, but you will be warned.  As always, this isn’t an issue for exhaustive search.

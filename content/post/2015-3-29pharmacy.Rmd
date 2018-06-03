@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
- ‘You have heard that it was said to those of ancient times, “You shall not murder”; and “whoever murders shall be liable to judgement.”  But I say to you that if you are angry with a brother or sister, you will be liable to judgement.  Matthew 5:21-22  
+ *‘You have heard that it was said to those of ancient times, “You shall not murder”; and “whoever murders shall be liable to judgement.”  But I say to you that if you are angry with a brother or sister, you will be liable to judgement.*  Matthew 5:21-22  
 
 In practice, we have to distinguish. Whoever murders is liable to judgement, but being angry isn’t enough. In the same way, formal codes of professional ethics come in two versions: the aspirational code that describes the way we want the profession to be, and the legalistic code that describes what will get you kicked out.  In medical research, the [Nuremberg Code](http://www.hhs.gov/ohrp/archive/nurcode.html) is a bare minimum, but the [Declaration of Helsinki](http://www.wma.net/en/30publications/10policies/b3/) goes well beyond current practice (notably on registration and publication of trials and on use of untested treatments). 
 
@@ -23,6 +23,6 @@ Perhaps that’s true of pharmacies as well. Maybe supplying the popular demand 
 
   
 
-_* I'm not making this up, you know._
+\* _I'm not making this up, you know._
 
 _# except about the quantum_

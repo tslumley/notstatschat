@@ -1,0 +1,35 @@
+---
+title: "A bus-watching bot"
+author: "Thomas Lumley"
+date: 2017-01-17
+output: html_document
+---
+
+
+
+<p>When it’s up, the account @<a href="https://twitter.com/tuureiti">tuureiti</a> on Twitter tweets a summary of the state of Auckland buses – at the moment, every 15 minutes.</p>
+<div class="figure">
+<img src="https://68.media.tumblr.com/39c4c160c5ab6b00e5b7c9bce5a71bde/tumblr_inline_ojy1kaBwrY1s1hdxy_540.png" />
+
+</div>
+<p>Q: Can you explain that picture?</p>
+<p>A: Every bus that the Auckland Transport GTFS feed knows about has a dot on the graph.  The GTFS feed has a ‘delay’ field that says how far ahead or behind schedule the bus is, separated by whether the next event is ‘arrival’ or ‘departure’.  I’ve coded departures as green (‘on time’) if they are between one minute early and 5 minutes late, and arrivals as on time if they are less than 5 minutes late. </p>
+<p>Q: Are there really buses more than half an hour late? Isn’t it more likely to be a data problem?</p>
+<p>A: The extreme outliers are definitely more likely to be a data problem.  One possibility is that the driver puts the wrong trip number into the system. Some of them will be bus failures, but those trips tend to be cancelled fairly quickly.</p>
+<p>Q: So shouldn’t you truncate the axis a bit?</p>
+<p>A: I already did. I might truncate it more, later.</p>
+<p>Q: What does `tuureiti’ mean? Is it a really contrived acronym?</p>
+<p>A: It’s the Māori word for ‘late’, in the writing system that doesn’t use modified characters, because Twitter won’t let me.  In the more-common writing system it would be ‘tūreiti’. </p>
+<p>Q: Why use Twitter, rather than just putting the data up on a web page?</p>
+<p>A: It’s actually easier to use Twitter, because the University of Auckland website runs off a ‘Content Management System’. </p>
+<p>Q: Is it really hard to write a bot?</p>
+<p>A: No. Even I can do it. And I’m old.</p>
+<p>Q: What impressive technologies did you use to write the bot?</p>
+<p>A: Um. R? The <code>jsonlite</code> package to read the GTFS feed, the <code>twitteR</code> package to send tweets, and <code>beeswarm</code> to draw the dotplots. It only tweets every 15 minutes; it doesn’t have to be, like, efficient or anything.</p>
+<p>Q: Are you going to add more exciting features in the future?</p>
+<p>A: Maybe. But I hope we’ll soon have a much better system based on Tom Elliott’s PhD research. </p>
+<p>Q: Why is the ‘on-time’ percentage so much worse than the official figures?</p>
+<p>A: Because the official figures don’t measure punctuality after the bus actually starts its route.  The official definition is bogus, but for better official quality-control purposes you might not want my percentage either – mine is for all buses at all stops, but you’d probably want to restrict to the set of stops on the published timetables.  </p>
+<p>Q: This comes with the usual disclaimers, right?</p>
+<p>A: Definitely. Not intended to prevent, diagnose, cure, or treat any condition. Your mileage may vary. Keep out of reach of babies and young children. Product of more than one country. May contain nuts. </p>
+<p>[Update: I need to recheck the meaning of negative arrival vs departure delays: is a negative arrival delay an early arrival at a timepoint or an early departure from the last stop?]</p>

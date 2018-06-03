@@ -1,0 +1,26 @@
+---
+title: "Case-control sampling and pseudo-Rsquareds"
+author: "Thomas Lumley"
+date:  2017-01-27
+output: html_document
+---
+
+
+
+<p>So, I have been asked a few times how to compute <span class="math inline">\(R^2\)</span> for models fitted to survey data. Initially the questions were about the ordinary linear-regression <span class="math inline">\(R^2\)</span>, which is easy because it’s the ratio of two variances, and we can estimate variances. More recently, people have been asking about the Nagelkerke pseudo-<span class="math inline">\(R^2\)</span> in logistic regression. </p>
+<p>It’s not immediately obvious how to define the Nagelkerke <span class="math inline">\(R^2\)</span> under complex sampling. My approach was to consider the Cox–Snell <span class="math inline">\(R^2\)</span> that precedes it, which is an estimate of a well-defined population quantity: <span class="math inline">\(\log (1-R^2)\)</span> is the mutual information between the predictors and outcome.  Replacing the likelihood in the definitions by the estimated population likelihood gives a design-based definition of the Cox–Snell <span class="math inline">\(R^2\)</span>, and the Nagelkerke <span class="math inline">\(R^2\)</span> is a simple rescaling. I’ve got a <a href="https://arxiv.org/abs/1701.07745">preprint here</a> and <a href="https://github.com/tslumley/pseudorsq">code here</a>. [Update: the paper is out, <a href="http://onlinelibrary.wiley.com/doi/10.1111/anzs.12187/abstract">at ANZ J Stat</a>]</p>
+<p>With any design-based statistic for logistic regression it’s natural to look at case–control designs as an example. These have highly informative sampling, so that ignoring the sampling weights will lead to bias. Usually we don’t worry about the bias, because in a logistic regression model it’s all in the intercept, and not in the other regression parameters.  However, when you have a statistic that isn’t just a function of the regression slopes, you have to worry about whether the bias reappears.</p>
+<p>It does.</p>
+<p>The following picture shows a series of simulated case-control designs with <span class="math inline">\(X\sim N(0,1)\)</span>, <span class="math inline">\(\textrm{logit}\,P[Y=1]=-6+x\)</span>, and 1,2,5,10, or 20 controls per case. The three lines are the ordinary Nagelkerke <span class="math inline">\(R^2\)</span>, Cox–Snell <span class="math inline">\(R^2\)</span>, and a trendy new one due to Tjur.  The x-axis gives the control sampling percentage, and the horizontal dashed lines are the <span class="math inline">\(R^2\)</span> values for a model fitted to the full cohort. </p>
+<div class="figure">
+<img src="https://68.media.tumblr.com/23ec773a473da73fe01c8844d7323ee4/tumblr_inline_okfanj9ArE1s1hdxy_540.png" />
+
+</div>
+<p>As you can see, there’s a lot of bias.  Under case–control sampling, the standard forms of all three of these <span class="math inline">\(R^2\)</span> statistics are inflated relative to the value you would get with full-cohort data. </p>
+<p>While I could imagine someone coming up with a reason to prefer the in-sample <span class="math inline">\(R^2\)</span> rather than the full-cohort one, the usual motivation for case-control sampling is to estimate the properties of the cohort and the population from which it comes, not properties of the sample. So, design-based versions of these statistics should be useful.  My preprint shows how to define and compute design-based versions of Nagelkerke and Cox–Snell statistics. The Tjur statistic is easy: it’s the mean of <span class="math inline">\(\\hat Y\)</span> in cases minus the mean in non-cases, so a design-based version just needs weighted means.</p>
+<p>As evidence that the deisgn-based versions work, here’s the same sequence of designs with survey-weighted models and design-based <span class="math inline">\(R^2\)</span> statistics:</p>
+<div class="figure">
+<img src="https://68.media.tumblr.com/e8b9c2b0135493e525737f9915fba095/tumblr_inline_okf9q9IgGc1s1hdxy_540.png" />
+
+</div>
+<p>I was surprised that Cox and Snell didn’t notice and comment on this phenomenon, but on looking up the reference I found it’s an exercise in their book <em>Analysis of Binary Data</em></p>

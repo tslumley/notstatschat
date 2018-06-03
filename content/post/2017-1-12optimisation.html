@@ -1,0 +1,15 @@
+---
+title: "Mature and premature optimisation"
+author: "Thomas Lumley"
+date: 2017-01-12
+output: html_document
+---
+
+
+
+<p>Earlier this week I wrote some code that wasted 90% of its time moving data around in memory, because I just ‘grew’ a long vector with the idiom </p>
+<pre><code>&gt; stuff&lt;-c(stuff, morestuff)</code></pre>
+<p>Here’s the <a href="https://github.com/tslumley/bigchisqsum/commit/25ef9dbf8219d313d2053f5baebc526835c0283f">github commit</a> that changed the code.</p>
+<p>I’m writing about it because it illustrates a few useful points.  First, the inefficient code was <strong>absolutely</strong> the right choice initially.  I didn’t know how long each additional vector would be, and while I could have worked it out in principle, in practice I would quite likely have got it wrong. Or at least not been sure it was right.</p>
+<p>Second, the reason I know the code was inefficient was that I <strong>profiled</strong> it.  There were lots of potential inefficiencies in the code because I was trying to write it as simply as possible.  I didn’t know in advance which (if any) would matter, and I was surprised when the profiler found most of the time was being spent in the function <code>c()</code>. </p>
+<p>Third, the new code illustrates an approach to use when you don’t know (or don’t want to work out) how big the pieces of vector will be.  I work out  a <strong>crude upper bound</strong> for the possible size of the vector and have a variable that points to the first unused position so I can put new numbers in the right place. Then, at the end, I return just the part of the vector that I actually used. </p>
