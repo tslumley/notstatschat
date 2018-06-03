@@ -1,0 +1,36 @@
+---
+title: "When the bootstrap doesn’t work"
+author: "Thomas Lumley"
+date:  2017-02-01 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The bootstrap always works, except sometimes. 
+
+By ‘works’ here, I mean in the weakest senses that the large-sample bootstrap variance correctly estimates the variance of the statistic, or that the large-scale percentile bootstrap intervals have their nominal coverage.  I don’t mean the stronger sense that someone like Peter Hall might use, that the bootstrap gives higher-order accurate confidence intervals.  So the bootstrap ‘works’ for the median, even though not as well as for smooth functions of the mean.
+
+Here are the reasons I know of why the bootstrap might fail
+
+0\. **Correlation**. The one that everyone knows about nowadays.  If your data have structure, such as a time series, a spatial map, a carefully-structured experimental design, a multistage survey, a network, then you can’t hope to get the right distribution by resampling in a way that doesn’t respect that structure. 
+
+1\. **Constraints**: Suppose $X_n\sim N(\theta,1)$ and we know $\theta\geq 0$. The maximum likelihood estimator of $\theta$ is $\hat\theta=\max(\bar X,0)$. If $\theta>0$ there isn’t a problem asymptotically (or at a more sophisticated analysis, if $\theta\gg 1/\sqrt{n}$ there isn’t).  But if $\theta=0$ the sampling distribution of $\hat\theta$ is a 50:50 mixture of a spike at zero and the positive half of a $N(0,n^{-1})$ distribution.  The bootstrap distribution is also a mixture of a spike at zero and and a half-normal, but the mass on the spike does not converge to 0.5 (or to anything else) as the sample size increases. The problem is that the height of the spike is $\Phi(\bar X\sqrt{n})$, so the height converges in distribution to $U(0,1)$. 
+
+2\. **Extrema**.  Consider $X\sim U(\theta,1)$. The bootstrap replicates $\theta^*$ have a distribution that puts mass $0.632=1-e^{-1}$ on the smallest observation, $e^{-1}(1-e^{-1})\approx 0.233$ on the second smallest, and so on geometrically. We always have $\theta^*\geq\hat\theta$, and the bootstrap distribution stays very discrete as the sample size increases.
+
+3\. **Lack of smoothness (cube-root asymptotics)** Tukey’s shorth, the mean of the shortest half of the data, converges to the mean at $n^{-1/3}$ rate instead of the usual $n^{-1/2}$. The same is true for the least-median-of-squares regression line, the isotonic regression estimator, and the semiparametric maximum likelihood estimator of a convex density. These all have non-Normal limiting distributions and the bootstrap fails for all of them.
+
+4\. **Lack of smoothness (worse)** Suppose your statistic of interest is the proportion of the distribution represented by non-zero probability mass points. The proportion of non-unique observations estimates this, and is zero for a continuous distribution.  It’s not even close to zero for bootstraps of a sample from a continuous distribution.
+
+5\. **Serious outliers**: Suppose $X$ comes from a Cauchy distribution and you don’t realise and still try bootstrap inference for the mean. There isn’t a mean. The bootstrap intervals don’t even correctly cover the center of symmetry (where the mean would be if there was one). The problem here is that a large collection of new samples from the true distribution would contain outliers of very different sizes (some worse than the original sample).  The bootstrap replicates contain multiple outliers the same size as in the original sample.
+
+6\. **Zero derivative**. Suppose $X\sim N(\sqrt{\theta},1)$ with $\theta\geq 0$ and your statistic is $\bar X^2.$ \[edit so that $\theta$ is what $\bar X^2$ estimates] If $\theta> 0$, that’s fine: $\sqrt{n}(\hat\theta-\theta)$ is asymptotically Normal and the bootstrap works. But if $\theta=0$, $\sqrt{n}(\hat\theta-\theta)$ converges to point mass at zero, and it’s $n(\hat\theta-\theta)$ that converges to $\chi^2_1$.  Since $\theta^*$ is not taken from a distribution with mean zero (it has mean $\bar X$), the convergence doesn’t work. The distributions are not regular at $\theta=0$. For a couple of realistic examples, essentially this happens to the IDI statistic in medical diagnostics, and also in regression if you try to test the joint null hypothesis $\theta_1=0 \cup \theta_2=0$ using $\hat\theta_1\hat\theta_2$ as the statistic. [edit for ‘pleiotropy’ in genetics]
+
+7\. **Sparse estimators**: The lasso, for example, doesn’t bootstrap.  The problem is related to numbers 1 and 6: zero is a special value for the regression coefficients, and the distribution of estimates changes as the true regression coefficient approaches zero.
+
+8\. **Overfitting**:  If your predictive model is overfitted, all the bootstrap replicates will also be overfitted.  You need some way to subtract off the optimism. 
+
+Many of these are fixable with variations on the bootstrap: there are time-series bootstraps and survey bootstraps for problem 0, ideas like the .632 bootstrap for problem 8 and subtle penalised and thresholded bootstraps for problem 7. There are also subsampling bootstraps, which work (in theory) very generally as long as you know the convergence rate of your estimator.  But the simple nonparametric bootstrap can fail, and it’s good to have some idea of when it does. 

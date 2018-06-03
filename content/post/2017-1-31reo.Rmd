@@ -1,0 +1,24 @@
+---
+title: "Te Reo Māori in schools"
+author: "Thomas Lumley"
+date: 2017-01-31
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Having Te Reo Māori taught as part of the standard curriculum in NZ schools seems like a reasonable idea to me. A few reasons:
+
+1\. Learning more than one language is good for understanding grammar and pronounciation, and it doesn’t matter a lot which one.  “Grammar” is, almost by definition, the set of rules for correct sentences that native speakers follow most of the time without thinking, so it’s hard to talk and think about grammar sensibly if you’ve never tried to produce correct sentences in another language.
+
+2\. There isn’t a compelling single alternative purely on the basis of narrowly-defined utility.  In eastern Canada it’s obviously a good idea to learn French. In most of the US, Spanish is the clear choice. There isn’t something like that here, as there wasn’t in Australia where I grew up.
+
+3\. Te reo is relatively easy to pronounce and hear for English speakers.  It uses the same alphabet, it has few or no sounds not present in NZ English (word-initial \\ɾ\\ and \\ŋ\\ might count), and only makes one phonetic distinction that English doesn’t (long vs short vowels). Compare to Mandarin Chinese, which has tones, characters, and a bunch of alvelo-palatal and retroflex consonants, or to Thai which makes a three-way distinction between voiced, unvoiced unaspirated, and unvoiced aspirated consonants. Or even to French.
+
+4\. Formal speeches and welcomes in te reo seem to be part of life here, and they’re probably more interesting if you can understand parts of them.
+
+5\. It promotes the radical left-wing agenda of brainwashing children into believing the country had a genuine pre-European history and culture.
+
+It should be easier to implement a language-teaching policy with the same language being used everywhere, but if people really wanted their kids to learn Spanish or Indonesian or Chinese or, whatever, Pitjantjatjara I wouldn’t be opposed to having alternatives. There currently isn’t much sign that they do.
