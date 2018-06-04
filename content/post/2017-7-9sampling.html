@@ -1,0 +1,44 @@
+---
+title: "Probabilities not bounded away from zero"
+author: "Thomas Lumley"
+date: 2017-07-09
+output: html_document
+---
+
+
+
+<p>We have a population or cohort of <span class="math inline">\(N\)</span> people divided into <span class="math inline">\(H\)</span> sampling strata, with a sample of size <span class="math inline">\(n_h\)</span> taken from the population <span class="math inline">\(N_h\)</span> in stratum <span class="math inline">\(h\)</span>. Let <span class="math inline">\(\pi_{ij}\)</span> be the sampling probability for person <span class="math inline">\(i\)</span> in stratum <span class="math inline">\(h\)</span>. When we do asymptotics we usually assume <span class="math inline">\(\pi_{ih}\)</span> are bounded away from zero. That’s not ideal for, say, case-control studies of rare diseases, where we might want asymptotic approximations based on the case incidence being small (ie, converging to zero). </p>
+<p>In the situations where I’m interested in <span class="math inline">\(\pi_{ih}\)</span> being small, it’s usually small for a whole stratum. Since sampling is independent between strata, there should be a central limit theorem separately for each stratum, and we should be able to add up the limiting Normal approximations for the stratum totals to get a Normal limit for the population total estimate and the population mean estimate. </p>
+<p>To formalise this,  suppose <span class="math inline">\(n_h\to\infty\)</span> for every stratum (so that asymptotics makes sense), and that <span class="math inline">\(\pi_{ih}N_h/n_h\)</span> is bounded above and below, so that within each stratum the sampling probability has a finite (relative) range. As a simple example, we might have a case stratum with <span class="math inline">\(\pi_i\approx 1\)</span> and a control stratum with very small <span class="math inline">\(\pi_i\)</span>. </p>
+<p>[<strong>Update</strong>: As Stas Kolenikov points out, I’m assuming the same strata are small large along the infinite sequence, so I need something like <span class="math inline">\(n_{h_1}/(n_{h_1}+n_{h_2})\to c_{h_1,h_2}\in [0,1]\)</span> for each pair of strata.  This isn’t a meaningful loss of generality since (a) the infinite sequence is an analytic fiction and we might as well set it up for our maximum convenience; and (b) even without assuming anything, every subsequence will have a subsubsequence along which the condition holds]</p>
+<p>By standard results, <span class="math inline">\(n_h^{1/2}(\bar X_{.h}-\mu_h)\stackrel{d}{\to} N(0,\sigma^2_h)\)</span> for each stratum <span class="math inline">\(h\)</span> , and by the Skorohod representation theorem we can find an <span class="math inline">\(H\)</span>-variate normal vector <span class="math inline">\(\langle Z_h\rangle_{h=1}^H\)</span> with<br />
+<span class="math display">\[n_h^{1/2}(\bar X_{.h}-\mu_h)\stackrel{p}{\to} Z_h\]</span><br />
+(possibly on a different probability space), to get<br />
+<span class="math display">\[\bar X_{.h}= \mu_h+ n_h^{-1/2}{Z_h}+o_p(n_h^{-1/2})\]</span><br />
+The <span class="math inline">\(Z_h\)</span> will be independent, with mean zero; write <span class="math inline">\(\sigma^2_h\)</span> for the variances. </p>
+<p>[<strong>Update</strong>: Note that <span class="math inline">\(\sigma^2_h\)</span> is just <span class="math inline">\(\mathrm{var}[Z_h]\)</span>, nothing more fundamental. Under stratified random sampling, <span class="math inline">\(\sigma^2_h\)</span> will be <span class="math inline">\(\mathrm{var}[X]\)</span> in stratum <span class="math inline">\(h\)</span> multiplied by the ‘finite population correction” <span class="math inline">\((N_h-n_h)/N_h\)</span>, but under other sampling schemes it will be something else]</p>
+Now,<br />
+<span class="math display">\[\bar X_{..} = \frac{1}{N}\sum_{h=1}^H N_h\bar X_{.h}\]</span><br />
+giving<br />
+
+<span class="math display">\[\begin{align*}  
+\bar X_{..} &amp;=\sum_{h=1}^H \frac{N_h}{N}\mu_h+\frac{N_hn_h^{-1/2}}{N}Z_h+o_p\left(\frac{N_hn_h^{-1/2}}{N} \right)\\  
+&amp;=\mu+\left(\sum_{h=1}^H\frac{N_hn_h^{-1/2}}{N}Z_h\right)+o_p\left(\sum_{h=1}^H\frac{ N_h}{N\sqrt{n_h}}\right)  
+\end{align*}\]</span>
+<p>First, suppose $ N_h/N$ converges to a non-zero constant for each <span class="math inline">\(h\)</span>. Let <span class="math inline">\(n_*=\min_h n_h\)</span> and define <span class="math inline">\({\mathcal H}=\{h: \lim n_*/n_h&gt;0\}\)</span><br />
+<span class="math display">\[\begin{eqnarray*}  
+\bar X_{..} &amp;= &amp;\mu+\left(\sum_{h=1}^H\frac{N_hn_h^{-1/2}}{N}Z_h\right)+o_p\left(\frac{\max_h N_h}{N\min_h \sqrt{n_h}}\right)\\  
+ &amp;= &amp;\mu+\left(\sum_{h\in{\mathcal H}}\frac{N_hn_*^{-1/2}}{N}Z_h\right)+\sum_{h\not\in{\mathcal H}} o_p(n_*^{-1/2})+o_p\left(\frac{\max_h N_h}{N\sqrt{n_*}}\right)\\  
+&amp;=&amp; \mu+ n_*^{-1/2}Z+o_p(n_*^{-1/2}) \\  
+\end{eqnarray*}\]</span></p>
+<p>where <span class="math inline">\(Z\sim N(0, \sigma^2)\)</span> with<br />
+<span class="math display">\[\sigma^2=\lim_{n_*\to\infty} \sum_{h\in{\mathcal H}} \frac{N_h^2n_*\sigma^2_h}{N^2n_h}\]</span></p>
+<p>Alternatively, for case–control sampling we may have <span class="math inline">\(N_h/N\to 0\)</span> in the case stratum, but we would have <span class="math inline">\(n_h\)</span> all of the same order, and so of the same order as their total, <span class="math inline">\(n\)</span>. The limiting distribution is dominated by the largest strata: define <span class="math inline">\({\mathcal H}&#39;=\{h: \lim N_h/N&gt;0\}\)</span> (which is non-empty as <span class="math inline">\(H\)</span> is finite)</p>
+<p><span class="math display">\[\begin{eqnarray*}  
+\bar X_{..} &amp;=&amp;\mu+\left(\sum_{h=1}^H\frac{N_hn_h^{-1/2}}{N}Z_h\right)+o_p\left(\sum_{h=1}^H\frac{ N_h}{N\sqrt{n_h}}\right)\\  
+&amp;=&amp;\mu+\left(\sum_{h\in{\mathcal H}&#39;}\frac{N_hn^{-1/2}}{N}Z_h\right)+\sum_{h\not\in{\mathcal H}&#39;} o_p(n^{-1/2})+o_p\left(n^{-1/2}\right)\\\  
+&amp;=&amp; \mu+ n^{-1/2}Z+o_p(n^{-1/2})\\  
+\end{eqnarray*}\]</span><br />
+where <span class="math inline">\(Z\sim N(0, \sigma^2)\)</span> with<br />
+<span class="math display">\[\sigma^2=\lim_{n\to\infty} \sum_{h\in{\mathcal H}} \frac{N_h^2n\sigma^2_h}{N^2n_h}\]</span></p>
+<p>Weaker conditions on <span class="math inline">\(N_h\)</span> and <span class="math inline">\(n_h\)</span> are clearly possible: it is only necessary to identify which terms dominate the limiting distribution of <span class="math inline">\(\bar X_{..}\)</span>, since the limiting distribution of estimated stratum totals is always independent <span class="math inline">\(H\)</span>-variate Normal under appropriate scaling.</p>

@@ -1,0 +1,43 @@
+---
+title: "Come work with us"
+author: "Thomas Lumley"
+date: 2017-03-28
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ The Statistics Department at the University of Auckland is looking for three new academics. We have two entry-level positions[1], and one mid-level to senior position[2]. Formal ad [here](https://www.opportunities.auckland.ac.nz/psp/ps/EMPLOYEE/HRMS/c/HRS_HRAM.HRS_CE.GBL?Page=HRS_CE_JOB_DTL&Action=A&JobOpeningId=18865&SiteId=1&PostingSeq=1):
+
+![](https://68.media.tumblr.com/363a02c228d128bc0c4caf2135349bc9/tumblr_inline_on97s54qhz1s1hdxy_540.png)
+
+_([https://www.flickr.com/photos/yaranaika/5612799116](https://www.flickr.com/photos/yaranaika/5612799116))_
+
+The department has a fairly broad view of what statistics is about: we have probabiliists (both theoretical and applied), researchers in mainstream statistical methods, in astrostatistics, in genomics, in stats education, in statistical ecology, in forensic statistics, and ([famously](https://www.stat.auckland.ac.nz/en/about/our-department/ihaka-lectures.html)) in statistical computing. The department is fairly stable financially: about a third of the University’s students take an introductory stats paper, so while outside money is always a bonus, the department isn’t going to dry up and blow away without it. We’re the largest department of statistics in Australasia, and we think we’re the second-largest in the southern hemisphere (there’s a bigger one in São Paulo). The current QS rankings have us at 49, which doesn’t seem outrageously high or low. 
+
+![](https://68.media.tumblr.com/0b289503c330c02a5a403fef366aa525/tumblr_inline_on97wxk43l1s1hdxy_540.png)
+
+_([https://www.flickr.com/photos/yaranaika/6194710360](https://www.flickr.com/photos/yaranaika/6194710360))  
+_
+
+As the ad says, there are specific needs that it would be great to fill: our applied probabilist and our forensics expert would like collaborators, we’ve got a big cohort of data science students looming from an agreement with a university in Chongqing, we have opportunities to expand in social stats and demography, and our postgraduate students would like more projects in finance to be available. But we’re not expecting to get a precise fit, and we’ll consider people with any research area close enough to statistics.
+
+![](https://68.media.tumblr.com/de2655eba0d0031a4351afc222029c19/tumblr_inline_on98cagQTp1s1hdxy_540.png)
+
+_([https://www.flickr.com/photos/yaranaika/6135487087/in/album-72157627643758946/](https://www.flickr.com/photos/yaranaika/6135487087/in/album-72157627643758946/))_
+
+Auckland is a medium-sized (1.5 million), cosmopolitan city with about 1/3 of the population born overseas. It’s built on an isthmus between two harbours, full of tiny extinct volcanoes, so it’s physically spectacular.  The weather is mild: never below freezing in winter, never above 30C (85F) in summer. There are the basic civilised amenities like good libraries, public transport, single-payer health care, and curry laksa. Auckland has a housing-price problem that’s so bad even the politicians have noticed, but otherwise is a nice place to live.
+
+Nat Torkington, an NZ tech person, has [a largely relevant blog post](http://nathan.torkington.com/blog/2016/11/09/on-moving-to-new-zealand/) on moving to NZ for American tech types. Obviously I’m biased, but it’s not as if Auckland was my only option for somewhere to work and live. 
+
+![](https://68.media.tumblr.com/31903a763f653764cd77b4c20c2a564e/tumblr_inline_on9991Rcie1s1hdxy_540.png)
+
+_([https://www.flickr.com/photos/yaranaika/8152694252/in/album-72157631922413795/](https://www.flickr.com/photos/yaranaika/8152694252/in/album-72157631922413795/))_
+
+[1] Lecturer, equivalent to hard-money tenure-track Assistant Professor in the US system  
+
+[2] Senior Lecture or Associate Professor, about the range from Associate Professor to the starting end of full Professor in the US
+
+Photos all CC-BY-SA, by Salman Javed:  [https://www.flickr.com/photos/yaranaika/](https://www.flickr.com/photos/yaranaika/)

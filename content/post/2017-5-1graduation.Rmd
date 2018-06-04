@@ -1,0 +1,20 @@
+---
+title: "Value of a degree"
+author: "Thomas Lumley"
+date: 2017-05-01
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ Today was graduation day for Science students at the University of Auckland. At each graduation, the Chancellor of the University gives an introduction that includes (for example, [here](https://youtu.be/aPKGc-99BSI?t=19m16s))
+
+> *We know that, compared to those whose formal education ends in high school, graduates have lower unemployment rates, higher salaries, better career prospects, and better health outcomes.*
+
+I’d hope that a university degree would give students the tools to think about claims like that. 
+
+Some of them would be able to explain why that sentence, although literally just a claim of correlation, becomes a claim of causation via the pragmatics of language.  Others could describe the alternative explanations for the difference, whether through education selecting more intelligent people, or through wealth leading both to better access to education and to other social and financial capital. Others could work out the sort of data or experiment you’d need to make the implied causal claim valid.
+
+I’d hope that our students could do that sort of thing, but I think it’s unfair to make them do it on graduation day. 

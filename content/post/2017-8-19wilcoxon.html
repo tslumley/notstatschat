@@ -1,0 +1,14 @@
+---
+title: 'Wilcoxon and polymath: another update'
+author: "Thomas Lumley"
+date: 2017-08-19
+output: html_document
+---
+
+
+
+<p>As I wrote before, there’s a polymath (large-scale collaborative pure maths) project on transitivity of dice. <a href="https://gowers.wordpress.com/2017/07/25/intransitive-dice-vi-sketch-proof-of-the-main-conjecture-for-the-balanced-sequences-model/#more-6318">Here’s the latest update</a> from Timothy Gowers’s blog.</p>
+<p>Suppose <span class="math inline">\(X\)</span>, <span class="math inline">\(Y\)</span>, and <span class="math inline">\(Z\)</span> are discrete distributions supported on <span class="math inline">\(1,2,\\dots,n\)</span>.  We can ask about <span class="math inline">\(P(X&lt;Y)\)</span> and <span class="math inline">\(P(Y&lt;Z)\)</span> and <span class="math inline">\(P(X&lt;Z)\)</span>, which is what the Wilcoxon/Mann-Whitney rank test does. </p>
+<p>The project has basically proved that under one model for randomly choosing distributions, if <span class="math inline">\(X\)</span>,  <span class="math inline">\(Y\)</span>, and <span class="math inline">\(Z\)</span> have the same mean and <span class="math inline">\(P(X&gt;Y)&gt;1/2\)</span> and <span class="math inline">\(P(Y&gt;Z)&gt;1/2\)</span>, the probability of <span class="math inline">\(P(X&gt;Z)&gt;1/2\)</span> is <span class="math inline">\(1/2+o(1)\)</span>. That is, if three distributions have the same mean, and the Wilcoxon test says <span class="math inline">\(X\)</span> is bigger than <span class="math inline">\(Y\)</span> and <span class="math inline">\(Y\)</span> is bigger than <span class="math inline">\(Z\)</span>, you’ve got essentially no information about whether it will say <span class="math inline">\(X\)</span> is bigger than <span class="math inline">\(Z\)</span>.</p>
+<p>Gowers also says they are close to showing a converse: if the means are different, then <span class="math inline">\(P(X&gt;Y)&gt;1/2\)</span>, <span class="math inline">\(P(Y&gt;Z)&gt;1/2\)</span> and <span class="math inline">\(P(X&gt;Z)&gt;1/2\)</span> are true or false they way you’d assume from the ordering of the means. </p>
+<p>That is, we knew the Wilcoxon test does not give a self-consistent ordering on all distributions. Now we know that (for this particular model of discrete distributions) when it <strong>does</strong> give an ordering, the ordering is typically the same as the ordering by means. </p>

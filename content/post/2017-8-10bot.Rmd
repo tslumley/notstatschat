@@ -1,0 +1,25 @@
+---
+title: "The bus bot"
+author: "Thomas Lumley"
+date: 2017-08-10 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Back in January, I spent a few hours hacking together a script to tweet summaries of the Auckland bus system, on the account [`@tuureiti`](https://twitter.com/tuureiti). People seemed to like it: the bot has 110 followers, many of whom appear to be actual people (or at least actual organisations).
+
+A few times I’ve been asked for the source code and hadn’t gotten around to it, because the code is ugly, includes my API key, and is ugly. The second problem is fixable, so I fixed it. The code (which has been running the bot since about 04:00 UTC, August 10th), is [here](https://github.com/tslumley/busbot). Did I mention it was ugly?
+
+Good takeaways from the code: 
+
+*   it’s really easy to write a Twitter bot in R  
+*   it’s pretty easy to parse JSON in R
+*   when you’re dealing with external servers, **anything** can fail so you need exception handling **everywhere**
+*   Rule 34a: if you can think of it, there’s an R package for it.
+*   experimental hacked-together scripts last longer than you expected
+
+From a user viewpoint, people seem to like the morning and evening messages, and the greetings in reo Māori.  They like the unfiltered data -- especially as Auckland Transport’s headline punctuality figure (based on the first stop only) is so far removed from the lived experience of passengers. 
+
+One problem with percentage on time is that people don’t have a good idea of what is a sensible target.  Aiming for 100% on time would be a disaster: you’d need to slow down the entire system to the worst-case traffic speeds.  One of the things I want to do with the AT transit feed is to get a better idea of what’s reasonable, so that a future `@tuureiti` can produce the sort of rating scale that the [‘London Transport Chaos’](http://www.transportchaos.org/) site used to. 

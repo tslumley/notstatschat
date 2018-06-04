@@ -1,0 +1,16 @@
+---
+title: "Pipeable survey analysis in R"
+author: "Thomas Lumley"
+date:  2017-05-29
+output: html_document
+---
+
+
+
+<p>Today, I accidentally found out about the <a href="https://github.com/gergness/srvyr">‘srvyr’ package</a>, which is a wrapper for my ‘survey’ package to make it work with %&gt;% pipes and dplyr and so on. </p>
+<ol style="list-style-type: decimal">
+<li><p> Yay!</p></li>
+<li>R has a package discovery problem. I wouldn’t say I’m the most plugged-in of R users, but there must be a reasonable fraction who would be even less likely than me to find out about it.  </li>
+<li>Even though the ‘survey’ package design sticks fairly close to ‘tidy data’ principles, the fact that it uses different conventions from the `tidyverse’ packages means that there’s <strong>a whole lot</strong> of adaptor code needed. I could have fixed this by sticking to Hadley’s conventions, except that would have needed time travel.</li>
+<li><p>It’s much harder, sitting at the command line, to find the code that actually does the work in a pipeable tidyverse-type package. It’s clear that many people find that a good tradeoff, but I’m not sure it is for me. </p></li>
+</ol>

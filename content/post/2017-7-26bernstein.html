@@ -1,0 +1,61 @@
+---
+title: "Tail bounds under sparse correlation"
+author: "Thomas Lumley"
+date: 2017-07-26
+output: html_document
+---
+
+
+
+<p><em>Attention Conservation Notice: Very long and involves a proof that hasn’t been published, though the paper was rejected for unrelated reasons. </em></p>
+<p>Basically everything in statistics is a sum, and the basic useful fact about sums is the Law of Large Numbers: the sum is close to its expected value. Sometimes you need more, and there are lots of uses for a good bound on the probability of medium to large deviations from the expected value.</p>
+<p>One of the nice ones is Bernstein’s Inequality, which applies to bounded variables. If the variables have mean zero, are bounded by <span class="math inline">\(\pm K\)</span>, and the variance of the sum is <span class="math inline">\(\sigma^2\)</span>, then<br />
+<span class="math display">\[\Pr\left(\left|\sum_i X_i\right|&gt;t\right)\leq 2e^{-\frac{1}{2}\frac{t^2}{\sigma^2+Kt}}.\]</span><br />
+The bound is exponential for large <span class="math inline">\(t\)</span> and looks like a Normal distribution for small <span class="math inline">\(t\)</span>.  You don’t actually need the boundedness; you just need the moment bounds it implies: for all <span class="math inline">\(r&gt;2\)</span>, <span class="math inline">\(EX_i^r\leq K^{r-2}r!E[X_i^2]/2\)</span>. That looks like the Taylor series for the exponential, and indeed it is.</p>
+<p>These inequalities tend to only hold for sums of independent variables, or ones that can be rewritten as independent, or nearly independent. My one, which this post is about, is for what I call sparse correlation.  Suppose you’re trying to see how accurate radiologists are (or at least, how consistent they are). You line up a lot of radiologists and a lot of x-ray images, and get multiple ratings.  Any two ratings of the same image will be correlated; any two ratings by the same radiologist will be correlated; but ‘most’ pairs of ratings will be independent. </p>
+<p>You might have the nice tidy situation where every radiologist looks at every image, in which case you could probably use <span class="math inline">\(U\)</span>-statistics to prove things about the analysis. More likely, though, you’d divide the images up somehow. For rating <span class="math inline">\(X_i\)</span>, I’ll write <span class="math inline">\({\cal S}_i\)</span> as the set of ratings that aren’t independent of <span class="math inline">\(X_i\)</span>, and call it the neighbourhood of <span class="math inline">\(X_i\)</span>.  You could imagine a graph where each observation has an edge to each other observation in its neighbourhood, and this graph will be important later.</p>
+<p>I’ll write <span class="math inline">\(M\)</span> for the size of the largest neighbourhood and <span class="math inline">\(m\)</span> for the size of the largest set of independent observations.  If you had 10 radiologists each reading 20 images, <span class="math inline">\(M\)</span> would be <span class="math inline">\(10+20-1\)</span> and <span class="math inline">\(m\)</span> would be <span class="math inline">\(10\)</span>.  I’ll call data sparsely correlated if <span class="math inline">\(Mm\)</span> isn’t too big. If I was doing asymptotics I’d say <span class="math inline">\(Mm=O(n)\)</span></p>
+<p>I actually need to make the stronger assumption that any two sets of observations that aren’t connected by any edges in the graph are independent: pairwise independence isn’t enough. For the radiology example that’s still fine: if set A and set B of ratings don’t involve any of the same images or any of the same radiologists they’re independent.</p>
+<p>A simple case of sparsely correlated data that’s easy to think about (if pointless in the real world) is identical replicates.  If we have <span class="math inline">\(m\)</span> independent observations and take <span class="math inline">\(M\)</span> copies of each one, we know what happens to the tail probabilities: you need to replace <span class="math inline">\(t\)</span> by <span class="math inline">\(Mt\)</span> and <span class="math inline">\(\sigma^2\)</span> by <span class="math inline">\(M\sigma^2\)</span> (ie, <span class="math inline">\(M^2\)</span> times the sum of the <span class="math inline">\(m\)</span> independent variances). We can’t hope to do better; it turns out we can do as well. </p>
+<p>The way we get enough independence to use the Bernstein’s-inequality argument is to make up <span class="math inline">\(M-1\)</span> imaginary sets of data.  Each set has the same joint distribution as the original variables, but the sets are independent of each other.  Actually, what we need is not <span class="math inline">\(M\)</span> copies but <span class="math inline">\(\chi\)</span> copies, where <span class="math inline">\(\chi\)</span> is the number of colours needed for every variable in the dependency graph to have a different colour from all its neighbours. <span class="math inline">\(M\)</span> is always enough, but you can sometimes get away with fewer.</p>
+<p>Here’s the picture, for a popular graph</p>
+<div class="figure">
+<img src="https://68.media.tumblr.com/1eb7385484649fe9267c716e30f66dca/tumblr_inline_otpz4zklkg1s1hdxy_540.png" />
+
+</div>
+<p>The original variables are at the top. We needed three colours, so we have the original variables and two independent copies. </p>
+<p>Now look at the points numbered ‘1′.  Within a graph these are never neighbours because they are the same colour, and obviously between graphs they can’t be neighbours. So, all the variables labelled `1′ are independent (even though they have horribly complicated relationships with variables of different labels). There’s a version of every variable labelled ‘1′, another version labelled ‘2′, and another  labelled ‘3′.  </p>
+<p>The proof has five steps.  First, we work with the exponential of the sum in order to later use Markov’s inequality to get exponential tail bounds. Second, we observe that adding all these extra copies makes the problem worse: a bound for the sum of all <span class="math inline">\(M\)</span> copies will bound the original sum. Third, we use the independence within each label to partially factorise an expectation of <span class="math inline">\(e^{\textrm{sum}}\)</span> into a product of expectations. We use the original Taylor-series argument based on the moment bounds to get a bound for an exponential moment. And, finally, we use Markov’s inequality to turn that into an exponential tail bound.  The first, and last two, steps are standard, the second and third are new. </p>
+<p><strong>Theorem</strong>: Suppose we have <span class="math inline">\(X_i\)</span>, <span class="math inline">\(i=1,2,\ldots,n\)</span> mean zero with neighbourhood size <span class="math inline">\(M\)</span>. Suppose that for each <span class="math inline">\(X_i\)</span><br />
+<span class="math display">\[ EX_i^r\leq K^{r-2}r!\sigma_i^2/2\]</span><br />
+and let <span class="math inline">\(\sigma^2\geq\sum_{i=1}^n\sigma_i^2\)</span><br />
+Then<br />
+<span class="math display">\[\Pr\left(\left|\sum_i X_i\right|&gt;t\right)\leq2e^{-\frac{1}{2}\frac{t^2}{M\sigma^2+MKt}}.\]</span></p>
+<p><strong>Proof</strong>: The <span class="math inline">\(M\)</span> copies of the variables are written <span class="math inline">\(\tilde X_{ij}\)</span> with <span class="math inline">\(i=1,\dots,n\)</span> and <span class="math inline">\(j=1,\dots,M\)</span>, and the labelled versions as <span class="math inline">\(X_{i(j)}\)</span> for the copy of <span class="math inline">\(X_i\)</span> labelled <span class="math inline">\(j\)</span>. </p>
+<p>By independence of the copies from each other<br />
+<span class="math display">\[\begin{eqnarray*}  
+E\left[\exp(\frac{1}{M}\sum_{j=1}^M\sum_{i=1}^n\tilde X_{ij}) \right]&amp;=&amp;\prod_{j=1}^ME\left[\exp(\frac{1}{M}\sum_{i=1}^n\tilde X_{ij}) \right]\\  
+&amp;=&amp;E\left[\exp(\frac{1}{M}\sum_{i=1}^nX_{i}) \right]^M\\\  
+&amp;\geq&amp;E\left[\exp(\frac{1}{M}\sum_{i=1}^nX_{i}) \right]  
+\end{eqnarray*}\]</span><br />
+so introducing the extra copies makes things worse.</p>
+<p>Now we use the labels. We can factor the expectation into a product over <span class="math inline">\(i\)</span>, since <span class="math inline">\(X_{i(j)}\)</span> with the same <span class="math inline">\(j\)</span> and different <span class="math inline">\(i\)</span> are independent.<br />
+<span class="math display">\[E\left[\exp(\frac{1}{M}\sum_{j=1}^M\sum_{i=1}^n\tilde X_{i(j)}) \right]=\prod_i E\left[\exp\left(\frac{1}{M}\sum_{j=1}^M \tilde X_{i(j)} \right)\right]\]</span></p>
+<p>Now we use the moment assumptions to get moment bounds for the sum<br />
+<span class="math display">\[E\left[\left(\frac{1}{M}\sum_{j=1}^M\sum_{i=1}^n\tilde X_{i(j)}\right)^r\;\right]\leq M^{r-1}E\left[\left(\sum_{i=1}^n \tilde X_{i1}\right)^r\,\right]\leq M^{r-1}r!K^{r-2}\sigma^2\]</span></p>
+<p>Writing <span class="math inline">\(S_n\)</span> for <span class="math inline">\(\sum_{i=1}^n X_i\)</span>, and <span class="math inline">\(\tilde S_n\)</span> for <span class="math inline">\(\sum_{i,j} \tilde X_{ij}\)</span> we have (for a value <span class="math inline">\(c\)</span> to be chosen later)<br />
+<span class="math display">\[\begin{eqnarray*}  
+E e^{cS_n} &amp;\leq&amp; Ee^{c\tilde S_n}\\  
+&amp;=&amp; 1+\frac{1}{2}\sigma^2c^2\sum_{r=2}^\infty \frac{c^{r-2}E\tilde S_n^r}{r!\sigma^2/2}\\  
+&amp;&lt;&amp;\exp\left[\frac{1}{2}\sigma^2c^2\sum_{r=2}^\infty \frac{c^{r-2}E\tilde S_n^r}{r!\sigma^2/2}\right]\\  
+&amp;\leq&amp;\exp\left[\frac{1}{2}\sigma^2c^2\sum_{r=2}^\infty \frac{c^{r-2}M^{r-1}r!K^{n-2}\sigma^2/2}{r!\sigma^2/2}\right]\\  
+&amp;&lt;&amp;\exp\left[\frac{1}{2}M\sigma^2c^2\sum_{r=2}^\infty(cMK)^{r-2}  \right]\\  
+&amp;=&amp;\exp\left[\frac{M\sigma^2c^2}{2(1-cMK)}\right]  
+\end{eqnarray*}\]</span></p>
+<p>Write <span class="math inline">\(\tilde K\)</span> for <span class="math inline">\(MK\)</span> and <span class="math inline">\(\tilde \sigma^2\)</span> for <span class="math inline">\(M\sigma^2\)</span> to get<br />
+<span class="math display">\[E e^{cS_n}&lt;\exp\left[\frac{\tilde\sigma^2c^2}{2(1-c\tilde K)}\right]\]</span><br />
+Markov’s inequality now says<br />
+<span class="math display">\[P[S_n\geq t\tilde\sigma]\leq \frac{Ee^{cS_n}}{e^{ct\tilde\sigma}}&lt;\exp\left[\frac{\tilde\sigma^2c^2}{2(1-c\tilde K)}-ct\tilde\sigma\right],\]</span><br />
+We’re basically done: we just need to find a good choice of <span class="math inline">\(c\)</span>. The calculations are the same as in Bennett’s 1962 proof of Bernstein’s inequality, where he shows that <span class="math inline">\(c=t/(\tilde Kt+\tilde \sigma)\)</span> gives<br />
+<span class="math display">\[P[S_n\geq t]&lt;\exp\left[-\frac{1}{2}\frac{t^2}{\tilde\sigma^2+\tilde Kt}\right]\]</span></p>
+<p>That’s an upper bound, and adding the same lower bound at most doubles the tail probability. So we are done. </p>

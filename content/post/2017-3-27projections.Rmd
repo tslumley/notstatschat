@@ -1,0 +1,28 @@
+---
+title: "Flat Earthers"
+author: "Thomas Lumley"
+date:  2017-03-27
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The world isn’t a flat rectangle. 
+
+We’ve got to the stage where most people accept this.  It’s especially easy in New Zealand, where we know you can fly in a wide variety of directions and still end up in Europe after about the same time in the air. 
+
+Since the world isn’t a flat rectangle, all flat rectangular maps have to be badly wrong somehow.  Recently, Boston public schools have shifted from the badly-wrong Mercator projection to the differently-wrong Gall-Peters projection. That’s probably a good thing, but the coverage has been playing to some urban myths about maps.
+
+The Mercator projection makes countries far from the equator look bigger than they are relative to countries near the equator. The myth is that this is **why** Europeans adopted it, to make Europe look big.  To start with, the myth doesn’t make a lot of sense: even when we stipulate European ego and intellectual dishonesty, we’re left with the question of why they’d want to make their colonial conquests look small. When the British boasted of an empire ‘on which the sun never sets’ they weren’t trying to make the British Isles look big. Anyone who knows a fisher, knows that “it was this big” isn’t typically an understatement.
+
+More importantly, there’s a good reason for the Mercator projection.  If you sail a ship along a constant compass bearing (as you do), your course is a straight line on the Mercator projection. It’s the only rectangular projection where this is true. Back in the day, that was a life-saving piece of navigation tech. 
+
+Because all flat maps have to lie, being perfect for compass navigation means the Mercator projection has to really suck for some other map features. It’s really bad at area.  The Gall-Peters projection is perfect for area. Of course, being perfect for area means the Gall-Peters projection has to really suck in some other ways. It distorts shape really badly, and it distorts geopolitics pretty badly, too. 
+
+People who work with maps mostly think there are better compromises: either giving up on longitude lines being straight, or trading off area distortion and shape distortion, or allowing for gaps cut into the oceans. XKCD, as usual, [has a good take](https://xkcd.com/977/).  
+
+It is strange, though, that Google has forced the world into “Web Mercator” as a standard online projection. Few people use Google Maps to plan long sailing voyages. It would be simpler as well as arguably more accurate to use the Plate Carrée projection where vertical and horizontal coordinates map on to latitude and longitude.  [**Update**: it turns out I’m completely wrong here. Web Mercator is important if you want to  preserve shape in small areas, and if you *also* want nice rectangular nesting of map tiles. Which you do. So just use Google Earth for continent-scale maps.]
+
+One bonus of all the bizarre projections we have is to make some nice homework exercises in differential topology: work out what the implied distance metric is on the projected space, or derive the formulas for straight lines.

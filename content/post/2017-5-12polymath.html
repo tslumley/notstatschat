@@ -1,0 +1,12 @@
+---
+title: "A ‘polymath’ project on the Wilcoxon test?"
+author: "Thomas Lumley"
+date: 2017-05-12
+output: html_document
+---
+
+
+
+<p>`Polymath’ is a set of projects in massive collaborative proof of mathematical results; Terry Tao and Timothy Gowers are two of the famous mathematicians involved.  There’s a new potential project <a href="https://gowers.wordpress.com/2017/04/28/a-potential-new-polymath-project-intransitive-dice/"> on Gowers’s blog</a>, which he describes a being related to intransitive dice. As you know, if you read this blog, (a) I prefer the term non-transitive, and (b) this means it’s about the Wilcoxon test.</p>
+<p>The idea of the conjecture is that you define an <span class="math inline">\(n\)</span>-sided die by sampling uniformly with replacement <span class="math inline">\(n\)</span> numbers from <span class="math inline">\(1, 2,3,\dots,n\)</span> as the numbers on the sides, with the constraint that the numbers have to add up to <span class="math inline">\(n(n+1)/2\)</span>. Rolling such a die <span class="math inline">\(M\)</span> times samples <span class="math inline">\(M\)</span> observations from a distribution on <span class="math inline">\(1,2,3,\\dots, n\)</span> with mean <span class="math inline">\((n+1)/2\)</span>.  You construct three such dice, <span class="math inline">\(A\)</span>, <span class="math inline">\(B\)</span>, and <span class="math inline">\(C\)</span>.  Their distributions have the same mean, so the <span class="math inline">\(t\)</span>-test would have no ability to distinguish data from the three distributions, no matter how large <span class="math inline">\(M\)</span> was. But the Wilcoxon test probably would. It’s assumed, but not yet proved, that the probability of a tie according to the Wilcoxon test goes to zero as <span class="math inline">\(n\to\infty\)</span>.</p>
+<p>The interesting conjecture is that if you see <span class="math inline">\(A\)</span> beat <span class="math inline">\(B\)</span> and <span class="math inline">\(B\)</span> beat <span class="math inline">\(C\)</span> according to the Wilcoxon test, the probability that <span class="math inline">\(A\)</span> beats <span class="math inline">\(C\)</span> goes to 1/2 as <span class="math inline">\(n\)</span> goes to infinity.   That is, given equal means, the Wilcoxon test is basically as non-transitive as possible.  </p>

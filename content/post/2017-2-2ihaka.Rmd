@@ -1,0 +1,22 @@
+---
+title: "The Ihaka Lectures"
+author: "Thomas Lumley"
+date: 2017-02-02
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ The Stats department at the University of Auckland is [inaugurating a public lecture series](https://www.stat.auckland.ac.nz/en/about/our-department/ihaka-lectures.html), named to honour Ross Ihaka, who is planning to retire this year. We’re having four lectures, with speakers chosen to represent a wide range of areas where statistical computing and graphics is important. 
+
+Wednesday, March 8: **Hadley Wickham** (Chief Scientist, RStudio; (honorary) Associate Professor, University of Auckland).  Hadley did an MSc in Statistics here in Auckland and a PhD with Di Cook’s statistical graphics group at Iowa State University.  As a researcher, he studies data analysis and visualisation. As a software developer, he produces and encourages others to produce an ecosystem of packages for data manipulation and tidying.  As a community leader, he has been an advocate for under-represented groups and for being generally nice to people whether they deserve it or not.
+
+Wednesday, March 15: **Harkanwal Singh** (Data Editor, New Zealand Herald) Harkanwal was New Zealand’s first full-time data journalist, a role he created for himself and persuaded his employers to accept. He and his team at the Herald have since won several Canon Media Awards. Harkanwal’s work combines analysis and programming to create interactive visualisations and present complex data in stories the reader can understand. 
+
+Wednesday, March 22: **Genevera Allen** (Dobelman Family Junior Chair, Rice University). Genevera works in the intersection of statistics, medicine, and applied mathematics,  with joint appointments at Rice University and Baylor College of Medicine.  She has appeared in Forbes ‘30 under 30′, as the North America representative in the  International Biometric Society’s “Young Statisticians Showcase”, and in the American Statistical Association’s video “This is Statistics’. 
+
+Wednesday, March 29: **Ross Ihaka** (Associate Professor of Statistics, University of Auckland). Ross doesn’t actually need an introduction.  If you’re reading this, you've probably heard of R. I’ll just mention his Pickering Medal from the Royal Society of New Zealand (for excellence and innovation in technology).  
+
+Lectures start at 6:30pm, in MLT1 on the ground (not basement) floor of [38 Princes Street](https://www.google.co.nz/maps/place/Department+of+Statistics,+University+of+Auckland/@-36.8524341,174.7658516,17z/data=!3m1!4b1!4m5!3m4!1s0x6d0d47e32eb1d09d:0x868a73f26ed3e621!8m2!3d-36.8524341!4d174.7680403).  Refreshments from 6pm in the foyer of [23 Symonds St](https://www.google.co.nz/maps/place/302%2F23+Symonds+St,+Auckland,+1010/@-36.8532432,174.7663845,17z/data=!3m1!4b1!4m5!3m4!1s0x6d0d47e385a59abf:0xc16eb826595c5310!8m2!3d-36.8532432!4d174.7685732)

@@ -1,0 +1,16 @@
+---
+title: "A ‘polymath’ project on the Wilcoxon test?"
+author: "Thomas Lumley"
+date: 2017-05-12
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+`Polymath’ is a set of projects in massive collaborative proof of mathematical results; Terry Tao and Timothy Gowers are two of the famous mathematicians involved.  There’s a new potential project [ on Gowers’s blog](https://gowers.wordpress.com/2017/04/28/a-potential-new-polymath-project-intransitive-dice/), which he describes a being related to intransitive dice. As you know, if you read this blog, (a) I prefer the term non-transitive, and (b) this means it’s about the Wilcoxon test.
+
+The idea of the conjecture is that you define an $n$-sided die by sampling uniformly with replacement $n$ numbers from $1, 2,3,\dots,n$ as the numbers on the sides, with the constraint that the numbers have to add up to $n(n+1)/2$. Rolling such a die $M$ times samples $M$ observations from a distribution on $1,2,3,\\dots, n$ with mean $(n+1)/2$.  You construct three such dice, $A$, $B$, and $C$.  Their distributions have the same mean, so the $t$-test would have no ability to distinguish data from the three distributions, no matter how large $M$ was. But the Wilcoxon test probably would. It’s assumed, but not yet proved, that the probability of a tie according to the Wilcoxon test goes to zero as $n\to\infty$.
+
+The interesting conjecture is that if you see $A$ beat $B$ and $B$ beat $C$ according to the Wilcoxon test, the probability that $A$ beats $C$ goes to 1/2 as $n$ goes to infinity.   That is, given equal means, the Wilcoxon test is basically as non-transitive as possible.  

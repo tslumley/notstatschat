@@ -1,0 +1,30 @@
+---
+title: "Why I like the Convolution Theorem"
+author: "Thomas Lumley"
+date:  2017-03-27
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The convolution theorem (or theorems: it has versions that some people would call distinct species and other would describe as mere subspecies) is another almost obviously almost true result, this time about asymptotic efficiency. It’s an asymptotic version of the Cramér--Rao bound. 
+
+Suppose $\hat\theta$ is an efficient estimator of $\theta$ and $\tilde\theta$ is another, not fully efficient, estimator.  The convolution theorem says that if you rule out stupid exceptions, asymptotically $\tilde\theta=\hat\theta+e$ where $e$ is pure noise, independent of $\hat\theta$.  
+
+The reason that’s almost obvious is that if it weren’t true, there would be some information about $\theta$ in $\tilde\theta-\hat\theta$, and you could use this information to get a better estimator than $\hat\theta$, which (by assumption) can’t happen. The stupid exceptions are things like the [Hodges superefficient estimator](http://notstatschat.netlify.com/2015/05/12/superefficiency/) that do better at a few values of $\theta$ but much worse at neighbouring values. 
+
+In the usual case where everything is asymptotically Normal, 
+
+$$\sqrt{n}\begin{pmatrix} \hat\theta-\theta_0\\  
+\tilde\theta-\theta_0\end{pmatrix}\stackrel{d}{\to} N\left( 0, \begin{pmatrix} \sigma^2 & \sigma^2\\  
+\sigma^2 &\sigma^2+\omega^2\end{pmatrix}\right)$$
+
+The interesting part of that equation is the off-diagonal term. It’s the way it is because any other choice would imply the existence of a linear combination of $\hat\theta$ and $\tilde\theta$ with better efficiency than $\hat\theta$.  Rescaling to correlations, the square of the correlation between $\hat\theta$ and $\tilde\theta$ is the relative efficiency. 
+
+I think the convolution theorem is a useful way to think about asymptotic efficiency (and the fact that it has assumptions is a useful reminder that asymptotic efficiency is less elegant than it should be). 
+
+Also, more or less by the definition of influence functions, it follows that the squared correlation between the influence functions for $\hat\theta$ and $\tilde\theta$ is also the asymptotic relative efficiency.  That’s nice because in simulations we can evaluate the influence functions at the true parameter value and don’t need to solve the estimating equations iteratively.  
+
+In particular, now I’m looking at relative efficiency of weighted and unweighted logistic regression in the case-control design, I can compute the correlation between the estimating functions without needing the fitted log odds ratio estimates.  That saves iteration, but more importantly it still works if the case and control $X$ distributions completely separate in a minority of the simulations. Now, I could just estimate the two variances at the true parameter value instead (with about as much work) but working with the correlation has made it easier to prove some special cases analytically.  

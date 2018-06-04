@@ -1,0 +1,60 @@
+---
+title: "Probabilities not bounded away from zero"
+author: "Thomas Lumley"
+date: 2017-07-09
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We have a population or cohort of $N$ people divided into $H$ sampling strata, with a sample of size $n_h$ taken from the population $N_h$ in stratum $h$. Let $\pi_{ij}$ be the sampling probability for person $i$ in stratum $h$. When we do asymptotics we usually assume $\pi_{ih}$ are bounded away from zero. That’s not ideal for, say, case-control studies of rare diseases, where we might want asymptotic approximations based on the case incidence being small (ie, converging to zero). 
+
+In the situations where I’m interested in $\pi_{ih}$ being small, it’s usually small for a whole stratum. Since sampling is independent between strata, there should be a central limit theorem separately for each stratum, and we should be able to add up the limiting Normal approximations for the stratum totals to get a Normal limit for the population total estimate and the population mean estimate. 
+
+To formalise this,  suppose $n_h\to\infty$ for every stratum (so that asymptotics makes sense), and that $\pi_{ih}N_h/n_h$ is bounded above and below, so that within each stratum the sampling probability has a finite (relative) range. As a simple example, we might have a case stratum with $\pi_i\approx 1$ and a control stratum with very small $\pi_i$. 
+
+[**Update**: As Stas Kolenikov points out, I’m assuming the same strata are small large along the infinite sequence, so I need something like $n_{h_1}/(n_{h_1}+n_{h_2})\to c_{h_1,h_2}\in [0,1]$ for each pair of strata.  This isn’t a meaningful loss of generality since (a) the infinite sequence is an analytic fiction and we might as well set it up for our maximum convenience; and (b) even without assuming anything, every subsequence will have a subsubsequence along which the condition holds]
+
+  
+
+By standard results, $n_h^{1/2}(\bar X_{.h}-\mu_h)\stackrel{d}{\to} N(0,\sigma^2_h)$ for each stratum $h$ , and by the Skorohod representation theorem we can find an $H$-variate normal vector $\langle Z_h\rangle_{h=1}^H$ with  
+$$n_h^{1/2}(\bar X_{.h}-\mu_h)\stackrel{p}{\to} Z_h$$  
+(possibly on a different probability space), to get  
+$$\bar X_{.h}= \mu_h+ n_h^{-1/2}{Z_h}+o_p(n_h^{-1/2})$$  
+The $Z_h$ will be independent, with mean zero; write $\sigma^2_h$ for the variances. 
+
+[**Update**: Note that $\sigma^2_h$ is just $\mathrm{var}[Z_h]$, nothing more fundamental. Under stratified random sampling, $\sigma^2_h$ will be $\mathrm{var}[X]$ in stratum $h$ multiplied by the ‘finite population correction” $(N_h-n_h)/N_h$, but under other sampling schemes it will be something else]
+
+Now,  
+$$\bar X_{..} = \frac{1}{N}\sum_{h=1}^H N_h\bar X_{.h}$$  
+giving  
+\begin{align*}  
+\bar X_{..} &=\sum_{h=1}^H \frac{N_h}{N}\mu_h+\frac{N_hn_h^{-1/2}}{N}Z_h+o_p\left(\frac{N_hn_h^{-1/2}}{N} \right)\\  
+&=\mu+\left(\sum_{h=1}^H\frac{N_hn_h^{-1/2}}{N}Z_h\right)+o_p\left(\sum_{h=1}^H\frac{ N_h}{N\sqrt{n_h}}\right)  
+\end{align*}
+
+  
+
+First, suppose $ N_h/N$ converges to a non-zero constant for each $h$. Let $n_*=\min_h n_h$ and define ${\mathcal H}=\{h: \lim n_*/n_h>0\}$  
+$$\begin{eqnarray*}  
+\bar X_{..} &= &\mu+\left(\sum_{h=1}^H\frac{N_hn_h^{-1/2}}{N}Z_h\right)+o_p\left(\frac{\max_h N_h}{N\min_h \sqrt{n_h}}\right)\\  
+ &= &\mu+\left(\sum_{h\in{\mathcal H}}\frac{N_hn_*^{-1/2}}{N}Z_h\right)+\sum_{h\not\in{\mathcal H}} o_p(n_*^{-1/2})+o_p\left(\frac{\max_h N_h}{N\sqrt{n_*}}\right)\\  
+&=& \mu+ n_*^{-1/2}Z+o_p(n_*^{-1/2}) \\  
+\end{eqnarray*}$$
+
+where $Z\sim N(0, \sigma^2)$ with  
+$$\sigma^2=\lim_{n_*\to\infty} \sum_{h\in{\mathcal H}} \frac{N_h^2n_*\sigma^2_h}{N^2n_h}$$
+
+Alternatively, for case--control sampling we may have $N_h/N\to 0$ in the case stratum, but we would have $n_h$ all of the same order, and so of the same order as their total, $n$. The limiting distribution is dominated by the largest strata: define ${\mathcal H}'=\{h: \lim N_h/N>0\}$ (which is non-empty as $H$ is finite)
+
+$$\begin{eqnarray*}  
+\bar X_{..} &=&\mu+\left(\sum_{h=1}^H\frac{N_hn_h^{-1/2}}{N}Z_h\right)+o_p\left(\sum_{h=1}^H\frac{ N_h}{N\sqrt{n_h}}\right)\\  
+&=&\mu+\left(\sum_{h\in{\mathcal H}'}\frac{N_hn^{-1/2}}{N}Z_h\right)+\sum_{h\not\in{\mathcal H}'} o_p(n^{-1/2})+o_p\left(n^{-1/2}\right)\\\  
+&=& \mu+ n^{-1/2}Z+o_p(n^{-1/2})\\  
+\end{eqnarray*}$$  
+where $Z\sim N(0, \sigma^2)$ with  
+$$\sigma^2=\lim_{n\to\infty} \sum_{h\in{\mathcal H}} \frac{N_h^2n\sigma^2_h}{N^2n_h}$$
+
+Weaker conditions on $N_h$ and $n_h$ are clearly possible: it is only necessary to identify which terms dominate the limiting distribution of $\bar X_{..}$, since the limiting distribution of estimated stratum totals is always independent $H$-variate Normal under appropriate scaling.

@@ -1,0 +1,44 @@
+---
+title: "Stupid word games"
+author: "Thomas Lumley"
+date:  2017-06-05
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Today, Jeroen Ooms announced the appearance on CRAN of [an R package for language detection](https://cran.r-project.org/package=cld2), wrapping the “[CLD2](https://github.com/CLD2Owners/cld2)″ compact language detector.   Obviously, given a tool like that on a holiday long weekend, my first reaction was to try to confuse it.
+
+Two fun games to play with a language detector:
+
+*   Find an obviously English sentence (ideally a quote) that it doesn’t recognise as English, and a very non-obviously English sentence that it does  
+    
+*   Find two sentences with as few differences as possible, where one is recognised as English and the other not
+
+CLD2 doesn’t recognise the famous telegram about platypuses “Monotremes oviparous, ovum meroblastic” as English, which I suppose is fair enough. 
+
+It didn’t recognise Getrude Stein’s “Rose is a rose is a rose is a rose”, or even the shorter “Rose is a rose is a rose”, though it had no trouble with the start of FInnegan’s “Finnegans Wake” or bits of “Howl”.  Even better than the Stein, though:
+
+![image](https://68.media.tumblr.com/59ed88fe394e0436e23334799f7858a4/tumblr_inline_or1w9jON0W1s1hdxy_540.png)
+
+There’s a linguistic discussion of this sort of sentence [at Language Log](http://itre.cis.upenn.edu/~myl/languagelog/archives/005101.html) \-\- it’s not usual English in a lot of ways --  but I think it’s going to be hard to beat as a false negative.
+
+As a false positive I tried Jabberwocky (English), and then thought of Douglas Hofstatder’s self-referential example sentences
+
+![image](https://68.media.tumblr.com/7e1064ce6164c9b87e2ebe5fbc232ca7/tumblr_inline_or1w4rkNGD1s1hdxy_540.png)
+
+Ok, so how far can the second one be warped and still show up as English?
+
+![image](https://68.media.tumblr.com/0827cac73903358183f64c52099af6e7/tumblr_inline_or1w7n4f2l1s1hdxy_540.png)
+
+That’s English, but “See Spot run” isn’t!
+
+For minimal changes: changing “a” to “the”
+
+![image](https://68.media.tumblr.com/aa8a584fdcd83ef634d4daedbde9f908/tumblr_inline_or1wb9QsgT1s1hdxy_540.png)
+
+And as a sort of combination of the two: Chomsky’s obviously-English nonsense sentence “Colorless green ideas sleep furiously” is recognised as English, but so is every permutation of the same words. 
+
+So, is there a point to this (other than a fun way to waste half an hour)? Well, one of the important things to remember about automated classification algorithms is (as Zeynep Tukfeci puts it) [how alien they are](https://www.ted.com/talks/zeynep_tufekci_machine_intelligence_makes_human_morals_more_important). They can often imitate human decisions astonishingly well, but they don’t work the same way.  If another person makes the same decisions as you, it’s a good bet there are some basically similar reasons underneath. It’s easy to believe the same is true for machines, but it isn’t.

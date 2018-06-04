@@ -1,0 +1,36 @@
+---
+title: "Bayesian surprise"
+author: "Thomas Lumley"
+date:  2017-09-22 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+For reasons not entirely unconnected with NZ election polling, I’ve been thinking about surprise in Bayesian inference again: what happens when you get a result that’s a long way from what you expected in advance? Yes, your prior is badly calibrated and you should feel bad, but what should you **believe**?
+
+A toy version of the problem is inference for a location parameter. We have a prior $p_\theta(\theta)$ for the parameter, and a model $p_X(x|\theta)$. Consider two extremes
+
+*   $\theta\sim N(0,1)$ and $X\sim\textrm{Cauchy}(\theta)$
+*   $\theta\sim\textrm{Cauchy}(0)$ and $X\sim N(\theta, 1)$
+
+Suppose we take a single observation $x$ of $X$ and it’s very large. What do we end up believing about $\theta$ in each case?
+
+Heuristically, the first case says the data can sometimes be a long way from $\theta$, but $\theta$ has to be not that far from 0. The second case says $\theta$ can sometimes be a long way from 0 but $X$ can’t be that far from $\theta$. So in the the first case the posterior for $\theta$ should be concentrated fairly near zero and in the second it should be concentrated fairly near $X$. That’s exactly what happens when you do the maths. 
+
+Under the first model, the posterior density is proportional to   
+$$e^{-\theta^2/2}\frac{1}{1+(x-\theta)^2}$$ and the posterior mode solves  
+$$\tilde\theta =\frac{(x-\tilde\theta)}{1+(x-\tilde\theta)^2}.$$  
+For $x\to\infty$ we can’t have  $x-\theta$ bounded, which in turn means $\tilde\theta=O((x-\tilde\theta)^{-1})$, giving $\theta\to 0$.
+
+Under the second model, the posterior is proportional to $$e^{(x-\theta)^2/2}\frac{1}{1+\theta^2}$$ and the posterior mode solves  
+$$x-\tilde\theta=\frac{2\tilde\theta}{1+\tilde\theta^2}.$$  
+If $x\to\infty$, the solution to this equation must have $x-\tilde\theta$ bounded, which implies $\tilde\theta\to\infty$, which implies $x-\tilde\theta\to 0$.
+
+If the two distributions are both Normal the posterior mode will be about halfway between $x$ and 0. If they’re both Cauchy, the posterior will be bimodal, with one mode near $x$ and another near 0.   
+
+The basic observation here goes back a long way, with a relatively recent summary by O’Hagan in [JASA, 1990](http://www.jstor.org/stable/2289540): given a surprising observation, Bayesian inference can (sensibly) end up just ‘rejecting’ which ever of the prior and model have heavier tails. 
+
+Working it out for simple cases makes a nice straightforward stats theory question.  It’s also a good low-dimensional example of the problem common in high-dimensional problems that it’s quite hard to be sure what features of your model and prior are going to matter for inference. 

@@ -1,0 +1,16 @@
+---
+title: "A possibly unsurprising bootstrap observation"
+author: "Thomas Lumley"
+date: 2017-06-11
+output: html_document
+---
+
+
+
+<p>Suppose you have a finite population modelled as a realisation of some probability model with potentially complicated spatial structure, and a multistage sample taken with some different structure.  For example, suppose you have a genetic linear mixed model with ancestry and relatedness structure, but you sample people by census block group and household. </p>
+<p>It is either blindingly obvious or really surprising (or both?) that the sampling component of the standard error doesn’t depend on the structure of the model. We can write <br />
+<span class="math display">\[\mathrm{var}_{Y\pi}[\hat\theta]=E_Y[\mathrm{var}_\pi[\hat\theta]]+\mathrm{var}_Y[E_\pi[\hat\theta]]\]</span><br />
+(where <span class="math inline">\(Y\)</span> expectations are over the model and <span class="math inline">\(\pi\)</span>-expectations are over the sampling) and estimate the first term by (say) a survey bootstrap. The second term is just the inverse population expected Fisher information, the model variance of the estimate for the whole population (the ‘census parameter’). </p>
+<p>For a simpler, concrete example, consider a linear mixed model where the population is 1000 clusters of size 100, with a cluster-specific random intercept and a covariate <span class="math inline">\(x\)</span>. At sampling, the population is divided into 1000 primary sampling units of size 100, but differently: they could be independent of the model clusters, or overlapping in some way.  We take a sample random sample of, say, 250 primary sampling units and fit the random-intercept mixed model</p>
+<p>The variance of <span class="math inline">\(\hat\beta_x\)</span> should be the sum of the sampling variance (depending only on the primary sampling units and ignoring the model clusters) and the model-based variance from the whole population. And, in simulation, it is. </p>
+<p>In most practical settings, you’d still need to use information about the sampling structure (eg weights) to estimate the model parameters and the population expected Fisher information, but the two steps are still conceptually separate. And, in practice, you’d need to work out how to get the weights into the estimating functions, which is not straightforward. But you really can bootstrap the sampling component of variance without worrying about the spatial structure of the model. </p>

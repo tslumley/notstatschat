@@ -1,0 +1,24 @@
+---
+title: "Causes and counterfactuals"
+author: "Thomas Lumley"
+date: 2017-08-23
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+_Attention Conservation Notice: this was on StatsChat four years ago, but I like it as a causation example._
+
+A [story in the Herald](http://www.nzherald.co.nz/nz/news/article.cfm?c_id=1&objectid=11186087) illustrates a subtle technical and philosophical point about causation. A Lotto winner says
+
+> “I realised I was starving, so stopped to grab a bacon and egg sandwich.
+> 
+> “When I saw they had a Lotto kiosk, I decided to buy our Lotto tickets while I was there.
+> 
+> “We usually buy our tickets at the supermarket, so I’m glad I followed my gut on this one,” said one of the couple, who wish to remain anonymous.
+
+Assuming it was a random pick, it’s almost certainly true that if they had not bought the ticket at that Lotto kiosk at that time, they would not have won.  On the other hand, if Lotto is honest, buying at that kiosk wasn’t a good *strategy* — it had no impact on the chance of winning.
+
+There is a sense in which buying the bacon-and-egg sandwich was a *cause* of the win, but it’s not a very useful sense of the word ’cause’ for most statistical purposes.

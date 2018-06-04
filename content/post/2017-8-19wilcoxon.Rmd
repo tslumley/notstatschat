@@ -1,0 +1,20 @@
+---
+title: 'Wilcoxon and polymath: another update'
+author: "Thomas Lumley"
+date: 2017-08-19
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+As I wrote before, there’s a polymath (large-scale collaborative pure maths) project on transitivity of dice. [Here’s the latest update](https://gowers.wordpress.com/2017/07/25/intransitive-dice-vi-sketch-proof-of-the-main-conjecture-for-the-balanced-sequences-model/#more-6318) from Timothy Gowers’s blog.
+
+Suppose $X$, $Y$, and $Z$ are discrete distributions supported on $1,2,\\dots,n$.  We can ask about $P(X<Y)$ and $P(Y<Z)$ and $P(X<Z)$, which is what the Wilcoxon/Mann-Whitney rank test does. 
+
+The project has basically proved that under one model for randomly choosing distributions, if $X$,  $Y$, and $Z$ have the same mean and $P(X>Y)>1/2$ and $P(Y>Z)>1/2$, the probability of $P(X>Z)>1/2$ is $1/2+o(1)$. That is, if three distributions have the same mean, and the Wilcoxon test says $X$ is bigger than $Y$ and $Y$ is bigger than $Z$, you’ve got essentially no information about whether it will say $X$ is bigger than $Z$.
+
+Gowers also says they are close to showing a converse: if the means are different, then $P(X>Y)>1/2$, $P(Y>Z)>1/2$ and $P(X>Z)>1/2$ are true or false they way you’d assume from the ordering of the means. 
+
+That is, we knew the Wilcoxon test does not give a self-consistent ordering on all distributions. Now we know that (for this particular model of discrete distributions) when it **does** give an ordering, the ordering is typically the same as the ordering by means. 
