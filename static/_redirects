@@ -1,2 +1,6 @@
-http://notstatschat.netlify.com/* http://notstatschat.rbind.io/:splat 301!
+# Redirect default Netlify subdomain to primary domain
+https://notstatschat.netlify.com/* https://notstatschat.rbind.io/:splat 301!
+
+# These extra rules are required because HTTPS is not forced
+http://notstatschat.netlify.com/* https://notstatschat.rbind.io/:splat 301!
 
