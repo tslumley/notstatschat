@@ -2,7 +2,7 @@ baseurl = "http://notstatschat.netlify.com/"
 languageCode = "en-us"
 title = "Biased and Inefficient"
 theme = "hugo-lithium"
-googleAnalytics = ""
+googleAnalytics = "UA-120366445-1"
 disqusShortname = "notstatschat-netlify-com"
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
