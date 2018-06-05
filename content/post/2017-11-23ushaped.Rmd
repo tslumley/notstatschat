@@ -1,0 +1,42 @@
+---
+title: "When all U-shaped curves look the same to you"
+author: "Thomas Lumley"
+date: 2017-11-23
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There was (as usual) controversy about some of the NCEA maths questions this year.  Most of the controversy was about whether they assumed knowledge that the students hadn’t been told to know, but I’m going to worry about the pseudocontext problem
+
+One question had the set up
+
+![](https://78.media.tumblr.com/0b3faafaa981a2b4ba446b326be75be7/tumblr_inline_ozwfjiYTq31s1hdxy_540.png)
+
+and then (from the Herald), the question was
+
+![](https://78.media.tumblr.com/e6a5c7ba45a884a62a1bd950562a197f/tumblr_inline_ozwfkdgHoL1s1hdxy_540.png)
+
+  
+
+The maths problem is fine as a quadratic equation, I suppose. But the physics is wrong and the maths isn’t how any sane person would answer the question in reality.
+
+First, a hanging rope *does not* form a parabola -- you can tell, looking at the picture, that there’s something wrong.  A hanging rope is steeper at the top and flatter at the bottom; the idealised physical model of a perfectly flexible rope with constant weight per unit length will form a curve called a catenary. 
+
+Here’s a comparison of catenary and parabola [from a maths teaching blog](http://mathyear2013.blogspot.co.nz/2013/07/the-catenary-and-parabola.html)
+
+![](https://78.media.tumblr.com/a17e9920ae5611bbef5025c369624bb0/tumblr_inline_ozwftimyci1s1hdxy_540.png)
+
+  
+
+Second, if you stick a board across the bottom, the shape of the rope *will not stay the same*. The extra weight of the board will pull the rope straighter. 
+
+A good motivating example for a maths or stats question can be one where you learn something about the world using maths, or one where your knowledge of the world helps you with the maths.  This question isn’t like that. It comes from a different universe.
+
+Admittedly, good questions are hard to find. But last year’s exam had a good real-world parabola question
+
+![](https://78.media.tumblr.com/7d5d6a8054afb675f52693aec87af852/tumblr_inline_ozwfj8BRUp1s1hdxy_540.png)
+
+Unlike a hanging rope, an idealised suspension bridge does actually have a parabolic curve. And you might want to use geometry and algebra to work out a height like the one in the problem, rather than going out and measuring it. 

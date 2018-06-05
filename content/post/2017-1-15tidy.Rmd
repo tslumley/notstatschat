@@ -1,0 +1,45 @@
+---
+title: "breakInNamespace"
+author: "Thomas Lumley"
+date: 2018-01-15
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+_Attention Conservation Notice: I’m putting this in a blog post in the hope it makes it easier for other people to find when they encounter the problem. _
+
+The `!!` and `!!!` quasiquotation syntax in R’s tidyverse will break if you run them through the parser and deparser. This means:
+
+1.  Printing out the code of a function at the command line may give the wrong code  
+    
+2.  Functions like `fix()`, `fixInNamespace()`, and `edit()` may break functions using quasiquotation.
+3.  When you’re stepping through a function in the debugger, the code the debugger displays may be wrong
+
+I say “may” because it depends on your settings for saving the source code of functions. By default, the problems occur with code loaded in packages but not for code loaded by `source()`.
+
+The symptom is that you get bizarre-looking nested calls to the ! operator. For example, from the `tidypredict` package
+
+```
+reg <- expr(!(!syms(reg)))
+```
+
+and
+
+```
+reduce(set, function(l, r) expr((!(!(!l))) * (!(!(!r)))))  
+```
+
+The output from these functions ends up with lots of exclamation marks in it, and doesn’t work. 
+
+Tracking this down is quite hard -- especially when you’ve been trained over the years that “it’s never the compiler”.  Sometimes it is (or, rather, the interpreter).
+
+What’s happening under the hood? The tidyeval system has a special magic interpreter to treat `!!` and `!!!` as single operators. This is possible because R does, in fact, distinguish `!!x` from `!(!x))` at the level of the parse tree. Things break because the deparser doesn’t distinguish.
+
+Why does the deparser not distinguish? I don’t know for sure, but I suspect it’s because the operator precedence of ! is not what many people would expect: it binds relatively loosely, so that `!x %in% y` is the same as `!(x %in% y)`. Putting in the implied parenthesis (previously) made code more readable, and it wouldn’t cause any problems under the built-in definition of ! as the logical not operator. With tidyeval, we have problems. 
+
+Now,  I like quasiquotation. I’m responsible for the previous step in this direction, the `bquote()` function. I don’t want to get into the fight over whether !! is an abomination or a brilliantly creative work-around.
+
+The fact that C++ overloads the bitwise left shift operator to do printing is probably a supporting argument that could be used in the fight -- but I’m not sure by which side.   

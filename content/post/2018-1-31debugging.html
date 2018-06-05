@@ -1,0 +1,25 @@
+---
+title: "Useful debugging trick"
+author: "Thomas Lumley"
+date: 2018-01-31
+output: html_document
+---
+
+
+
+<p>If you have a thing with lots of indices, such as a fourth-order sampling probability <span class="math inline">\(\pi_{ijk\ell}\)</span> (the probability that individuals <span class="math inline">\(i\)</span>, <span class="math inline">\(j\)</span>, <span class="math inline">\(k\)</span> and <span class="math inline">\(\ell\)</span> are all sampled), there will likely be scenarios where it has lots and lots of symmetries. </p>
+<p>A useful trick is to write a wrapper that checks them:</p>
+<pre><code>FourPi&lt;-function(i,j,k,l){  
+    answer &lt;- FourPiInternal(i,j,k,l)  
+    sym &lt;- FourPiInternal(j,i,k,l)  
+    if (abs((answer-sym)/(answer+sym))&gt;EPSILON) stop(paste(i,j,k,l))  
+    answer  
+}</code></pre>
+<p>Other useful tricks:</p>
+<ul>
+<li>The score (deriviative of loglikelihood) has mean zero at the true parameters under sampling from the model, even in finite samples</li>
+<li>Quite a few design-based variance estimators are unbiased for the sampling variance even in small samples. </li>
+<li>Many (but not all) variance estimators should be positive semidefinite even in small samples.</li>
+<li>If you have two estimators of the same thing, do a scatterplot of them or of their estimating functions.</li>
+</ul>
+<p>More generally, properties of estimating functions are often easier to check in small samples than properties of the estimators.  This is especially useful when you have an estimator that takes <span class="math inline">\(\Omega\left(M^2N^2\right)\)</span> time for large <span class="math inline">\(N\)</span> and moderate <span class="math inline">\(M\)</span>, so you can’t just scale up and use asymptotics.  If the computation time isn’t <span class="math inline">\(O(N)\)</span> or near offer, tests you can do with small samples are enormously useful </p>

@@ -1,0 +1,33 @@
+---
+title: "Why pairwise likelihood?"
+author: "Thomas Lumley"
+date: 2018-03-13
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Xudong Huang and I are working on fitting mixed models using pairwise composite likelihood. JNK Rao and various co-workers have done this in the past, but only for the setting where the structure (clusters, etc) in the sampling is the same as in the model.  That’s not always true. 
+
+The example that made me interested in this was genetic analyses from the Hispanic Community Health Survey.  The survey is a multistage sample: census block groups and then households. The models have random effect structure corresponding to relatedness.  Since there are unrelated people in the same household (eg, spouses) and related people in different households, the sampling and design structures are very different.
+
+What you’d start off trying to do in a traditional design-based approach is to estimate the population loglikelihood.  In a linear mixed model that’s of the form  
+$$-\frac{1}{2}\log\left|\Xi\right| -\frac{1}{2} (y-\mu(\beta))^T\Xi^{-1} y-\mu(\beta))$$  
+for a covariance matrix $\Xi$ and regression parameters $\beta$. 
+
+The way I’ve described the problem previously is “it’s not clear where you stick the weights”. That’s true, but it’s worth going into more detail.  Suppose you know $\Xi$ for the whole population.  You then know the log-determinant term, and the residual term is a pairwise sum. If $R_{ij}$ is the indicator that the pair $(i,\,j)$ is sampled, and $\pi_{ij}$ is the probability, you could use  
+$$\hat\ell =-\frac{1}{2}\log\left|\Xi\right| -\frac{1}{2} \sum_{i,j} \frac{R_{ij}}{\pi_{ij}}(y-\mu(\beta))_i^T\left(\Xi^{-1}\right)_{ij} y-\mu(\beta))_j$$
+
+Typically we don’t know $\Xi$ for the whole population: it can depend on covariates (in a random-slope model), or we might not even know the number of people in non-sampled clusters, or in the genetic example we wouldn’t know the genetic relationships between non-sampled people.  Also, the full population could be quite big, so working out $-\frac{1}{2}\log\left|\Xi\right|$ might be no fun.  The approach might be worth trying for a spatial model, but it’s not going to work for a health survey.
+
+If the model and design structures were the same, we might treat $\Xi$ as block diagonal, with some blocks observed and others not, and hope to easily rescale the sample log determinant to the population one. But in general that will be hopeless, too. 
+
+Pairwise composite likelihood works because we can use a different objective function, one that really is a sum that’s easy to reweight.  If $\ell_{ij}$ is the loglikelihood based on observations $i$ and $j$, then in the population  
+$$\ell_\textrm{composite} = \sum_{i,j} \ell_{ij}$$  
+and based on the sample  
+$$\hat\ell_\textrm{composite} = \sum_{i,j} \frac{R_{ij}}{\pi_{ij}}\ell_{ij}.$$  
+We now only need to be able to work out $\Xi$ for observed pairs of people, which we can easily do.  Since the summands are honest-to-Fisher loglikelihoods, they have their expected maximum at the true parameter values and estimation works straightforwardly for both $\beta$ and $\Xi$. Variance estimation for $\hat\beta$ doesn’t work so easily: a sandwich estimator has *a lot* of terms, and proving it’s consistent is fairly delicate. But it *is* consistent.
+
+We would do strictly better in terms of asymptotic efficiency by going beyond pairs to triples or fourples or whatever. But even triples would up the computational complexity by a factor of $n$, and require us to have explicit formulas for sixth-order joint sampling probabilities -- and it gets exponentially worse for larger tuples. 

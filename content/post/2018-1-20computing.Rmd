@@ -1,0 +1,42 @@
+---
+title: "As far as it goes"
+author: "Thomas Lumley"
+date: 2018-01-20
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+I’ve been reading two somewhat depressing documents today.
+
+The American Statistical Association has put out a [position pape](http://www.amstat.org/asa/files/pdfs/POL-Statistics-as-a-Scientific-Discipline.pdf)r titled “Overview of Statistics as a Scientific Discipline and Practical Implications for the Evaluation of Faculty Excellence“. It says, in the executive summary
+
+> _Statistics is at the same time a dynamic, stand-alone science with its own core research agenda and an inherently collaborative discipline, developing in response to scientific needs. In this sense, statistics fundamentally differs from many other domain-specific disciplines in science. This difference poses unique challenges for defining the standards by which faculty excellence is evaluated across the teaching, research, and service components._
+> 
+> _This document strives to provide a conceptual framework and practical guidelines to facilitate such evaluations. To that end, the intended audience includes all participants in the evaluation process—provosts and deans with faculty members in statistics positions; chairs and heads of statistics, biostatistics, and non-statistics departments; and the promotion and tenure evaluation committees in academic institutions.Furthermore, this document seeks to assist statistical scientists in the negotiation of faculty positions and the articulation of their collaborative role with the subject-matter sciences._ 
+
+The position paper references a [paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4653084/) from a few years ago called “Evaluating Academic Scientists Collaborating in Team-Based Research: A Proposed Framework”. The latter is by people in biostatistics/epi (the former, rather notably, has no names from biostatistics departments).  They both deal with the question of how to get people promoted when they do a lot of collaborative research rather than sitting in an office proving theorems.  
+
+Both papers are good as far as they go. But, as [Di Cook](https://twitter.com/askdrstats/status/954773643564847104) and [others](https://twitter.com/JennyBryan/status/954800417166082048) pointed out on Twitter, one of the places they don’t go is where most modern statistics lives. There is no mention of “computing”, “programming”, or “software”,  “open” or “reproducible”. Twenty years ago, this lack would have been unfortunate but unremarkable. Today, it’s bizarre. 
+
+So, what should the position paper say about computing? Here’s a start:
+
+1.  Statistical software development and publishing is also “a legitimate and essential scholarly activity” for the discipline.  
+2.  Data analysis is part of statistics, so that research on the theory, practice, and teaching of data analysis is statistics research
+3.  Software may be important either because it contributes to the discipline of statistical computing, or because it improves the quality of research in other areas of science (or both). 
+4.  Software often develops over time: peer review before initial publication may be neither necessary nor sufficient
+5.  Some statistical computing is crap; knowledgeable evaluation is necessary.
+6.  Recognising that expertise may be hard to find, the ASA (or other relevant bodies) should assist departments in finding reviewers to evaluate statistical computing and data science research
+7.  Department chairs should make sure expectations and criteria are clear.
+
+  
+
+  
+
+_[Two clarifications: _
+
+_for 6. A set of explicit criteria would be much better, but i think it’s easier to get agreement on particular cases than to get agreement on a set of criteria -- a workshop in 2001 didn’t manage._
+
+_for 7: what the expectations and criteria are, not what they should be-- if your department is not going to promote someone without an Annals paper, you need to know that]_

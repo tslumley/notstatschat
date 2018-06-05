@@ -1,0 +1,41 @@
+---
+title: "How to add chi-squareds"
+author: "Thomas Lumley"
+date: 2017-12-06
+output: html_document
+---
+
+
+
+<p>A quadratic form in Gaussian variables has the same distribution as a linear combination of independent <span class="math inline">\(\chi^2_1\)</span> variables – that’s obvious if the Gaussian variables are independent and the quadratic form is diagonal, and you can make that true by change of basis. The coefficients in the linear combination are the eigenvalues <span class="math inline">\(\lambda_1,\dots,\lambda_m\)</span> of <span class="math inline">\(VA\)</span>, where <span class="math inline">\(A\)</span> is the matrix representing the quadratic form and <span class="math inline">\(V\)</span> is the covariance matrix of the Gaussians. I’ve <a href="https://notstatschat.netlify.com/2016/09/27/large-quadratic-forms/">written about</a> the issue of computing the eigenvalues, and how to speed this up. That still leaves you with the problem of computing tail probabilities for a linear combination of <span class="math inline">\(\chi^2\)</span>s – for <span class="math inline">\(m\)</span> at least hundreds, and perhaps thousands or tens of thousands. </p>
+<p>There’s quite a bit of literature on this problem, but it mostly deals with small numbers of terms (like, say, <span class="math inline">\(m=5\)</span>) and moderate p-values.  The genetics examples involve large numbers of terms and very small p-values. So, Tong Chen did an MSc short research project with me, looking at these methods in the context of genetics. Here’s a summary of what we know (what we knew before and what he found)</p>
+<p><strong>‘Exact’ methods<br />
+</strong></p>
+<ol style="list-style-type: decimal">
+<li><a href="https://www.jstor.org/stable/2347721">Farebrother</a>: based on an infinite series of <span class="math inline">\(F\)</span> densities<br />
+</li>
+<li><a href="https://www.jstor.org/stable/2346911">Davies</a>: based on numerical inversion of the characteristic function</li>
+<li><a href="https://arxiv.org/abs/1208.2691">Bausch</a>: based on an algebra for sums of Gamma distributions</li>
+</ol>
+<p>All three of these can achieve any desired accuracy when used with infinite-precision arithmetic. Bausch’s method also has bounds on the computational effort, polynomial in the number of terms and the log of the maximum relative approximation error.</p>
+<p>In ordinary double-precision (using Kahan summation), Bausch’s method can be accurate in the right tail for 50 or so terms. It is very inaccurate in the left tail. Achieving anything like the full theoretical accuracy of the algorithm requires multiple-precision arithmetic and seems slow compared to the alternatives. (It might be faster in Mathematica, which is what Bausch used)</p>
+<p>Farebrother’s method and Davies’s method are usable even for a thousand terms, and achieve close to their nominal accuracy as long as the right tail probability is much larger than machine epsilon.  Since <span class="math inline">\(P(Q&gt;q)\)</span> is computed from <span class="math inline">\(1-P(Q&lt;q)\)</span>, they break down completely at right tail probabilities near machine epsilon. Farebrother’s method is faster for high precision, but only works when all the coefficients are positive. </p>
+<p><strong>Moment methods</strong></p>
+<p>The traditional approach is the <strong>Satterthwaite</strong> approximation, which approximates the distribution by <span class="math inline">\(a\chi^2_d\)</span> with <span class="math inline">\(a\)</span> and <span class="math inline">\(d\)</span> chosen to give the correct mean and variance.  The Satterthwaite approximation is much better than you’d expect for moderate <span class="math inline">\(p\)</span>-values and is computationally inexpensive: it only needs the sum and sum of squares of the eigenvalues, which can be computed more rapidly than the full eigendecomposition and can be approximated by randomised estimators.</p>
+<p>Sadly, the Satterthwaite distribution is increasingly anti-conservative in the right tail.</p>
+<p><a href="https://www.sciencedirect.com/science/article/pii/S0167947308005653">Liu and co-workers</a> proposed a <strong>four-moment approximation</strong> by a distribution of the form <span class="math inline">\(a+b\chi^2_d(\nu)\)</span>, where <span class="math inline">\(\nu\)</span> is a non-centrality parameter and <span class="math inline">\(a\)</span> is an offset. This approximation is used in the R <a href="https://www.hsph.harvard.edu/skat/">SKAT</a> package. It’s a lot better than the Satterthwaite approximation, but it is still anticonservative in the right tail, even for <span class="math inline">\(p\)</span>-values in the vicinity of <span class="math inline">\(10^{-5}\)</span>.</p>
+<p>The moment methods are more-or-less inevitably anticonservative in the right tail, because the extreme right tail of the linear combination is proportional to the extreme right tail of the single summand <span class="math inline">\(\lambda_1\chi^2_1\)</span> corresponding to the leading eigenvalue. (That’s how convolutions with exponential tails work.) The tail of the approximation depends on all of the eigenvalues and so is lighter. </p>
+<p>Moment methods more accurate than the Satterthwaite approximation need summaries of the third or higher powers of the eigenvalues; these can’t be computed any faster than by a full eigendecomposition.</p>
+<p><strong>Saddlepoint approximation</strong></p>
+<p><a href="https://www.jstor.org/stable/2673596">Kuonen</a> derived a saddlepoint approximation to the sum. The approximation gets better as <span class="math inline">\(m\)</span> increases. Tong Chen proved it has the correct exponential rate in the extreme right tail, so that its relative error is uniformly bounded. The computational effort is linear in <span class="math inline">\(m\)</span> and is fairly small. On the downside, there’s no straightforward way to use more computation to reduce the error further.</p>
+<p><strong>Leading eigenvalue approximation</strong></p>
+<p>This <a href="https://www.biorxiv.org/content/early/2016/11/04/085639">approximates</a> <span class="math inline">\(\sum_{i=1}^m\lambda_i\chi^2_1\)</span> by a sum of <span class="math inline">\(k\)</span> terms plus a remainder<br />
+<span class="math display">\[a_k\chi^2_{d_k}+\sum_{i=1}^k\lambda_i\chi^2_1\]</span></p>
+<p>The remainder is the Satterthwaite approximation to the <span class="math inline">\(n-k\)</span> remaining terms; having the first <span class="math inline">\(k\)</span> terms separate is done to improve the tail approximation.  You still need to decide how to add up these <span class="math inline">\(k+1\)</span> terms, but the issues are basically the same as with any set of <span class="math inline">\(k+1\)</span> <span class="math inline">\(\chi^2\)</span>s.</p>
+<p><strong>Take-home message</strong></p>
+<ol style="list-style-type: decimal">
+<li><p>For large <span class="math inline">\(m\)</span>, use the leading-eigenvalue approximation</p></li>
+<li><p>For p-values much larger than machine epsilon, use the Davies or Farebrother algorithms (together with the leading-eigenvalue approximation if <span class="math inline">\(m\)</span> is large)</p></li>
+<li><p>For p-values that might not be much larger than machine epsilon, use the saddlepoint approximation if its relative error (sometimes as much as 10% or so) is acceptable. There’s no need to use the leading-eigenvalue approximation if you have the full set of eigenvalues, but you might want to use it to avoid needing them all. </p></li>
+<li><p>If you need very high relative accuracy for very small tail probabilities, you’ll need Bausch’s method, and multiple-precision arithmetic. With any luck you’ll still be able to use the leading-eigenvalue approximation to cut down the work. </p></li>
+</ol>

@@ -1,0 +1,56 @@
+---
+title: "Faster generalised linear models in largeish data"
+author: "Thomas Lumley"
+date: 2018-03-05
+output: html_document
+---
+
+
+
+<p>There basically isn’t an algorithm for generalised linear models that computes the maximum likelihood estimator in a single pass over the <span class="math inline">\(N\)</span> observatons in the data. You need to iterate.  The <strong>bigglm</strong> function in the <strong>biglm</strong> package does the iteration using bounded memory, by reading in the data in chunks, and starting again at the beginning for each iteration. That works, but it can be slow, especially if the database server doesn’t communicate that fast with your R process.</p>
+<p>There is, however, a way to cheat slightly. If we had a good starting value <span class="math inline">\(\tilde\beta\)</span>, we’d only need one iteration – and all the necessary computation for a single iteration can be done in a single database query that returns only a small amount of data.  It’s well known that if <span class="math inline">\(\|\tilde\beta-\beta\|=O_p(N^{-1/2})\)</span>, the estimator resulting from one step of Newton–Raphson is fully asymptotically efficient. What’s less well known is that for simple models like glms, we only need <span class="math inline">\(\|\tilde\beta-\beta\|=o_p(N^{-1/4})\)</span>.</p>
+<p>There’s not usually much advantage in weakening the assumption that way, because in standard asymptotics for well-behaved finite-dimensional parametric models, any reasonable starting estimator will be <span class="math inline">\(\sqrt{N}\)</span>-consistent if it’s consistent at all. In the big-data setting, though, there’s a definite advantage: a starting estimator based on a bit more than <span class="math inline">\(N^{1/2}\)</span> observations will have error less than <span class="math inline">\(N^{-1/4}\)</span>.  More concretely, if we sample <span class="math inline">\(n=N^{5/9}\)</span> observations and compute the full maximum likelihood estimator, we end up with a starting estimator <span class="math inline">\(\tilde\beta\)</span> satisfying <span class="math display">\[\|\tilde\beta-\beta\|=O_p(n^{-1/2})=O_p(N^{-5/18})=o_p(N^{-1/4}).\]</span></p>
+<p>The proof is later, because you don’t want to read it. The basic idea is doing a Taylor series expansion and showing the remainder is <span class="math inline">\(O_p(\|\tilde\beta-\beta\|^2)\)</span>, not just <span class="math inline">\(o_p(\|\tilde\beta-\beta\|).\)</span></p>
+<p>This approach should be faster than <strong>bigglm</strong>, because it only needs one and a bit iterations, and because the data stays in the database. It doesn’t scale as far as bigglm, because you need to be able to handle <span class="math inline">\(n\)</span> observations in memory, but with <span class="math inline">\(N\)</span> being a billion, <span class="math inline">\(n\)</span> is only a hundred thousand. </p>
+<p>The database query is fairly straightforward because the efficient score in a generalised linear model is of the form <br />
+<span class="math display">\[\sum_{i=1}^N x_iw_i(y_i-\mu_i)\]</span><br />
+for some weights <span class="math inline">\(w_i\)</span>. Even better, <span class="math inline">\(w_i=1\)</span> for the most common models. We do need an exponentiation function, which isn’t standard SQL, but is pretty widely supplied. </p>
+<p>So, how well does it work? On my ageing Macbook Air, I did a 1.7-million-record logistic regression to see if red cars are faster. More precisely, using the “passenger car/van” records from the <a href="https://nzta.govt.nz/resources/new-zealand-motor-vehicle-register-statistics/new-zealand-vehicle-fleet-open-data-sets/">NZ vehicle database</a>, I fit a regression model where the outcome was being red and the predictors were vehicle mass, power, and number of seats. More powerful engines, fewer seats, and lower mass were associated with the vehicle being red. Red cars <strong>are</strong> faster.</p>
+<p>The computation time was 1.4s for the sample+one iteration approach and 15s for <strong>bigglm</strong>.</p>
+<p>Now I’m working on  an analysis of the <a href="https://github.com/toddwschneider/nyc-taxi-data">NYC taxi dataset</a>, which is much bigger and has more interesting variables.  My first model, with 87 million records, was a bit stressful for my laptop. It took nearly half an hour elapsed time for the sample+one-step approach and 41 minutes for <strong>bigglm</strong>, though bigglm took about three times as long in CPU time.  I’m going to try on my desktop to see how the comparison goes there.  Also, this first try was using the in-process MonetDBLite database, which will make bigglm look good, so I should also try a setting where the data transfer between R and the database actually needs to happen. </p>
+<p>I’ll be talking about this at the JSM and (I hope at useR).</p>
+<p><strong>Math stuff</strong></p>
+<p>Suppose we are fitting a generalised linear model with regression parameters <span class="math inline">\(\beta\)</span>, outcome <span class="math inline">\(Y\)</span>, and predictors <span class="math inline">\(X\)</span>.  Let <span class="math inline">\(\beta_0\)</span> be the true value of <span class="math inline">\(\beta\)</span>, <span class="math inline">\(U_N(\beta)\)</span> be the score at <span class="math inline">\(\beta\)</span> on <span class="math inline">\(N\)</span> observations and <span class="math inline">\(I_N(\beta)\)</span> theFisher information at <span class="math inline">\(\beta\)</span> on <span class="math inline">\(N\)</span> observations. Assume the second partial derivatives of the loglikelihood have uniformly bounded second moments on a compact neighbourhood <span class="math inline">\(K\)</span> of <span class="math inline">\(\beta_0\)</span>. Let <span class="math inline">\(\Delta_3\)</span> be the tensor of third partial derivatives of the log likelihood, and assume its elements</p>
+<p><span class="math display">\[(\Delta_3)_{ijk}=\frac{\partial^3}{\partial x_i\partial x_jx\partial _k}\log\ell(Y;X,\beta)\]</span><br />
+have uniformly bounded second moments on <span class="math inline">\(K\)</span>.</p>
+<p><strong>Theorem</strong>:  Let <span class="math inline">\(n=N^{\frac{1}{2}+\delta}\)</span> for some <span class="math inline">\(\delta\in (0,1/2]\)</span>, and let <span class="math inline">\(\tilde\beta\)</span> be the maximum likelihood estimator of <span class="math inline">\(\beta\)</span> on a subsample of size <span class="math inline">\(n\)</span>.  The one-step estimators<br />
+<span class="math display">\[\hat\beta_{\textrm{full}}= \tilde\beta + I_N(\tilde\beta)^{-1}U_N(\tilde\beta)\]</span><br />
+and<br />
+<span class="math display">\[\hat\beta= \tilde\beta + \frac{n}{N}I_n(\tilde\beta)^{-1}U_N(\tilde\beta)\]</span><br />
+are first-order efficient</p>
+<p><strong>Proof</strong>: The score function at the true parameter value is of the form<br />
+<span class="math display">\[U_N(\beta_0)=\sum_{i=1}^Nx_iw_i(\beta_0)(y_i-\mu_i(\beta_0)\]</span><br />
+By the mean-value form of Taylor’s theorem we have<br />
+<span class="math display">\[U_N(\beta_0)=U_N(\tilde\beta)+I_N(\tilde\beta)(\tilde\beta-\beta_0)+\Delta_3(\beta^*)(\tilde\beta-\beta_0,\tilde\beta-\beta_0)\]</span><br />
+where <span class="math inline">\(\beta^*\)</span> is on the interval between <span class="math inline">\(\tilde\beta\)</span> and <span class="math inline">\(\beta_0\)</span>. With probability 1, <span class="math inline">\(\tilde\beta\)</span> and thus <span class="math inline">\(\beta^*\)</span> is in <span class="math inline">\(K\)</span> for all sufficiently large <span class="math inline">\(n\)</span>, so the remainder term is <span class="math inline">\(O_p(Nn^{-1})=o_p(N^{1/2})\)</span>.<br />
+Thus<br />
+<span class="math display">\[I_N^{-1}(\tilde\beta) U_N(\beta_0) = I^{-1}_N(\tilde\beta)U_N(\tilde\beta)+\tilde\beta-\beta_0+o_p(N^{-1/2})\]</span></p>
+<p>Let <span class="math inline">\(\hat\beta_{MLE}\)</span> be the maximum likelihood estimator. It is a standard result that<br />
+<span class="math display">\[\hat\beta_{MLE}=\beta_0+I_N^{-1}(\beta_0) U_N(\beta_0)+o_p(N^{-1/2})\]</span></p>
+<p>So<br />
+<span class="math display">\[\begin{eqnarray*}  
+\hat\beta_{MLE}&amp;=&amp; \tilde\beta+I^{-1}_N(\tilde\beta)U_N(\tilde\beta)+o_p(N^{-1/2})\\\  
+&amp;=&amp; \hat\beta_{\textrm{full}}+o_p(N^{-1/2})  
+\end{eqnarray*}\]</span></p>
+<p>Now, define <span class="math inline">\(\tilde I(\tilde\beta)=\frac{N}{n}I_n(\tilde\beta)\)</span>, the estimated full-sample information based on the subsample, and let <span class="math inline">\({\cal I}(\tilde\beta)=E_{X,Y}\left[N^{-1}I_N\right]\)</span> be the expected per-observation information.  By the Central Limit Theorem we have  <br />
+<span class="math display">\[I_N(\tilde\beta)=I_n(\tilde\beta)+(N-n){\cal I}(\tilde\beta)+O_p((N-n)n^{-1/2}),\]</span><br />
+so<br />
+<span class="math display">\[I_N(\tilde\beta) \left(\frac{N}{n}I_n(\tilde\beta)\right)^{-1}=\mathrm{Id}_p+ O_p(n^{-1/2})\]</span><br />
+where <span class="math inline">\(\mathrm{Id}_p\)</span> is the <span class="math inline">\(p\times p\)</span> identity matrix.<br />
+We have<br />
+<span class="math display">\[\begin{eqnarray*}  
+\hat\beta-\tilde\beta&amp;=&amp;(\hat\beta_{\textrm{full}}-\tilde\beta)I_N(\tilde\beta)^{-1} \left(\frac{N}{n}I_n(\tilde\beta)\right)\\\  
+&amp;=&amp;(\hat\beta_{\textrm{full}}-\tilde\beta)\left(\mathrm{Id}_p+ O_p(n^{-1/2}\right)\\\  
+&amp;=&amp;(\hat\beta_{\textrm{full}}-\tilde\beta)+ O_p(n^{-1})  
+\end{eqnarray*}\]</span><br />
+so <span class="math inline">\(\hat\beta\)</span> (without the <span class="math inline">\(\textrm{full}\)</span>)is also asymptotically efficient. </p>

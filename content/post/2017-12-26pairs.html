@@ -1,0 +1,79 @@
+---
+title: "Statistics on pairs"
+author: "Thomas Lumley"
+date: 2017-12-26
+output: html_document
+---
+
+
+
+<p>I’m interested in estimation for complex samples from structured data — clustered, longitudinal, family, network — and so I’m interested in intuition for estimating statistics of pairs, triples, etc.   This turns out to be surprisingly hard, so I want easy examples.  One thing I want easy examples for is the relationship between design-weighted <span class="math inline">\(U\)</span>-statistics and design-weighted versions of their Hoeffding projections. That is, if you write a statistic as a sum over all pairs of observations, you can usually rewrite it as a sum of a slightly more complicated statistic over single observations, and I want to think about whether the weighting should be done before or after you rewrite the statistic.</p>
+<p>The easiest possible <span class="math inline">\(U\)</span>-statistic is the variance<br />
+<span class="math display">\[V = \frac{1}{N(N-1)}\sum_{i,j=1}^N (X_i-X_j)^2\]</span><br />
+where Hoeffding projection gives the usual form<br />
+<span class="math display">\[S = \frac{1}{N-1} \sum_{i=1}^N (X_i-\frac{1}{N}\sum_{j=1}^N X_j)^2.\]</span></p>
+<p>These are identical, as everyone who has heard of <span class="math inline">\(U\)</span>-statistics has probably been forced to prove.  In fact<br />
+<span class="math display">\[\begin{eqnarray*}  
+S&amp;=&amp; \frac{1}{N-1}\sum_{i=1}^N (X_i - \frac{1}{N}\sum_{j=1}^N X_j)^2\\\  
+&amp;=&amp;\frac{1}{N-1}\sum_{i=1}^N \left(\frac{1}{N}\sum_{j=1}^N (X_i-X_j)\right)^2\\\  
+&amp;=&amp;\frac{1}{N-1}\sum_{i=1}^N \left(\frac{1}{N}\sum_{j=1}^N (X_i-X_j)\right)^2\\\  
+&amp;=&amp;\frac{1}{N(N-1)}\sum_{i,j=1}^N (X_i-X_j)^2 + \frac{1}{N(N-1)}\sum_{(i,j)\neq(k,l)}^N (X_i-X_j)(X_k-X_l)\\\  
+\end{eqnarray*}\]</span><br />
+with the second term zero by symmetry, because the <span class="math inline">\((i,j)\)</span> terms cancel the <span class="math inline">\((j,i)\)</span> terms and so on.</p>
+<p>The idea is that we can estimate <span class="math inline">\(S\)</span> from a sample by putting in sampling weights <span class="math inline">\(w_i\)</span> where <span class="math inline">\(w_i^{-1}\)</span> is the probability of <span class="math inline">\(X_i\)</span> getting sampled, because the sums are only over one index at a time.  We get a weighted mean with another weighted mean nested inside it.   We can reweight <span class="math inline">\(V\)</span> with pairwise sampling weights <span class="math inline">\(w_{ij}\)</span> where <span class="math inline">\(w_{ij}^{-1}\)</span> is the probability that the pair <span class="math inline">\((i,j)\)</span> are both sampled, because the sum is over pairs.  </p>
+<p>Under general sampling, we’d expect the two weighted estimators to be different because one of them depends on joint sampling probabilities and the other doesn’t. Unfortunately, the variance is <strong>too</strong> simple. For straightforward comparisons such as simple random sampling versus cluster sampling all the interesting stuff cancels out and the two estimators are the same. We do not pass `Go’ and do not collect 200 intuition points.</p>
+<p>The next simplest example is the Wilcoxon–Mann–Whitney test.</p>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<p>Suppose we have a finite population of pairs <span class="math inline">\((Z, G)\)</span> , where <span class="math inline">\(Z\)</span> is numeric and <span class="math inline">\(G\)</span> is binary, and for some crazy reason we want to do a rank test for association between <span class="math inline">\(Z\)</span> and <span class="math inline">\(G\)</span>.  In fact, we don’t {} to assume we want a rank test, since the test statistics will be reasonable estimators of well-defined population quantities, but to be honest the main motivation is rank tests.  For a test to make any sense at all, we need a model for the population, and we’ll start with pairs <span class="math inline">\((Z,G)\)</span> chosen iid from some probability distribution. Later, we’ll add covariates to give a bit more structure.</p>
+<p>Write <span class="math inline">\(N\)</span> for the number of observations with <span class="math inline">\(Z=1\)</span> and <span class="math inline">\(M\)</span> for the numher with <span class="math inline">\(Z=0\)</span>, and write <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> respectively for the subvectors of <span class="math inline">\(Z\)</span>. Write <span class="math inline">\(\mathbb{F}\)</span> for the empirical cdf of <span class="math inline">\(X\)</span>, <span class="math inline">\(\mathbb{G}\)</span> for the empirical cdf of <span class="math inline">\(Y\)</span>, and <span class="math inline">\(\mathbb{H}\)</span> for that of <span class="math inline">\(Z\)</span>.  </p>
+<p>The Mann–Whitney <span class="math inline">\(U\)</span> statistic (suitably scaled) is<br />
+<span class="math display">\[U_{\textrm{pop}} = \frac{1}{NM} \sum_{i=1}^N\sum_{j=1}^M \{X_i&gt;Y_j\}\]</span><br />
+The Wilcoxon rank-sum statistic (also scaled) is<br />
+<span class="math display">\[W_{\textrm{pop}} = \frac{1}{N}\sum_{i=1}^N \mathbb{H}(X_i) -\frac{1}{M}\sum_{J=1}^M \mathbb{H}(Y_j)\]</span></p>
+<p>Clearly, <span class="math inline">\(U_\textrm{pop}\)</span> is an unbiased estimator of <span class="math inline">\(P(X&gt;Y)\)</span> if a single observation is generated with <span class="math inline">\(G=0\)</span> and <span class="math inline">\(G=1\)</span>.  We can expand <span class="math inline">\(\mathbb{H}\)</span> in terms of pairs of observations:<br />
+<span class="math display">\[\mathbb{H}(x) = \frac{1}{M+N}\left(\sum_{i=1}^N \{X_i\leq x\} + \sum_{j=1}^M \{Y_j\leq x\}\right)\]</span><br />
+and substitute to get<br />
+<span class="math display">\[\begin{eqnarray*}  
+W_{\textrm{pop}} &amp;= &amp;\frac{1}{N}\sum_{i=1}^N \frac{1}{M+N}\left(\sum_{i&#39;=1}^N \{X_{i&#39;}\leq X_i\} + \sum_{j&#39;=1}^M \{Y_{j&#39;}\leq X_i\}\right) \\\  
+&amp; &amp;\qquad - \frac{1}{M}\sum_{j=1}^M \frac{1}{M+N}\left(\sum_{i&#39;=1}^N \{X_{i&#39;}\leq Y_j\} + \sum_{j&#39;=1}^M \{Y_{j&#39;}\leq Y_j\}\right)\\\  
+&amp;=&amp; \frac{1}{N(M+N)} \sum_{i=1}^N\sum_{j&#39;=1}^M  \{Y_{j&#39;}\leq X_i\}-\frac{1}{M(M+N)}  \sum_{i&#39;=1}^N \{X_{i&#39;}\leq Y_j\} \\\  
+&amp;&amp;\qquad +\frac{1}{N(M+N)}\sum_{i=1}^N\sum_{i&#39;=1}^N \{X_{i&#39;}\leq X_i\} - \frac{1}{M(M+N)}\sum_{j=1}^M\sum_{j&#39;=1}^M \{Y_{j&#39;}\leq Y_j\}\\\  
+&amp;=&amp;\frac{M+N}{NM(M+N)}\sum_{i,j} \{X_i&gt;Y_j\} + \frac{NM(M-1)/2-MN(N-1)/2}{NM(M+N)}\\\  
+&amp;=&amp;\frac{1}{NM}\sum_{i,j} \{X_i&gt;Y_j\} + \frac{M-N}{2(M+N)}  
+\end{eqnarray*}\]</span></p>
+<p>So,  <span class="math display">\[U_\textrm{pop} =  W_\textrm{pop} + \frac{M-N}{2(M+N)}\]</span><br />
+and the two tests are equivalent, as everyone already knows. Again, there’s a good chance you have been forced to do this derivation, and you probably took fewer tries to get it right than I did.</p>
+</div>
+<div id="definitions-under-complex-sampling" class="section level2">
+<h2>Definitions under complex sampling</h2>
+<p>We take a sample, with known marginal sampling probabilities <span class="math inline">\(p_i\)</span> for the <span class="math inline">\(X\)</span>s, <span class="math inline">\(q_j\)</span> for the <span class="math inline">\(Y\)</span>s and pairwise sampling probabilities <span class="math inline">\(\pi_{i,j}\)</span>.  We write <span class="math inline">\(n\)</span> and <span class="math inline">\(m\)</span> for the number of sampled observations in each group, and relabel so that these are <span class="math inline">\(i=1,\ldots,n\)</span> and <span class="math inline">\(j=1,\ldots,m\)</span>.  We write <span class="math inline">\(\hat N\)</span>  and <span class="math inline">\(\hat M\)</span> for the Horvitz–Thompson estimates of <span class="math inline">\(N\)</span> and <span class="math inline">\(M\)</span>, and <span class="math inline">\(\hat F\)</span> for the estimate of <span class="math inline">\(\mathbb{F}\)</span> (and so on).  That is<br />
+<span class="math display">\[\hat H(z) = \frac{1}{\hat M+\hat N}\left(\sum_{i=1}^n \frac{1}{p_i} \{X_i\leq z\} + \sum_{j=1}^m \frac{1}{q_i} \{Y_j\leq z\}\right)\]</span></p>
+<p>The natural estimator of <span class="math inline">\(W_\textrm{pop}\)</span> is that of <a href="https://academic.oup.com/biomet/article-abstract/100/4/831/213064">Lumley and Scott</a><br />
+<span class="math display">\[\hat W = \frac{1}{\hat N}\sum_{i=1}^n \frac{1}{p_i}\hat{H}(X_i) -\frac{1}{\hat M}\sum_{J=1}^m \frac{1}{q_i}\hat{H}(Y_j)\]</span></p>
+<p>A natural estimator of <span class="math inline">\(U_\textrm{pop}\)</span> is<br />
+<span class="math display">\[\hat U= \frac{1}{\widehat{NM}} \sum_{i=1}^n\sum_{j=1}^m \frac{1}{\pi_{ij}}\{X_i&gt;Y_j\}\]</span></p>
+<p>Now</p>
+<ol style="list-style-type: decimal">
+<li><p> <span class="math inline">\(\hat U\)</span> and <span class="math inline">\(\hat W\)</span> are consistent estimators of the population values</p></li>
+<li><p> Therefore, they are also consistent estimators of the superpopulation parameters</p></li>
+<li><p>However, <span class="math inline">\(\hat U\)</span> depends explicitly on pairwise sampling probabilities and <span class="math inline">\(\hat W\)</span> does not</p></li>
+<li><p>And there (hopefully) isn’t enough linearity to make all the differences go away.</p></li>
+</ol>
+</div>
+<div id="expansions" class="section level2">
+<h2>Expansions</h2>
+<p>We can try to substitute the definition of <span class="math inline">\(\hat H\)</span> into the definition of <span class="math inline">\(\hat W\)</span> and expand as in the population case.  To simplify notation I will assume that the sampling probabilities are designed or calibrated so that <span class="math inline">\(N=\hat N\)</span> and so on (or close enough that it doesn’t matter).<br />
+<span class="math display">\[\begin{eqnarray*}  
+\hat W &amp;= &amp;\frac{1}{N}\sum_{i=1}^n \frac{1}{p_i} \frac{1}{M+N}\left(\sum_{i&#39;=1}^n \frac{1}{p_{i&#39;}}\{X_{i&#39;}\leq X_i\} + \sum_{j&#39;=1}^m \frac{1}{q_{j&#39;}} \{Y_{j&#39;}\leq X_i\}\right) \\\  
+&amp; &amp;\qquad - \frac{1}{M}\sum_{j=1}^m \frac{1}{q_{j}} \frac{1}{M+N}\left(\sum_{i&#39;=1}^n\frac{1}{p_{i&#39;}} \{X_{i&#39;}\leq Y_j\} + \sum_{j&#39;=1}^m\frac{1}{q_{j&#39;}} \{Y_{j&#39;}\leq Y_j\}\right)\\\  
+&amp;=&amp; \frac{1}{N(M+N)} \sum_{i=1}^n\sum_{j&#39;=1}^m\frac{1}{p_iq_{j&#39;}}  \{Y_{j&#39;}\leq X_i\}-\frac{1}{M(M+N)}  \sum_{i&#39;=1}^n \sum_{j=1}^m\frac{1}{p_{i&#39;}q_{j}} \{X_{i&#39;}\leq Y_j\} \\\  
+&amp;&amp;\qquad +\frac{1}{N(M+N)}\sum_{i=1}^n\sum_{i&#39;=1}^n \frac{1}{p_{i&#39;}p_{i}} \{X_{i&#39;}\leq X_i\} - \frac{1}{M(M+N)}\sum_{j=1}^m\sum_{j&#39;=1}^m \frac{1}{q_jq_{j&#39;}} \{Y_{j&#39;}\leq Y_j\}\\\  
+&amp;=&amp;\frac{1}{MN}\sum_{i,j}\frac{1}{p_iq_j} \{X_i&gt;Y_j\} + \textrm{ugly expression not involving $X$ and $Y$}  
+\end{eqnarray*}\]</span></p>
+<p>(The ugly expression involves the variance of the marginal sampling weights, since<br />
+<span class="math display">\[2\sum_{i,i&#39;} p_i^{-1}p_{i&#39;}^{-1}= (\sum_i p_i^{-1})^2- 2\sum_i p_i^{-2}.\]</span><br />
+It doesn’t depend on <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>, and it is the same in, for example, simple random sampling of individuals and simple random sampling of clusters. )</p>
+<p>That is, the reweighted <span class="math inline">\(\hat W\)</span> is a version of <span class="math inline">\(\hat U\)</span> using the <em>product of marginal sampling probabilities</em> rather than the joint ones.  They really are different, this time. Using <span class="math inline">\(\hat W\)</span> will give more weight to pairs within the same cluster than to pairs in different clusters.</p>
+<p>It’s still not clear which one is preferable, eg,  how will the power of the tests compare in various scenarios? But it’s progress. </p>
+</div>

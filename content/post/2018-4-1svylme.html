@@ -1,0 +1,16 @@
+---
+title: "svylme"
+author: "Thomas Lumley"
+date: 2018-04-01
+output: html_document
+---
+
+
+
+<p>I’m working on an R package for mixed models under complex sampling.  It’s <a href="https://github.com/tslumley/svylme">here</a>. At the moment, it only tries to fit two-level linear mixed models to two-stage samples – for example, if you sample schools then students within schools, and want a model with school-level random effects. Also, it’s still experimental and not really tested and may very well contain nuts.</p>
+<p>The package uses <a href="http://notstatschat.netlify.com/2018/03/13/why-pairwise-likelihood/">pairwise composite likelihood,</a> because that’s a lot easier to implement efficiently than the other approaches, and because it doesn’t have the problems with nonlinearity and weight scaling. On the downside, there’s some loss in efficiency, especially in situations where both the predictor and response are very strongly correlated within clusters. </p>
+<p>Currently, I’ve only got standard error estimation for the fixed effects. I think I know how to do it for the random effects, but it’s enough of a pain that I don’t want to unless people actually need it.  A resampling approach may turn out to be better. </p>
+<p>Extending this to more levels of model and stages of sampling shouldn’t be that hard – more tedious than difficult – as long as the model level are nested in the sampling stages. That is, you could have school districts as sampling units above schools, or classrooms as a model level below schools. </p>
+<p>The more-general case where model and sampling units aren’t nested turns out to be straightforward for estimation (though efficient implementations are non-trivial) but rather more complicated for standard error estimation.  It will come, but not right now. </p>
+<p>Generalised linear mixed models are also tricky: for what I’m doing now you don’t need the conditional modes of the random effects, but for efficient computation in GLMMs you do, in order to use adaptive Gaussian quadrature. It should still be feasible, but it may be a while. </p>
+<p>The package relies on <code>lme4</code> in two ways. First, it uses <code>lmer</code> to get good starting values for optimisation, which is always helpful. Second, it uses Doug Bates’s idea of profiling out the fixed effects parameters and then just feeding the profile loglikelihood to a black-box, derivative-free optimiser. Profiling cuts the number of parameters down a lot, which makes optimisation easier.  Using a derivative-free optimiser simplifies the code a lot, since the derivatives with respect to the variance components get messy fast. </p>

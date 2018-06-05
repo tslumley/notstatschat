@@ -1,0 +1,20 @@
+---
+title: "Chebyshev’s inequality and `UCL’"
+author: "Thomas Lumley"
+date: 2018-03-15
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Chebyshev’s inequality (or any of the other transliterations of Чебышёв) is a simple bound on the proportion of a distribution that can be far from the mean. The Wikipedia page, on the other hand, isn’t simple. I’m hoping this will be more readable.
+
+We have a random quantity $X$ with mean $\mu$ and variance $\sigma^2$, and -- knowing nothing else -- we want to say something about the probability that $X-\mu$ is large.  Since we know nothing else, we need to find the largest possible value of $\Pr(|X-\mu|\geq d)$ for any distribution with that mean and variance. 
+
+It’s easier to think about the problem the other way: fix $\Pr(|X-\mu|\geq d)$, and ask how small we can make the variance.  So, how can we change the distribution to reduce the variance without changing $\Pr(|X-\mu|\geq d)$?  For any point further than $d$ away we can move it to distance $d$ away. It still has distance at least $d$, but the variance is smaller.  For any point closer than $d$ we can move it all the way to the mean. It’s still closer than $d$, and the variance is smaller.
+
+So, the worst-case distribution has all its probability at $\mu-d$, $\mu$, or $\mu+d$.  Write $p/2$ for the probability that $X=\mu-d$. This  must be the same as the probability that $X=\mu+d$, or $\mu$ wouldn’t be the mean.  By a straightforward calculation the variance of this worst-case distribution is $\sigma^2=pd^2$.  So, $p=\sigma^2/d^2$ for the worst-case distribution, and $p\leq \sigma^2/d^2$ always.
+
+In environmental monitoring there’s an approach to upper confidence limits for a mean based on this: the variance of the mean of $n$ observations is $\sigma^2/n$, and the probability of being more than $d$ units away from the mean is bounded by $\sigma^2/nd^2$.  The problem, where this is used in environmental monitoring, is that you don’t know $\sigma^2$.  You’ve got an estimate based on the data, but this estimate is going to be unreliable in precisely the situations where you’d need a conservative, worst-case interval.  The approach is ok if you’ve taken enough samples to see the bad bits of the pollution distribution, but it’s not very helpful if you don’t know whether you have.  

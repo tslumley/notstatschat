@@ -1,0 +1,31 @@
+---
+title: "Useful debugging trick"
+author: "Thomas Lumley"
+date: 2018-01-31
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ If you have a thing with lots of indices, such as a fourth-order sampling probability $\pi_{ijk\ell}$ (the probability that individuals $i$, $j$, $k$ and $\ell$ are all sampled), there will likely be scenarios where it has lots and lots of symmetries. 
+
+A useful trick is to write a wrapper that checks them:
+
+```
+FourPi<-function(i,j,k,l){  
+    answer <- FourPiInternal(i,j,k,l)  
+    sym <- FourPiInternal(j,i,k,l)  
+    if (abs((answer-sym)/(answer+sym))>EPSILON) stop(paste(i,j,k,l))  
+    answer  
+}
+```
+Other useful tricks:
+
+*   The score (deriviative of loglikelihood) has mean zero at the true parameters under sampling from the model, even in finite samples
+*   Quite a few design-based variance estimators are unbiased for the sampling variance even in small samples. 
+*   Many (but not all) variance estimators should be positive semidefinite even in small samples.
+*   If you have two estimators of the same thing, do a scatterplot of them or of their estimating functions.
+
+More generally, properties of estimating functions are often easier to check in small samples than properties of the estimators.  This is especially useful when you have an estimator that takes $\Omega\left(M^2N^2\right)$ time for large $N$ and moderate $M$, so you can’t just scale up and use asymptotics.  If the computation time isn’t $O(N)$ or near offer, tests you can do with small samples are enormously useful 

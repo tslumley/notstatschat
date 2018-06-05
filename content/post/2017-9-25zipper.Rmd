@@ -1,0 +1,24 @@
+---
+title: "A genome analogy"
+author: "Thomas Lumley"
+date: 2017-09-25
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+DNA looks like a zipper.  
+
+If you scale it up to a fairly fine-toothed zipper with tooth spacing of about 2mm or 1/12in, the human genome would run about from Auckland to Hawai’i.
+
+On this scale, 1 Morgan is about 230km, so you inherit contiguous genome chunks from your grandparents of about 60km. 
+
+The HLA region is about 6km long.
+
+A million-variant SNPchip has markers spaced several meters apart.
+
+A typical gene is maybe 20 meters from start to finish, but a lot of it is introns, and most exons are less than half a meter long.
+
+And, on this scale, the original Human Genome Project cost rather less per mile than a rural two-lane road. 

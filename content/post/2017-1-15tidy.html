@@ -1,0 +1,27 @@
+---
+title: "breakInNamespace"
+author: "Thomas Lumley"
+date: 2018-01-15
+output: html_document
+---
+
+
+
+<p><em>Attention Conservation Notice: I’m putting this in a blog post in the hope it makes it easier for other people to find when they encounter the problem. </em></p>
+<p>The <code>!!</code> and <code>!!!</code> quasiquotation syntax in R’s tidyverse will break if you run them through the parser and deparser. This means:</p>
+<ol style="list-style-type: decimal">
+<li><p>Printing out the code of a function at the command line may give the wrong code</p></li>
+<li>Functions like <code>fix()</code>, <code>fixInNamespace()</code>, and <code>edit()</code> may break functions using quasiquotation.</li>
+<li><p>When you’re stepping through a function in the debugger, the code the debugger displays may be wrong</p></li>
+</ol>
+<p>I say “may” because it depends on your settings for saving the source code of functions. By default, the problems occur with code loaded in packages but not for code loaded by <code>source()</code>.</p>
+<p>The symptom is that you get bizarre-looking nested calls to the ! operator. For example, from the <code>tidypredict</code> package</p>
+<pre><code>reg &lt;- expr(!(!syms(reg)))</code></pre>
+<p>and</p>
+<pre><code>reduce(set, function(l, r) expr((!(!(!l))) * (!(!(!r)))))  </code></pre>
+<p>The output from these functions ends up with lots of exclamation marks in it, and doesn’t work. </p>
+<p>Tracking this down is quite hard – especially when you’ve been trained over the years that “it’s never the compiler”.  Sometimes it is (or, rather, the interpreter).</p>
+<p>What’s happening under the hood? The tidyeval system has a special magic interpreter to treat <code>!!</code> and <code>!!!</code> as single operators. This is possible because R does, in fact, distinguish <code>!!x</code> from <code>!(!x))</code> at the level of the parse tree. Things break because the deparser doesn’t distinguish.</p>
+<p>Why does the deparser not distinguish? I don’t know for sure, but I suspect it’s because the operator precedence of ! is not what many people would expect: it binds relatively loosely, so that <code>!x %in% y</code> is the same as <code>!(x %in% y)</code>. Putting in the implied parenthesis (previously) made code more readable, and it wouldn’t cause any problems under the built-in definition of ! as the logical not operator. With tidyeval, we have problems. </p>
+<p>Now,  I like quasiquotation. I’m responsible for the previous step in this direction, the <code>bquote()</code> function. I don’t want to get into the fight over whether !! is an abomination or a brilliantly creative work-around.</p>
+<p>The fact that C++ overloads the bitwise left shift operator to do printing is probably a supporting argument that could be used in the fight – but I’m not sure by which side.   </p>

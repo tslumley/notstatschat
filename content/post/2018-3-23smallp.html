@@ -1,0 +1,12 @@
+---
+title: "Small p hacking"
+author: "Thomas Lumley"
+date: 2018-03-23
+output: html_document
+---
+
+
+
+<p>The proposal to change p-value thresholds from 0.05 to 0.005 won’t die. I think it’s targeting the wrong question:  many studies are too weak in various ways to provide the sort of reliable evidence they want to claim, and the choices available in analysis and publication process eat up too much of that limited information.  If you use p-values to decide what to publish, <strong>that’s</strong> your problem, and that’s what you need to fix.</p>
+<p>One issue that doesn’t get as much attention is how a change would affect the sensitivity of p-values to analysis choices.  When we started doing genome-wide association studies, we noticed that the results were much more sensitive than we had expected. If you changed the inclusion criteria or the adjustment variables in the model, the p-value for the most significant SNPs often changed a lot.  Part of that is just having low power. Part of it is because the Normal tail probability gets small very quickly: small changes in a <span class="math inline">\(Z\)</span>-statistic of -5 give you quite large changes in the tail probability. Part of it is because we were working at the edge of where the Normal approximation holds up: analyses that are equivalent to first order can start showing differences.  Overall, as Ken Rice put it “the data are very tired after getting to <span class="math inline">\(5\times 10^{-8}\)</span>”, and you can’t expect them to do much additional work.  In our (large) multi-cohort GWAS we saw these problems only at very small p-values , but with smaller datasets you’d see them a lot earlier.</p>
+<p>None of this is a problem if you have a tightly pre-specified analysis and do simulations to check that it’s going to be ok.  But it did mean we had to be more careful about being too flexible.  Fortunately, the computational load of GWAS (back then) was enough to encourage pre-specified analyses.  But if you’re trying to make a change to general statistical practice in order to mask some of the symptoms of analysis flexibility and publication bias, you do need to worry.</p>

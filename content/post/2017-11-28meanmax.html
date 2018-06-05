@@ -1,0 +1,34 @@
+---
+title: "Means of maximums"
+author: "Thomas Lumley"
+date: 2017-11-08
+output: html_document
+---
+
+
+
+<p>From a math point of view, it’s an interesting example of how the mean of the maximum of a set of random variables is higher than the max of the individual means – <a href="http://andrewgelman.com/2017/10/19/think-top-batting-average-will-higher-311-pooling-point-predictions-bayesian-inference/">Andrew Gelman</a></p>
+<p>Controlling the maximum of a set of random variables is an important problem in mathematical statistics, and it’s surprising how far a comparatively crude approach can be stretched.</p>
+<p>Suppose you have <span class="math inline">\(m\)</span> random variables <span class="math inline">\(X_1\)</span>, .., <span class="math inline">\(X_m\)</span>, and you want to know about the mean of the maximum.  A very simple bound is that the whole is greater than the parts:<br />
+<span class="math display">\[E[\max_i |X_i|]\leq E[\sum_i |X_i|]\leq m\max E|[X_i|].\]</span></p>
+<p>That’s crude enough to be pretty useless, but suppose we looked at the squares of the <span class="math inline">\(X_i\)</span>. Applying the same crude bound<br />
+<span class="math display">\[E[\max_i X_i^2]\leq E[\sum_i X_i^2]\leq m\max E[X_i^2],\]</span><br />
+but now we can say<br />
+<span class="math display">\[\sqrt{E[\max_i X_i^2]}\leq \sqrt{m}\max \sqrt{E[X_i^2]},\]</span><br />
+or<br />
+<span class="math display">\[\|X_i\|\leq \|X_i\|_2\leq \sqrt{m}\max_i\|X_i\|_2.\]</span></p>
+<p>We don’t need to to stop there:<br />
+<span class="math display">\[\|X_i\|\leq \|\max_i X_i\|_4\leq \sqrt[4]{m}\max_i\|X_i\|_4\]</span><br />
+and in general<br />
+<span class="math display">\[\|X_i\|\leq \|\max_i X_i\|_p\leq \sqrt[p]{m}\max_i\|X_i\|_p.\]</span></p>
+<p>And it doesn’t even stop there. If we write <span class="math inline">\(\psi_p(x)=\exp (\|x\|^p)\)</span> and define a norm by<br />
+<span class="math display">\[\psi_p(\|X\|_{\psi_p})=E[\psi_p(X)],\]</span><br />
+we get, eg, <br />
+<span class="math display">\[\|X_i\|\leq \|\max_I X_i\|_{\psi_2}\leq \sqrt{\log m}\max_i\|X_i\|_{\psi_2}.\]</span></p>
+<p>You still need to worry if these expectations exist, but for Normal distributions and those with lighter tails than the Normal they do. </p>
+<p>These bounds are for finite sets, but they can be stretched to some infinite sets by a process called chaining.  Suppose you have a stochastic process <span class="math inline">\(X\)</span> indexed by a set <span class="math inline">\(T\)</span> in a metric space, and you want to control <span class="math inline">\(E\left[\sup|X({r})-X(s)|\right]\)</span> over all pairs with <span class="math inline">\(d(r,s)&lt;\delta\)</span>.  Assume we have some sort of Lipschitz condition so that <span class="math inline">\(E[|X({r})-Xs)|]&lt;K d(r,s)\)</span> and (for simplicity) assume <span class="math inline">\(K=1\)</span>. First, lay down a grid of points <span class="math inline">\(t_{1i}\)</span> so that for any point <span class="math inline">\(s\)</span> there is a <span class="math inline">\(t_{1i}\)</span> with  <span class="math inline">\(d(s,t_{1i})&lt;1\)</span> and so also <span class="math inline">\(E[|X(s)-X(t_{1i})|]&lt;1\)</span>. Let <span class="math inline">\(N(1)\)</span> be the number of points you needed. Now, repeat with points <span class="math inline">\(t_{1/2,i}\)</span> so that for any point <span class="math inline">\(s\)</span> there is a <span class="math inline">\(t_{1i}\)</span> with  <span class="math inline">\(d(s,t_{1i})&lt;1/2\)</span>, and write <span class="math inline">\(N({1/2})\)</span> for the number you needed. And so on in both directions: …8,4,2,1,1/2 <span class="math inline">\(1/4, 1/8,\dots,1/{2^k},\dots\)</span>.</p>
+<p>For any two points <span class="math inline">\(r\)</span> and <span class="math inline">\(s\)</span> anywhere in any level of this grid, you can bound <span class="math inline">\(E[|X({r})-Xs)|]\)</span> by following the tree of links up to the coarsest necessary level (where the links will be of length about <span class="math inline">\(\delta\)</span>) and then back down again. At each level, the number of links of length <span class="math inline">\(2^{-k}\)</span> is finite: <span class="math inline">\(N(2^{-k})\)</span>, so the maximum over links of that length is bounded by <span class="math inline">\(2^{-k}\sqrt{\log N(2^{-k})}\)</span>.  The total path length is bounded by a multiple of <span class="math inline">\(\sum_k 2^{-k}\sqrt{\log N(2^{-k})}\)</span>, with the sum taken over all links shorter than <span class="math inline">\(\delta\)</span>. </p>
+<p>And, if you were optimistic, you might hope that under reasonable conditions this bound for a dense grid might often transfer to a bound for the whole process. And, after a lot of painful details including genuine questions of measurability, it often does.</p>
+<p>If we write <span class="math inline">\(N(\epsilon)\)</span> more generally for the number of points you’d need in a grid with spacing <span class="math inline">\(\epsilon\)</span>, we can bound (up to a multiple) the sum by an integral<br />
+<span class="math display">\[\int_0^\delta \sqrt{\log N(\epsilon)}\,d\epsilon.\]</span><br />
+Which is why integrals like that appear a lot in empirical process theory.</p>

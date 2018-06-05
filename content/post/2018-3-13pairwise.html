@@ -1,0 +1,24 @@
+---
+title: "Why pairwise likelihood?"
+author: "Thomas Lumley"
+date: 2018-03-13
+output: html_document
+---
+
+
+
+<p>Xudong Huang and I are working on fitting mixed models using pairwise composite likelihood. JNK Rao and various co-workers have done this in the past, but only for the setting where the structure (clusters, etc) in the sampling is the same as in the model.  That’s not always true. </p>
+<p>The example that made me interested in this was genetic analyses from the Hispanic Community Health Survey.  The survey is a multistage sample: census block groups and then households. The models have random effect structure corresponding to relatedness.  Since there are unrelated people in the same household (eg, spouses) and related people in different households, the sampling and design structures are very different.</p>
+<p>What you’d start off trying to do in a traditional design-based approach is to estimate the population loglikelihood.  In a linear mixed model that’s of the form<br />
+<span class="math display">\[-\frac{1}{2}\log\left|\Xi\right| -\frac{1}{2} (y-\mu(\beta))^T\Xi^{-1} y-\mu(\beta))\]</span><br />
+for a covariance matrix <span class="math inline">\(\Xi\)</span> and regression parameters <span class="math inline">\(\beta\)</span>. </p>
+<p>The way I’ve described the problem previously is “it’s not clear where you stick the weights”. That’s true, but it’s worth going into more detail.  Suppose you know <span class="math inline">\(\Xi\)</span> for the whole population.  You then know the log-determinant term, and the residual term is a pairwise sum. If <span class="math inline">\(R_{ij}\)</span> is the indicator that the pair <span class="math inline">\((i,\,j)\)</span> is sampled, and <span class="math inline">\(\pi_{ij}\)</span> is the probability, you could use<br />
+<span class="math display">\[\hat\ell =-\frac{1}{2}\log\left|\Xi\right| -\frac{1}{2} \sum_{i,j} \frac{R_{ij}}{\pi_{ij}}(y-\mu(\beta))_i^T\left(\Xi^{-1}\right)_{ij} y-\mu(\beta))_j\]</span></p>
+<p>Typically we don’t know <span class="math inline">\(\Xi\)</span> for the whole population: it can depend on covariates (in a random-slope model), or we might not even know the number of people in non-sampled clusters, or in the genetic example we wouldn’t know the genetic relationships between non-sampled people.  Also, the full population could be quite big, so working out <span class="math inline">\(-\frac{1}{2}\log\left|\Xi\right|\)</span> might be no fun.  The approach might be worth trying for a spatial model, but it’s not going to work for a health survey.</p>
+<p>If the model and design structures were the same, we might treat <span class="math inline">\(\Xi\)</span> as block diagonal, with some blocks observed and others not, and hope to easily rescale the sample log determinant to the population one. But in general that will be hopeless, too. </p>
+<p>Pairwise composite likelihood works because we can use a different objective function, one that really is a sum that’s easy to reweight.  If <span class="math inline">\(\ell_{ij}\)</span> is the loglikelihood based on observations <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>, then in the population<br />
+<span class="math display">\[\ell_\textrm{composite} = \sum_{i,j} \ell_{ij}\]</span><br />
+and based on the sample<br />
+<span class="math display">\[\hat\ell_\textrm{composite} = \sum_{i,j} \frac{R_{ij}}{\pi_{ij}}\ell_{ij}.\]</span><br />
+We now only need to be able to work out <span class="math inline">\(\Xi\)</span> for observed pairs of people, which we can easily do.  Since the summands are honest-to-Fisher loglikelihoods, they have their expected maximum at the true parameter values and estimation works straightforwardly for both <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\Xi\)</span>. Variance estimation for <span class="math inline">\(\hat\beta\)</span> doesn’t work so easily: a sandwich estimator has <em>a lot</em> of terms, and proving it’s consistent is fairly delicate. But it <em>is</em> consistent.</p>
+<p>We would do strictly better in terms of asymptotic efficiency by going beyond pairs to triples or fourples or whatever. But even triples would up the computational complexity by a factor of <span class="math inline">\(n\)</span>, and require us to have explicit formulas for sixth-order joint sampling probabilities – and it gets exponentially worse for larger tuples. </p>

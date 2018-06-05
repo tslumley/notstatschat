@@ -1,0 +1,50 @@
+---
+title: "Means of maximums"
+author: "Thomas Lumley"
+date: 2017-11-08
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+From a math point of view, it’s an interesting example of how the mean of the maximum of a set of random variables is higher than the max of the individual means -- [Andrew Gelman](http://andrewgelman.com/2017/10/19/think-top-batting-average-will-higher-311-pooling-point-predictions-bayesian-inference/)  
+
+Controlling the maximum of a set of random variables is an important problem in mathematical statistics, and it’s surprising how far a comparatively crude approach can be stretched.
+
+Suppose you have $m$ random variables $X_1$, .., $X_m$, and you want to know about the mean of the maximum.  A very simple bound is that the whole is greater than the parts:  
+$$E[\max_i |X_i|]\leq E[\sum_i |X_i|]\leq m\max E|[X_i|].$$
+
+That’s crude enough to be pretty useless, but suppose we looked at the squares of the $X_i$. Applying the same crude bound  
+$$E[\max_i X_i^2]\leq E[\sum_i X_i^2]\leq m\max E[X_i^2],$$  
+but now we can say  
+$$\sqrt{E[\max_i X_i^2]}\leq \sqrt{m}\max \sqrt{E[X_i^2]},$$  
+or  
+$$\|X_i\|\leq \|X_i\|_2\leq \sqrt{m}\max_i\|X_i\|_2.$$
+
+We don’t need to to stop there:  
+$$\|X_i\|\leq \|\max_i X_i\|_4\leq \sqrt[4]{m}\max_i\|X_i\|_4$$  
+and in general  
+$$\|X_i\|\leq \|\max_i X_i\|_p\leq \sqrt[p]{m}\max_i\|X_i\|_p.$$  
+  
+
+And it doesn’t even stop there. If we write $\psi_p(x)=\exp (\|x\|^p)$ and define a norm by  
+$$\psi_p(\|X\|_{\psi_p})=E[\psi_p(X)],$$  
+we get, eg,   
+$$\|X_i\|\leq \|\max_I X_i\|_{\psi_2}\leq \sqrt{\log m}\max_i\|X_i\|_{\psi_2}.$$
+
+You still need to worry if these expectations exist, but for Normal distributions and those with lighter tails than the Normal they do.   
+  
+
+These bounds are for finite sets, but they can be stretched to some infinite sets by a process called chaining.  Suppose you have a stochastic process $X$ indexed by a set $T$ in a metric space, and you want to control $E\left[\sup|X({r})-X(s)|\right]$ over all pairs with $d(r,s)<\delta$.  Assume we have some sort of Lipschitz condition so that $E[|X({r})-Xs)|]<K d(r,s)$ and (for simplicity) assume $K=1$. First, lay down a grid of points $t_{1i}$ so that for any point $s$ there is a $t_{1i}$ with  $d(s,t_{1i})<1$ and so also $E[|X(s)-X(t_{1i})|]<1$. Let $N(1)$ be the number of points you needed. Now, repeat with points $t_{1/2,i}$ so that for any point $s$ there is a $t_{1i}$ with  $d(s,t_{1i})<1/2$, and write $N({1/2})$ for the number you needed. And so on in both directions: ...8,4,2,1,1/2 $1/4, 1/8,\dots,1/{2^k},\dots$.
+
+For any two points $r$ and $s$ anywhere in any level of this grid, you can bound $E[|X({r})-Xs)|]$ by following the tree of links up to the coarsest necessary level (where the links will be of length about $\delta$) and then back down again. At each level, the number of links of length $2^{-k}$ is finite: $N(2^{-k})$, so the maximum over links of that length is bounded by $2^{-k}\sqrt{\log N(2^{-k})}$.  The total path length is bounded by a multiple of $\sum_k 2^{-k}\sqrt{\log N(2^{-k})}$, with the sum taken over all links shorter than $\delta$. 
+
+And, if you were optimistic, you might hope that under reasonable conditions this bound for a dense grid might often transfer to a bound for the whole process. And, after a lot of painful details including genuine questions of measurability, it often does.  
+  
+
+If we write $N(\epsilon)$ more generally for the number of points you’d need in a grid with spacing $\epsilon$, we can bound (up to a multiple) the sum by an integral  
+$$\int_0^\delta \sqrt{\log N(\epsilon)}\,d\epsilon.$$  
+Which is why integrals like that appear a lot in empirical process theory.
