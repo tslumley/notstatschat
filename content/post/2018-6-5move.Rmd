@@ -1,0 +1,24 @@
+---
+title: "New blog home"
+author: "Thomas Lumley"
+date: 2018-6-5
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+One way to prove you can really keep up with the cool kids is to move your blog to GitHub the day after they get bought by Microsoft.
+
+\
+
+\
+
+\
+
+\
+
+I'm not actually worried by that: one of the key features of a git repository is that it doesn't have the only copy of any of your stuff. The main motivation for switching was to use `blogdown` rather than Tumblr, because my blog is mostly text.
+
+Converting from Tumblr was a bit of a pain, partly because the Python setup on my desktop machine is a mess, partly because there's a lot of MathJax in the blog, and partly because I wanted to fix up the font choices in some posts.  I ended up doing a lot of it by hand. It wasn't too bad, though.
