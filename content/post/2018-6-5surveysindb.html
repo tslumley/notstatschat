@@ -1,0 +1,73 @@
+---
+title: "Survey analysis in SQL"
+author: "Thomas Lumley"
+date: 2018-06-06
+output: html_document
+---
+
+
+
+<p>Charco Hui, as his Honours project in Statistics, has been writing a package for complex-survey analysis using <code>dplyr</code> and <code>dbplyr</code>. It’s <a href="https://github.com/chrk623/svydb">here</a>. At the moment it has only been tested with MonetDB, using the github version (0.5.2) of <code>MonetDBlite</code>, but it should work with many other databases (not SQLite, at the moment). I hope it’s still under development: the approach does seem to be useful for large survey data sets – and for smaller data sets the <code>dplyr</code> version is faster than the <code>survey</code> package, though more limited.</p>
+<p>Mostly, the package does the same things as my old <code>sqlsurvey</code> package, just with <code>dbplyr</code> as middleware to avoid hand-coding all the SQL. One newish thing is the code for hexagonal binning. In <code>sqlsurvey</code> I did this by reading the data into memory in chunks, but that’s not necessary.</p>
+<p>The algorithm for hexagonal binning isn’t new: you compute which bin the point would go into for two offset rectangular grids and take the closer of the two resulting bin centres as the centre of the hex.</p>
+<p>Here’s a simplified version in R, bypassing the trivial but annoying centering and scaling you need to get away from <span class="math inline">\((0,\,0)\)</span>, and not being quite careful enough about edge effects for outliers.</p>
+<pre class="r"><code>x&lt;-rnorm(1000, sd=1)
+y&lt;-rnorm(1000, sd=sqrt(3))
+x1&lt;-round(x)
+x2&lt;-round(x+1/2)-1/2
+y1&lt;-round(y/sqrt(3))*sqrt(3)
+y2&lt;-(round(y/sqrt(3)+1/2)-1/2)*sqrt(3)
+d1&lt;-(x-x1)^2+3*(y-y1)^2
+d2&lt;-(x-x2)^2+3*(y-y2)^2
+hx&lt;-ifelse(d1&lt;d2,x1,x2)
+hy&lt;-ifelse(d1&lt;d2,y1,y2)
+par(pty=&quot;s&quot;)
+plot(x1,y1,pch=19)
+points(x2,y2,pch=19,col=&quot;blue&quot;)</code></pre>
+<p><img src="/post/2018-6-5surveysindb_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<pre class="r"><code>## now show how each point maps to a center
+plot(hx,hy, col=&quot;#A000A020&quot;,pch=19)
+points(x,y,pch=&quot;.&quot;)
+segments(x,y,hx,hy,col=&quot;#00000060&quot;)</code></pre>
+<p><img src="/post/2018-6-5surveysindb_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
+<p>You can do this in <code>dplyr</code>, of course. This code doesn’t plot, but it shows the aggregation of points to hexes that you’d need for plotting</p>
+<pre class="r"><code>library(dplyr, quietly=TRUE)
+tibble(x,y) %&gt;% 
+   mutate(x1=round(x),y1=round(y/sqrt(3))*sqrt(3), 
+   x2=round(x+1/2)-1/2, y2=(round(y/sqrt(3)+1/2)-1/2)*sqrt(3)) %&gt;%
+   mutate(d1=(x-x1)^2+3*(y-y1)^2, d2=(x-x2)^2+3*(y-y2)^2) %&gt;%
+   mutate(hx=if_else(d1&lt;d2,x1,x2), hy=if_else(d1&lt;d2,y1,y2)) %&gt;%
+   group_by(hx,hy) %&gt;% summarise(count=n())</code></pre>
+<pre><code>## # A tibble: 67 x 3
+## # Groups:   hx [?]
+##       hx     hy count
+##    &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt;
+##  1  -3.5  0.866     1
+##  2  -3.5  2.60      1
+##  3  -3    0         2
+##  4  -2.5 -0.866     5
+##  5  -2.5  0.866     6
+##  6  -2   -5.20      1
+##  7  -2   -3.46      3
+##  8  -2   -1.73      2
+##  9  -2    0        12
+## 10  -2    1.73      3
+## # ... with 57 more rows</code></pre>
+<p>And once you’ve got in <code>dplyr</code>, you can just run it in <code>dbplyr</code> to do the computations in the database</p>
+<p>For survey data, we want <code>summarise(count=sum(weights))</code> rather than <code>summarise(count=n())</code> so that the hex size depends on the estimated population size rather than the sample size, but otherwise it’s the same. That actually simplifies the edge-effect problem, as you can just add a point with zero weight at each potential hex center.</p>
+<p>And here’s a small example,</p>
+<pre class="r"><code># devtools:::install_github(chrk623/svydb)
+library(svydb,quietly=TRUE)
+library(DBI)
+library(MonetDBLite)
+con = dbConnect(MonetDBLite())
+
+data(nhane)
+dbWriteTable(con, &quot;nhanes&quot;,nhane)</code></pre>
+<pre><code>## Identifier(s) &quot;X&quot;, &quot;SurveyYr&quot;, &quot;ID&quot;, &quot;Gender&quot;, &quot;Age&quot;, &quot;AgeMonths&quot;, &quot;Race1&quot;, &quot;Race3&quot;, &quot;Education&quot;, &quot;MaritalStatus&quot;, &quot;HHIncome&quot;, &quot;HHIncomeMid&quot;, &quot;Poverty&quot;, &quot;HomeRooms&quot;, &quot;HomeOwn&quot;, &quot;Work&quot;, &quot;Weight&quot;, &quot;Length&quot;, &quot;HeadCirc&quot;, &quot;Height&quot;, &quot;BMI&quot;, &quot;BMICatUnder20yrs&quot;, &quot;BMI_WHO&quot;, &quot;Pulse&quot;, &quot;BPSysAve&quot;, &quot;BPDiaAve&quot;, &quot;BPSys1&quot;, &quot;BPDia1&quot;, &quot;BPSys2&quot;, &quot;BPDia2&quot;, &quot;BPSys3&quot;, &quot;BPDia3&quot;, &quot;Testosterone&quot;, &quot;DirectChol&quot;, &quot;TotChol&quot;, &quot;UrineVol1&quot;, &quot;UrineFlow1&quot;, &quot;UrineVol2&quot;, &quot;UrineFlow2&quot;, &quot;Diabetes&quot;, &quot;DiabetesAge&quot;, &quot;HealthGen&quot;, &quot;DaysPhysHlthBad&quot;, &quot;DaysMentHlthBad&quot;, &quot;LittleInterest&quot;, &quot;Depressed&quot;, &quot;nPregnancies&quot;, &quot;nBabies&quot;, &quot;Age1stBaby&quot;, &quot;SleepHrsNight&quot;, &quot;SleepTrouble&quot;, &quot;PhysActive&quot;, &quot;PhyActiveDays&quot;, &quot;TVHrsDay&quot;, &quot;ComputerHrsDay&quot;, &quot;Alcohol12PlusYr&quot;, &quot;AlcoholDay&quot;, &quot;AlcoholYear&quot;, &quot;SmokeNow&quot;, &quot;Smoke100&quot;, &quot;SmokeAge&quot;, &quot;Marijuana&quot;, &quot;AgeFirstMarij&quot;, &quot;RegularMarij&quot;, &quot;AgeRegMarij&quot;, &quot;HardDrugs&quot;, &quot;SexEver&quot;, &quot;SexAge&quot;, &quot;SexNumPartnLife&quot;, &quot;SexNumPartYear&quot;, &quot;SameSex&quot;, &quot;SexOrientation&quot;, &quot;WTINT2YR&quot;, &quot;WTMEC2YR&quot;, &quot;SDMVPSU&quot;, &quot;SDMVSTRA&quot; contain uppercase or reserved SQL characters and need(s) to be quoted in queries.</code></pre>
+<pre><code>## Identifier(s) &quot;Work&quot; are reserved SQL keywords and need(s) to be quoted in queries.</code></pre>
+<pre class="r"><code>nhanes.db = tbl(con, &quot;nhanes&quot;)
+nh.dbsurv = svydbdesign(st = SDMVSTRA , wt = WTMEC2YR,id = SDMVPSU , data = nhanes.db)
+hb = svydbhexbin(Weight~Height , design = nh.dbsurv)
+svydbhexplot(hb, xlab = &quot;Height&quot;, ylab = &quot;Weight&quot;)</code></pre>
+<p><img src="/post/2018-6-5surveysindb_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
