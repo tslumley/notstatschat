@@ -14,7 +14,7 @@ This is a picture of all the genetic associations found in genome-wide associati
 
 ![](/post/2018-6-9gwas_files/GWAS_Catalog_diagram.jpg){width=95%}
 
-There are two chromosomes with many fewer associations. One is the Y chromosome. There isn't much there because there isn't much there.  The other is the X chromosome. There isn't much there because GWAS took a lot longer to get started for the X chromosome, and that's mostly for software reasons.
+There are two chromosomes with many fewer associations. One is the Y chromosome. There isn't much there because there isn't much there.  The other is the X chromosome. There isn't much there because GWAS took a lot longer to get started for the X chromosome, and that's partly for software reasons.
 
 One of the important steps in GWAS consortia was imputation. Different research groups used different SNP chips, but they all had pretty good coverage of the genome, and all the sets of results could be imputed for a common set of SNPs -- typically 2.5 million from the HapMap project.
 
