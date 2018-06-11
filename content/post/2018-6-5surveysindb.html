@@ -1,7 +1,7 @@
 ---
 title: "Survey analysis in SQL"
 author: "Thomas Lumley"
-date: 2018-06-06
+date: 2018-06-09
 output: html_document
 ---
 
@@ -38,21 +38,21 @@ tibble(x,y) %&gt;%
    mutate(d1=(x-x1)^2+3*(y-y1)^2, d2=(x-x2)^2+3*(y-y2)^2) %&gt;%
    mutate(hx=if_else(d1&lt;d2,x1,x2), hy=if_else(d1&lt;d2,y1,y2)) %&gt;%
    group_by(hx,hy) %&gt;% summarise(count=n())</code></pre>
-<pre><code>## # A tibble: 64 x 3
+<pre><code>## # A tibble: 65 x 3
 ## # Groups:   hx [?]
 ##       hx     hy count
 ##    &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt;
-##  1  -3.5 -0.866     1
-##  2  -3   -3.46      1
-##  3  -3   -1.73      1
-##  4  -3    1.73      1
-##  5  -2.5 -4.33      1
-##  6  -2.5 -2.60      2
-##  7  -2.5 -0.866     5
-##  8  -2.5  0.866     5
-##  9  -2.5  2.60      1
-## 10  -2   -1.73      6
-## # ... with 54 more rows</code></pre>
+##  1  -3.5 -0.866     2
+##  2  -3    0         1
+##  3  -2.5 -2.60      1
+##  4  -2.5 -0.866     2
+##  5  -2.5  2.60      3
+##  6  -2   -3.46      1
+##  7  -2   -1.73      4
+##  8  -2    0        12
+##  9  -2    1.73      9
+## 10  -1.5 -4.33      3
+## # ... with 55 more rows</code></pre>
 <p>And once you’ve got in <code>dplyr</code>, you can just run it in <code>dbplyr</code> to do the computations in the database</p>
 <p>For survey data, we want <code>summarise(count=sum(weights))</code> rather than <code>summarise(count=n())</code> so that the hex size depends on the estimated population size rather than the sample size, but otherwise it’s the same. That actually simplifies the edge-effect problem, as you can just add a point with zero weight at each potential hex center.</p>
 <p>And here’s a small example,</p>
