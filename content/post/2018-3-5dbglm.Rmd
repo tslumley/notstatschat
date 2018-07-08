@@ -28,7 +28,11 @@ The computation time was 1.4s for the sample+one iteration approach and 15s for 
 
 Now I’m working on  an analysis of the [NYC taxi dataset](https://github.com/toddwschneider/nyc-taxi-data), which is much bigger and has more interesting variables.  My first model, with 87 million records, was a bit stressful for my laptop. It took nearly half an hour elapsed time for the sample+one-step approach and 41 minutes for **bigglm**, though bigglm took about three times as long in CPU time.  I’m going to try on my desktop to see how the comparison goes there.  Also, this first try was using the in-process MonetDBLite database, which will make bigglm look good, so I should also try a setting where the data transfer between R and the database actually needs to happen. 
 
-I’ll be talking about this at the JSM and (I hope at useR).
+I’ll be talking about this at the JSM and at useR.
+
+[arXiv](https://notstatschat.rbind.io/2018/03/05/faster-generalised-linear-models-in-largeish-data/)
+
+[package](https://github.com/tslumley/dbglm)
 
 **Math stuff**
 
