@@ -30,7 +30,7 @@ Now I’m working on  an analysis of the [NYC taxi dataset](https://github.com/
 
 I’ll be talking about this at the JSM and at useR.
 
-[arXiv](https://notstatschat.rbind.io/2018/03/05/faster-generalised-linear-models-in-largeish-data/)
+[arXiv](https://arxiv.org/abs/1803.05165)
 
 [package](https://github.com/tslumley/dbglm)
 
