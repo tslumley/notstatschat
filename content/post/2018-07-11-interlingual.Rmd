@@ -1,0 +1,20 @@
+---
+title: Interlingual
+author: "Thomas Lumley"
+date: 2018-07-11
+slug: interlingual
+output: html_document
+---
+
+I don't normally explain jokes, but it's clear from the useR conference that the name of the new R package
+`reticulate` divides people into two groups: amused or bemused. 
+
+The word *reticulate* barely exists in modern English. It comes from the Latin *reticulum*, 
+'small net', the diminutive of *rete*, net. In NZ and Australian usage, mains water -- supplied by 
+a network of pipes -- is called a 'reticulated water supply.' There are also scientific and 
+artistic uses referring to a netted appearance -- in stone, in plant leaves, in insect wings,
+and (most relevantly) in the scale markings of *Python reticulatus*, the
+[reticulated python](https://en.wikipedia.org/wiki/Reticulated_python). 
+
+So, `reticulate` is a Python interface package for R -- with the additional suggestion of
+being a copy of Python caught in a net inside R. 
