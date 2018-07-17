@@ -1,0 +1,42 @@
+---
+title: 'e-bike: the reboot'
+author: Thomas Lumley
+date: '2018-07-17'
+slug: e-bike-the-reboot
+---
+
+Q: What do you mean, "reboot"? Like, a new e-bike with only a vague brand-name resemblance to the original?
+
+A: Pretty much. I'm 200km into a SmartMotion Pacer GT. 
+
+Q: How fast does it go?
+
+A: Haven't we talked about that question? 
+
+Q:
+
+A: Ok. It's faster than the old one, because it has a wider range of gears. I get up to 45km/h down Manukau Rd toward Royal Oak. Which is actually faster than I'm happy going on Auckland roads.
+
+Q: Why did you get a new e-bike when you had a perfectly good old one?
+
+A: Partly the gears thing. Also, I tried one with a torque sensor when I was on holiday in Melbourne, and I liked it.
+
+Q: What's a torque sensor?
+
+A: Well, when I first started riding my old e-bike, I thought *"Someone needs to invent a version of this with a strain gauge on the pedals, to measure effort rather than speed"*. They did. It's faster *and* you get more exercise, because there's more return to pedalling harder than there is with a cadence sensor.
+
+Q: What other features does it have?
+
+A: Built-in lights, bright enough that they don't need to be flashing. A speedometer, so I know I'm going at the speed limit when cars are tailgating me down Lower Domain Drive. And a continuously variable transmission.
+
+Q: A continuously what?
+
+A: [Infinite gears?](https://www.gizmodo.com.au/2017/02/how-a-bike-with-infinite-gears-changed-the-way-i-commute/). The gear ratio changes smoothly as you turn the handle. It's a gimmick, but it's a nice one. You get the advantages (and disadvantages) of hub gears, to a higher level.
+
+Q: That sounds expensive.
+
+A: Yes. But there was a discount because a new higher-power version is supposed to be coming out soon. Since I don't care about higher power that was a good opportunity. It probably won't be cheaper than taking the bus, over its lifetime. But it won't be *much* more expensive.
+
+Q: What about a throttle?
+
+A: I do miss that from the old one. The torque sensor gives you good acceleration starting up, but it doesn't kick in as fast -- which matters, eg,  for traffic lights heading up hill. There is a throttle on the new one, but it's a bit Keynesian -- it operates with long and variable lags.  I should get it checked to see if it's broken.
