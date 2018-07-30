@@ -102,7 +102,7 @@ mean_by_name_tidyf(looking_glass, aged_aged_man)
 ```
 
 
-The tidyverse version is the same here, but the tidyverse adds some extra twiddles (like the ability to use a `~` instead of `=` to get around R syntax) and a couple of important features: the unquote-and-splice operator `!!!` that unquotes each element of a list into an argument list, and *quosures*, which capture the environment of an expression the way R functions ('closures') and model formulas do. 
+The tidyverse version is the same here, but the tidyverse adds some useful extra twiddles (like the ability to use a `~` instead of `=` to get around R syntax) and a couple of important features: the unquote-and-splice operator `!!!` that unquotes each element of a list into an argument list, and *quosures*, which capture the environment of an expression the way R functions ('closures') and model formulas do. 
 
 If you look at the `bquote` function you can see what's going a bit more easily than in the `rlang` package
 ```{r}

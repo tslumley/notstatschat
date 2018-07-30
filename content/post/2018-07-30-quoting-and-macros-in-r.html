@@ -25,14 +25,14 @@ slug: quoting-and-macros-in-r
 <pre class="r"><code>aged_aged_man &lt;- rnorm(1000)</code></pre>
 <p>binding a name to a vector of numbers. If we want the mean of the vector we can pass the vector to a function</p>
 <pre class="r"><code>mean(aged_aged_man)</code></pre>
-<pre><code>## [1] -0.0006699469</code></pre>
+<pre><code>## [1] 0.01513496</code></pre>
 <p>If we want to make life difficult, we could pass the <strong>name</strong> of the vector to a function and have the function find the variable by its name. One way to do this is to use a character string for the name</p>
 <pre class="r"><code>mean_by_name_string&lt;-function(name_of_x) {
  x&lt;- get(name_of_x, mode=&quot;numeric&quot;)
  mean(x)
 }
 mean_by_name_string(&quot;aged_aged_man&quot;)</code></pre>
-<pre><code>## [1] -0.0006699469</code></pre>
+<pre><code>## [1] 0.01513496</code></pre>
 <p>That <em>works</em>, but it’s limited and ugly: you can pass <code>&quot;x&quot;</code> but not <code>&quot;x+1&quot;</code>. Also, if you have a variable, you need to convert its name back into a string.</p>
 <p>Another way is using the magic of R’s lazy evaluation and promises</p>
 <pre class="r"><code>mean_by_name&lt;-function(name_of_x) {
@@ -43,7 +43,7 @@ mean_by_name_string(&quot;aged_aged_man&quot;)</code></pre>
 }
 mean_by_name(aged_aged_man)</code></pre>
 <pre><code>## mean(aged_aged_man)</code></pre>
-<pre><code>## [1] -0.0006699469</code></pre>
+<pre><code>## [1] 0.01513496</code></pre>
 <p>The <code>substitute()</code> function grabs an argument and extracts the unevaluated expression that went into it. According to the lies-to-children version of R syntax that shouldn’t be possible: R passes arguments by value, and the expression is gone to whereever expresions go when they’re evaluated. In reality, to allow for lazy evaluation, R has a special data structure called a <em>promise</em>, which stores the expression until you look at it then evaluates it. R also has <code>substitute()</code> to get the expression out of the promise.</p>
 <p>If you’ve ever wondered how plot axes get labelled with the expressions you pass as arguments (rather than with their values), this is the explanation. Inside many plotting functions you’ll find a line like</p>
 <pre><code>xlab&lt;-deparse(substitute(x))</code></pre>
@@ -59,7 +59,7 @@ mean_by_name(aged_aged_man)</code></pre>
 }
 mean_by_tidyname(aged_aged_man)</code></pre>
 <pre><code>## mean(aged_aged_man)</code></pre>
-<pre><code>## [1] -0.0006699469</code></pre>
+<pre><code>## [1] 0.01513496</code></pre>
 <p>Here, <code>enexpr()</code> does the equivalent of <code>substitute()</code></p>
 <p>More often, you’d want to pass a data frame and the name of an element of it</p>
 <pre class="r"><code>looking_glass &lt;- data.frame(aged_aged_man=rnorm(1000), tweedledum=1:1000, tweedledee=1000:1)
@@ -69,7 +69,7 @@ mean_by_name_df&lt;-function(data, name_of_x) {
  eval(mean_code, data)
 }
 mean_by_name_df(looking_glass, aged_aged_man)</code></pre>
-<pre><code>## [1] -0.04757489</code></pre>
+<pre><code>## [1] 0.03537387</code></pre>
 <p>Or, the new way</p>
 <pre class="r"><code>mean_by_name_tidyf&lt;-function(data, name_of_x) {
  name_of_x_is_called&lt;- enexpr(name_of_x)
@@ -77,8 +77,8 @@ mean_by_name_df(looking_glass, aged_aged_man)</code></pre>
  eval_tidy(mean_code, data)
 }
 mean_by_name_tidyf(looking_glass, aged_aged_man)</code></pre>
-<pre><code>## [1] -0.04757489</code></pre>
-<p>The tidyverse version is the same here, but the tidyverse adds some extra twiddles (like the ability to use a <code>~</code> instead of <code>=</code> to get around R syntax) and a couple of important features: the unquote-and-splice operator <code>!!!</code> that unquotes each element of a list into an argument list, and <em>quosures</em>, which capture the environment of an expression the way R functions (‘closures’) and model formulas do.</p>
+<pre><code>## [1] 0.03537387</code></pre>
+<p>The tidyverse version is the same here, but the tidyverse adds some useful extra twiddles (like the ability to use a <code>~</code> instead of <code>=</code> to get around R syntax) and a couple of important features: the unquote-and-splice operator <code>!!!</code> that unquotes each element of a list into an argument list, and <em>quosures</em>, which capture the environment of an expression the way R functions (‘closures’) and model formulas do.</p>
 <p>If you look at the <code>bquote</code> function you can see what’s going a bit more easily than in the <code>rlang</code> package</p>
 <pre class="r"><code>bquote</code></pre>
 <pre><code>## function (expr, where = parent.frame()) 
@@ -92,7 +92,7 @@ mean_by_name_tidyf(looking_glass, aged_aged_man)</code></pre>
 ##     else as.call(lapply(e, unquote))
 ##     unquote(substitute(expr))
 ## }
-## &lt;bytecode: 0x7fe156178c38&gt;
+## &lt;bytecode: 0x7fb3dff91320&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <p>Apart from the use of <code>substitute()</code> to grab the expression, it’s just a straightforward tree traversal algorithm: the expression is structured as a tree (the <em>abstract syntax tree</em> or <em>parse tree</em>), and <code>bquote()</code> walks down it. It’s limited by being written in pure R and by the fact I wasn’t willing to invent new syntax to make it work – that’s why it doesn’t have an analogue of <code>mutate((!!names)~(!!values))</code> and why it doesn’t have unquote-and-splice.</p>
 <p>The tidyverse and base approaches both use some magic to get hold of a parsed but unevaluated expression, in tree form, then do relatively comprehensible operations on it. The magic is needed because R doesn’t have macros. If you’ve programmed with other statistical software you probably encountered macros and likely were unimpressed: one of R’s selling points is that it has real functions, not just macros. It’s true that if you had to pick one of the two, functions would probably be better than macros. But in Lisp-like languages you get both.</p>
