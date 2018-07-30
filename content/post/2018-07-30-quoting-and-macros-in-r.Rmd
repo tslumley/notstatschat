@@ -1,0 +1,118 @@
+---
+title: Quoting and macros in R
+author: Thomas Lumley
+date: '2018-07-30'
+slug: quoting-and-macros-in-r
+---
+
+Miles McBain has a nice post about quoting in R and the tidyeval procedure.  In it, there's this footnote
+
+> *In truth there are other types of calls, and the ones Lisp nuts really bang on about are macro calls*
+
+In this post I want to talk about the similarities between the tidyversatile approach to quasiquoting and the base-R approach, as an introduction to banging on about macro calls. 
+
+First, though, a relevant quote from Lewis Carroll
+
+> “It's long,” said the Knight, “but it's very, very beautiful. Everybody that hears me sing it - either it brings the tears to their eyes, or else -”
+>
+> “Or else what?” said Alice, for the Knight had made a sudden pause.
+>
+> “Or else it doesn't, you know. The name of the song is called ‘Haddocks' Eyes.’”
+>
+> “Oh, that's the name of the song, is it?" Alice said, trying to feel interested.
+> 
+> “No, you don't understand,” the Knight said, looking a little vexed. “That's what the name is called. The name really is ‘The Aged Aged Man.’”
+
+The basic idea of quoting in code is the same as in logic: you want to be able to refer to use a thing, or the name of the thing, or what the name of the thing is called, or...
+
+Suppose we have
+```{r}
+aged_aged_man <- rnorm(1000)
+```
+binding a name to a vector of numbers.  If we want the mean of the vector we can pass the vector to a function
+```{r}
+mean(aged_aged_man)
+```
+
+If we want to make life difficult, we could pass the **name** of the vector to a function and have the function find the variable by its name.  One way to do this is to use a character string for the name
+```{r}
+mean_by_name_string<-function(name_of_x) {
+ x<- get(name_of_x, mode="numeric")
+ mean(x)
+}
+mean_by_name_string("aged_aged_man")
+```
+
+That *works*, but it's limited and ugly: you can pass `"x"` but not `"x+1"`. Also, if you have a variable, you need to convert its name back into a string.
+
+Another way is using the magic of R's lazy evaluation and promises
+```{r}
+mean_by_name<-function(name_of_x) {
+ name_of_x_is_called<- substitute(name_of_x)
+ mean_code <- bquote(mean(.(name_of_x_is_called)))
+ print(mean_code)
+ eval(mean_code)
+}
+mean_by_name(aged_aged_man)
+```
+
+The `substitute()` function grabs an argument and extracts the unevaluated expression that went into it. According to the lies-to-children version of R syntax that shouldn't be possible: R passes arguments by value, and the expression is gone to whereever expresions go when they're evaluated.  In reality, to allow for lazy evaluation, R has a special data structure called a *promise*, which stores the expression until you look at it then evaluates it. R also has `substitute()` to get the expression out of the promise. 
+
+If you've ever wondered how plot axes get labelled with the expressions you pass as arguments (rather than with their values), this is the explanation. Inside many plotting functions you'll find a line like
+```
+xlab<-deparse(substitute(x))
+```
+to retrieve the expression that's going to be `x` and turn it into a character string.  
+
+The tidyversatile version is 
+```{r}
+library(rlang)
+mean_by_tidyname<-function(name_of_x) {
+ name_of_x_is_called <- enexpr(name_of_x)
+ mean_code <- expr(mean(!!name_of_x_is_called))
+ print(mean_code)
+ eval(mean_code)
+}
+mean_by_tidyname(aged_aged_man)
+```
+Here, `enexpr()` does the equivalent of `substitute()`
+
+
+More often, you'd want to pass a data frame and the name of an element of it 
+
+```{r}
+looking_glass <- data.frame(aged_aged_man=rnorm(1000), tweedledum=1:1000, tweedledee=1000:1)
+mean_by_name_df<-function(data, name_of_x) {
+ name_of_x_is_called<- substitute(name_of_x)
+ mean_code <- bquote(mean(.(name_of_x_is_called)))
+ eval(mean_code, data)
+}
+mean_by_name_df(looking_glass, aged_aged_man)
+```
+
+Or, the new way
+
+```{r}
+mean_by_name_tidyf<-function(data, name_of_x) {
+ name_of_x_is_called<- enexpr(name_of_x)
+ mean_code <- expr(mean(!!name_of_x_is_called))
+ eval_tidy(mean_code, data)
+}
+mean_by_name_tidyf(looking_glass, aged_aged_man)
+```
+
+
+The tidyverse version is the same here, but the tidyverse adds some extra twiddles (like the ability to use a `~` instead of `=` to get around R syntax) and a couple of important features: the unquote-and-splice operator `!!!` that unquotes each element of a list into an argument list, and *quosures*, which capture the environment of an expression the way R functions ('closures') and model formulas do. 
+
+If you look at the `bquote` function you can see what's going a bit more easily than in the `rlang` package
+```{r}
+bquote
+```
+Apart from the use of `substitute()` to grab the expression, it's just a straightforward tree traversal algorithm: the expression is structured as a tree (the *abstract syntax tree* or *parse tree*), and `bquote()` walks down it.  It's limited by being written in pure R and by the fact I wasn't willing to invent new syntax to make it work -- that's why it doesn't have an analogue of `mutate((!!names)~(!!values))` and why it doesn't have unquote-and-splice. 
+
+The tidyverse and base approaches both use some magic to get hold of a parsed but unevaluated expression, in tree form, then do relatively comprehensible operations on it.  The magic is needed because R doesn't have macros. If you've programmed with other statistical software you probably encountered macros and likely were unimpressed: one of R's selling points is that it has real functions, not just macros.  It's true that if you had to pick one of the two, functions would probably be better than macros. But in Lisp-like languages you get both. 
+
+Both macros and functions let you pass arguments to code. They differ in how and when the arguments are inserted.  In Lisp, functions get the values of their arguments at run-time, whereas macros get their (unevaluated) arguments at compile-time.  That is, `mean(aged_aged_man)` as a function will evaluate `aged_aged_man` and use the value inside `mean` as the value of the first argument of the function (`x`, in this case).  As a macro, it would replace `x` with `aged_aged_man` in the text of the function before doing any evaluation. 
+For quasiquotation, this search-and-replace operation is exactly what we want. We want to replace our place-holder argument name with the user-supplied variable name and then evaluate the resulting code.  It's also what we'd ideally want for base R functions such as `with()` and `capture.output()`, and for hypothetical R functions such as `with_options()` and `with_graphical_pars()` that would temporarily set parameters. In fact, the Common Lisp version of `capture.output()` is a macro called `with-output-to-string`.
+
+We don't have this option in R, but we can fake it using lazy evaluation, as tidyeval does. Back in 2001 I wrote a short article for the then *R Newsletter* on how (and possibly why) to define macros in R.   Realistically, this falls under cool-but-useless, but if you've made it this far, you might be interested [in reading it.](https://www.r-project.org/doc/Rnews/Rnews_2001-3.pdf)
