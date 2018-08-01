@@ -1,0 +1,35 @@
+---
+title: Testing probability distribution generators
+author: Thomas Lumley
+date: '2018-08-01'
+slug: testing-probability-distribution-generators
+---
+
+In the 'regression tests' that are part of any change to the base-R source code, there's a file called `p-r-random-tests.R`. People notice it from time to time because the tests sometimes fail. That's what is supposed to happen.
+
+Testing random number generators is hard, because it's hard to specify what the results should be: you need statistics.  Fortunately, we have statistics, so it's not impossible.  The random tests check that, eg, `pnorm()` is not ruled out as the cumulative distribution function of numbers from `rnorm()`.  Somewhat unusually, this is a natural use of hypothesis testing with point null and global alternative. The null hypothesis really is that the marginal distribution of numbers from `rnorm()` is Normal (well, extremely close to Normal), and the alternative hypothesis under a bug in the code is 'anything else'. 
+
+A simple approach would be to use the Kolmogorov-Smirnov test. That's slightly sub-optimal because the exact sampling distribution is a pain to evaluate for large sample sizes, and even more of a pain for non-continuous distributions.  Back in about 1997 I was taking a course on empirical process theory from Jon Wellner, and we learned about [Massart's Inequality](https://projecteuclid.org/euclid.aop/1176990746), which bounds the error in the empirical cumulative distribution function $\mathbb{F}_n$:
+$$P(\sup_x|\mathbb{F}_n(x)-F(x)|>t)\leq 2e^{-2nt^2}.$$
+This bound holds for all $t$, all $F$, and all $n$, and the constant 2 in the front is sharp: it's an optimised version of the [Dvoretsky-Kiefer-Wolfowitz](https://en.wikipedia.org/wiki/Dvoretzky%E2%80%93Kiefer%E2%80%93Wolfowitz_inequality) inequality, which just says there's *some* finite constant that will do. We can generate `n` random numbers from `rwhatever()`, compute $\mathbb{F}_n$, and compare it to `pwhatever()` with the same parameters. If we choose $n$ and $t$ appropriately, we can pick up relatively small errors in either the generator or cdf, with a low false-positive rate.
+
+
+Here's the basic code
+```
+superror <- function(rfoo,pfoo,sample.size,...) {
+    x <- rfoo(sample.size,...)
+    tx <- table(signif(x, 12)) # such that xi will be sort(unique(x))
+    xi <- as.numeric(names(tx))
+    f <- pfoo(xi,...)
+    fhat <- cumsum(tx)/sample.size
+    max(abs(fhat-f))
+}
+
+qdkwbound <- function(n,p) sqrt(log(p/2)/(-2*n))
+```
+
+We run it with `n=1000` and `p=0.001`, so less than one test in 1000 will fail randomly -- but that's still some. Rerunning it (maybe with a larger sample size) is a good response to failure.
+
+So, how different is this from the one-sample Kolmogorov-Smirnov test? Not *very*.  The asymptotic approximaton to the KS is an alternating series with the Massart bound as the first term  But it's somehow elegant to use modern non-asymptotic probability bounds rather than asymptotics plus handwaving in testing basic statistical software functionality. 
+
+
