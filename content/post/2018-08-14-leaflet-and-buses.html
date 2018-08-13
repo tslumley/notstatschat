@@ -1,0 +1,66 @@
+---
+title: Leaflet and buses
+author: Thomas Lumley
+date: '2018-08-14'
+slug: leaflet-and-buses
+---
+
+
+
+<div id="where-are-the-buses" class="section level3">
+<h3>Where are the buses?</h3>
+<p>Wellington’s bus system has been the subject of negative attention in the news and on Twitter. Also, I’m teaching a course in Data Science Practice and we’re just getting to a lab on maps with Leaflet. So I thought I’d make a <a href="https://www.stat.auckland.ac.nz/~tlum005/buses/wellybus.html">map of Wellington buses and their lateness</a> – people do tend to overestimate problems with public transit, and if they aren’t overestimating it, that’s also important to know. Information helps. For reasons explained below, the map isn’t in real time; it’s accumulated over nearly an hour.</p>
+<p>The full code producing the map is <a href="https://gist.github.com/tslumley/93de82dd3284e375b3f4ded2a60257e0">here</a>.</p>
+</div>
+<div id="how-it-works" class="section level3">
+<h3>How it works</h3>
+<p>There isn’t an official API, but lots of people have noticed and used a set of URLs under <code>www.metlink.org.nz/api/v1/...</code>, so the real-time data is available. The static timetable and route information is officially available <a href="https://www.metlink.org.nz/customer-services/general-transit-file-specification/">here</a>.</p>
+<p>Because there isn’t an official API, we want to be careful about rate-limiting the queries. The <code>robots.txt</code> file says</p>
+<pre><code>User-agent: *
+Crawl-delay: 10
+Disallow: /admin
+Disallow: /dev
+Disallow: /Security</code></pre>
+<p>so we’re allowed to read from the real-time API, but no more than one query per ten seconds. I’m using twenty seconds, in case I ever want to make some other queries while the code is running. The <code>ratelimitr</code> package lets you create rate-limited functions. Here’s mine</p>
+<pre><code>download_route&lt;-limit_rate(
+    function(route) fromJSON(paste0(&quot;https://www.metlink.org.nz/api/v1/ServiceLocation/&quot;,route)),
+  rate(n=1,period=20) )</code></pre>
+<p>We only get one route at a time, so the data will have to accumulate over multiple queries. It will take nearly an hour to do a full cycle through all the routes (including expresses, night buses, and services in nearby towns such as Masterton). I’ll make a list that holds all the routes, update one route at a time, and drop information that’s more than two hours old.</p>
+<p>Here’s the download call</p>
+<pre><code>   this_route&lt;-tryCatch(download_route(route), error=function(e) NULL)
+    if (is.null(this_route)) next
+    if (!length(this_route$Services)) next
+    if (NROW(this_route$Services)==0) next</code></pre>
+<p>There’s a lot of <code>tryCatch()</code> and a lot of checking because almost anything involving someone else’s computer can go wrong in so many ways.</p>
+<p>Here’s the tidyverse-based data processing: splitting the timestamp up into fields, defining colour by lateness, and making a popup to say which route it is and when the information was downloaded</p>
+<pre><code>    df&lt;-this_route$Services %&gt;% 
+     select(Lat,Long, DelaySeconds, RecordedAtTime) %&gt;% 
+     separate(RecordedAtTime, into=c(&quot;y&quot;,&quot;mth&quot;,&quot;d&quot;,&quot;h&quot;,&quot;m&quot;,&quot;s&quot;,&quot;tz&quot;,&quot;tz2&quot;),sep=&quot;[-:T+]&quot;) %&gt;%
+     mutate(lateness=case_when(DelaySeconds&lt; -180 ~&quot;magenta&quot;, 
+         DelaySeconds&gt;= -180 &amp; DelaySeconds&lt;300~ &quot;forestgreen&quot;, 
+         DelaySeconds&gt;=300 &amp; DelaySeconds&lt;600~&quot;orange&quot;,
+         DelaySeconds&gt;=600~&quot;red&quot;)) %&gt;%
+     mutate(popup=paste0(route,paste(&quot;&lt;br/&gt;&quot;,abs(round(DelaySeconds/60)),&quot;mins&quot;,
+       ifelse(DelaySeconds&lt;0,&quot;early&quot;, &quot;late&quot;),&quot;at&quot;,h,&quot;:&quot;,m)))</code></pre>
+<p>Now, the map. Leaflet makes this <strong>really</strong> easy</p>
+<pre><code>  allpos[[route]]&lt;-df
+
+  m &lt;- leaflet(bind_rows(allpos)) %&gt;% 
+        addProviderTiles(&quot;CartoDB.Positron&quot;) %&gt;% 
+        addCircleMarkers(~as.numeric(Long),~as.numeric(Lat),col=~lateness,popup=~popup) %&gt;%
+        addLegend(&quot;bottomright&quot;,title=paste(&quot;Wellington buses (past hour or so)&quot;),
+                  colors=c(&quot;magenta&quot;,&quot;forestgreen&quot;,&quot;orange&quot;,&quot;red&quot;),
+                  labels=c(&quot;Early&quot;, &quot;On schedule&quot;,&quot;5-10 min late&quot;,&quot;10+ min late&quot;))</code></pre>
+<p>For a map in a HTML rmarkdown document I’d just print <code>m</code>, but here we want a separate map that automatically reloads over time. I’m using <code>htmlwidgets</code></p>
+<pre><code>saveWidget(widget=m,&quot;/Volumes/tlum005/buses/wellybus.html&quot;,selfcontained=FALSE)
+tryCatch(
+    makeItReload(&quot;/Volumes/tlum005/buses/wellybus.html&quot;),
+    error=function(e) {cat(&quot;Didn&#39;t reload\n&quot;)}
+  )</code></pre>
+<p>The function <code>makeItReload</code> just sticks a bit of JavaScript into the HTML</p>
+<pre><code>makeItReload&lt;-function(htmlfile){
+    contents&lt;-readLines(htmlfile)
+    writeLines(gsub(&quot;&lt;/body&gt;&quot;,&quot;&lt;script type=\&quot;text/javascript\&quot;&gt; setTimeout(function() { window.location.reload();}, 90*1000);&lt;/script&gt;&lt;/body&gt;&quot;,contents, fixed=TRUE), htmlfile) 
+}</code></pre>
+<p>And that’s basically it. Rate-limited calls to a web API returning JSON, turned into a scrollable interactive map, to make the Wellington bus situation more transparent.</p>
+</div>
