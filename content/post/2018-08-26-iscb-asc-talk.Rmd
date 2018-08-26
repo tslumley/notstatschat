@@ -1,0 +1,17 @@
+---
+title: ISCB/ASC talk
+author: Thomas Lumley
+date: '2018-08-26'
+slug: iscb-asc-talk
+---
+
+Notes and references for my keynote at the joint International Society for Clinical Biostatistics and Australian Statistical Conference:
+
+- Abstracts from the JSM on imputation and weighting for audit subsets: [Shepherd & Giganti](http://ww2.amstat.org/meetings/jsm/2018/onlineprogram/AbstractDetails.cfm?abstractid=326690); [Shaw & Oh](http://ww2.amstat.org/meetings/jsm/2018/onlineprogram/AbstractDetails.cfm?abstractid=326783)
+- [Preprint](https://arxiv.org/abs/1707.05924) on nearly-true models, and a couple of old [blog](https://notstatschat.rbind.io/2014/10/25/semiparametric-efficiency-and-nearly-true-models/) [posts](https://notstatschat.rbind.io/2016/01/13/another-view-of-thenearly-true-model/)
+- [Blog post](https://notstatschat.rbind.io/2017/03/18/case-control-efficiency/) on relative efficiency of weighted estimation in case-control studies
+- The [paper](https://www.ncbi.nlm.nih.gov/pubmed/19357328) that coined "using the whole cohort" 
+- The [relationship](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3699889/) between AIPW, calibration of weights, and adjusting for baseline
+- [review paper](https://projecteuclid.org/euclid.ss/1494489815) on survey-weighted regression
+- Photos from unsplash.com, by [Karina Vorosheva](https://unsplash.com/photos/rW-I87aPY5Y), [raxpixel](https://unsplash.com/photos/w9YHKTK-wLo), [Samuel Zeller](https://unsplash.com/photos/JuFcQxgCXwA)
+- Weka drawing by [Giselle Clarkson](http://www.giselledraws.com/)
