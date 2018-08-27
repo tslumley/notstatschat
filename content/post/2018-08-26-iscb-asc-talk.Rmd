@@ -10,7 +10,8 @@ Notes and references for my keynote at the joint International Society for Clini
 - Abstracts from the JSM on imputation and weighting for audit subsets: [Shepherd & Giganti](http://ww2.amstat.org/meetings/jsm/2018/onlineprogram/AbstractDetails.cfm?abstractid=326690); [Shaw & Oh](http://ww2.amstat.org/meetings/jsm/2018/onlineprogram/AbstractDetails.cfm?abstractid=326783)
 - [Preprint](https://arxiv.org/abs/1707.05924) on nearly-true models, and a couple of old [blog](https://notstatschat.rbind.io/2014/10/25/semiparametric-efficiency-and-nearly-true-models/) [posts](https://notstatschat.rbind.io/2016/01/13/another-view-of-thenearly-true-model/)
 - [Blog post](https://notstatschat.rbind.io/2017/03/18/case-control-efficiency/) on relative efficiency of weighted estimation in case-control studies
-- The [paper](https://www.ncbi.nlm.nih.gov/pubmed/19357328) that coined "using the whole cohort" 
+- The [paper](https://www.ncbi.nlm.nih.gov/pubmed/19357328) that coined "using the whole cohort"
+- software for multiple imputation on large databases: [missForest](https://cran.r-project.org/web/packages/missForest/index.html), [MIDAS](https://github.com/Oracen/MIDAS)
 - The [relationship](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3699889/) between AIPW, calibration of weights, and adjusting for baseline
 - [Paper by Peisong Han](https://onlinelibrary.wiley.com/doi/abs/10.1111/sjos.12177) showing that multiple imputation gives the optimal double-robust estimator (and therefore the optimal weighted estimator when the sampling probabilities are correct)
 - [review paper](https://projecteuclid.org/euclid.ss/1494489815) on survey-weighted regression by me and Alastair Scott
