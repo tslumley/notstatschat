@@ -5,7 +5,7 @@ date: '2018-08-28'
 slug: what-can-data-science-add-to-statistics-education
 ---
 
-*(for Deborah Nolan and Louise Ryan, ISCB/ASC 2018)*
+*(for Deborah Nolan and Louise Ryan, ISCB/ASC 2018, after Henry Reed)*
 
 Today we have naming of stats. Yesterday<br>
 We had assumptions. And tomorrow morning<br>
