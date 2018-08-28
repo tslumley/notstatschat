@@ -7,36 +7,36 @@ slug: what-can-data-science-add-to-statistics-education
 
 *(for Deborah Nolan and Louise Ryan, ISCB/ASC 2018)*
 
-Today we have naming of stats. Yesterday
-We had assumptions. And tomorrow morning
-We shall have testing of assumptions. But to-day
-Today we have naming of stats. *Data*
-*sparkles and flashes through all of the students' phones.*
+Today we have naming of stats. Yesterday<br>
+We had assumptions. And tomorrow morning<br>
+We shall have testing of assumptions. But to-day<br>
+Today we have naming of stats. *Data*<br>
+*sparkles and flashes through all of the students' phones.*<br>
 *And today we have naming of stats.*
 
 
-This is the rank-sum Wilcoxon test. And this
-is the one-sample Wilcoxon test, whose use you see
-when you are given one sample. And this is Levene's test
-Which in your case you have not got. *Near-supercomputers idle*
-*in pockets and desks, waiting for questions*
-*Which in our case we have not got.*
+This is the rank-sum Wilcoxon test. And this<br>
+is the one-sample Wilcoxon test, whose use you see<br>
+when you are given one sample. And this is Levene's test<br>
+Which in your case you have not got. *Near-supercomputers idle*<br>
+*in pockets and desks, waiting for questions*<br>
+*Which in our case we have not got.*<br>
 
-This is the t-test, which is always performed
-with assumptions of unequal variance. Do not let me
-see anyone with equal variances. You can easily do it
-with the formulas back of the book. *Global temperatures*
-*dance in rising spirals, not letting any one see them with equal variances.*
+This is the t-test, which is always performed<br>
+with assumptions of unequal variance. Do not let me<br>
+see anyone with equal variances. You can easily do it<br>
+with the formulas back of the book. *Global temperatures*<br>
+*dance in rising spirals, not letting any one see them with equal variances.*<br>
 
-And this you can see is the list. The purpose of this is to
-teach to the test, as you see. We can keep it constant from year to year.
-We say this provides transparency. *And constant from year to year*
-*Bored students stare out of the window. They say it provides transparency.*
+And this you can see is the list. The purpose of this is to<br>
+teach to the test, as you see. We can keep it constant from year to year.<br>
+We say this provides transparency. *And constant from year to year*<br>
+*Bored students stare out of the window. They say it provides transparency.*<br>
 
 
-*They say it provides transparency: you can easily do it*
-*with the formulas back of the book: like the list,and the test,*
-*and the context, which in our case we have not got;*
-*and the temperatures rising and the data and science and questions*
-*constant from year to year. For today we have naming of stats.*
+*They say it provides transparency: you can easily do it*<br>
+*with the formulas back of the book: like the list,and the test,*<br>
+*and the context, which in our case we have not got;*<br>
+*and the temperatures rising and the data and science and questions*<br>
+*constant from year to year. For today we have naming of stats.*<br>
 
