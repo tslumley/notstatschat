@@ -16,10 +16,10 @@ Today we have naming of stats. *Data*<br>
 
 
 This is the rank-sum Wilcoxon test. And this<br>
-is the one-sample Wilcoxon test, whose use you see<br>
+is the one-sample Wilcoxon test, whose use you will see<br>
 when you are given one sample. And this is Levene's test<br>
-Which in your case you have not got. *Near-supercomputers idle*<br>
-*in pockets and desks, waiting for questions*<br>
+Which in your case you have not got. *Near-supercomputers*<br>
+*idle in pockets and desks, waiting for questions*<br>
 *Which in our case we have not got.*<br>
 
 This is the t-test, which is always performed<br>
@@ -30,12 +30,12 @@ with the formulas back of the book. *Global temperatures*<br>
 
 And this you can see is the list. The purpose of this is to<br>
 teach to the test, as you see. We can keep it constant from year to year.<br>
-We say this provides transparency. *And constant from year to year*<br>
-*Bored students stare out of the window. They say it provides transparency.*<br>
+We see this provides transparency. *And constant from year to year*<br>
+*Bored students stare out of the window. They see it provides transparency.*<br>
 
 
-*They say it provides transparency: you can easily do it*<br>
-*with the formulas back of the book: like the list,and the test,*<br>
+*They see it provides transparency: you can easily do it*<br>
+*with the formulas back of the book: like the list, and the test,*<br>
 *and the context, which in our case we have not got;*<br>
 *and the temperatures rising and the data and science and questions*<br>
 *constant from year to year. For today we have naming of stats.*<br>
