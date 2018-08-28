@@ -14,7 +14,7 @@ Today we have naming of stats. *Data*<br>
 *sparkles and flashes through all of the students' phones.*<br>
 *And today we have naming of stats.*
 
-
+ 
 This is the rank-sum Wilcoxon test. And this<br>
 is the one-sample Wilcoxon test, whose use you will see<br>
 when you are given one sample. And this is Levene's test<br>
