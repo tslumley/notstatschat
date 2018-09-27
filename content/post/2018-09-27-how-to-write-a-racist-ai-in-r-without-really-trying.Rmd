@@ -5,7 +5,7 @@ date: '2018-09-27'
 slug: how-to-write-a-racist-ai-in-r-without-really-trying
 ---
 
-Last year, Rob Speer wrote a really great post [http://blog.conceptnet.io/posts/2017/how-to-make-a-racist-ai-without-really-trying/](How to make a racist AI without really trying). Go read it.
+Last year, Rob Speer wrote a really great post [How to make a racist AI without really trying](https://blog.conceptnet.io/posts/2017/how-to-make-a-racist-ai-without-really-trying/). Go read it.
 
 The idea is to do sentiment analysis with obvious, off-the-shelf tools. As the post says
 
