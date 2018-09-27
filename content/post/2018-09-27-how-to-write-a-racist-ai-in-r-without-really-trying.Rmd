@@ -17,7 +17,7 @@ The original post used Python and I'm teaching an undergraduate data science cou
 
 The first problem can be fixed with `dbplyr`.
 
-We download the mid-sized GloVe word-vector embeddings from [their home at Stanford](https://nlp.stanford.edu/projects/glove/). These represent words by points in a 3-d space, chosen so that vector differences between words correlate somewhat well with semantic relationships.
+We download the mid-sized GloVe word-vector embeddings from [their home at Stanford](https://nlp.stanford.edu/projects/glove/). These represent words by points in a Euclidean space, chosen so that vector differences between words correlate somewhat well with semantic relationships. 
 
 The '42B' file is based on 42 billion tokens of text, with nearly two million distinct words embedded into 300 dimensions. It's relatively big. On my laptop, it just barely reads into R all at once, and takes hours to do so.
 

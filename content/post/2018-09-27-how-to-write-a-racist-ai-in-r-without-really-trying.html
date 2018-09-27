@@ -14,7 +14,7 @@ slug: how-to-write-a-racist-ai-in-r-without-really-trying
 </blockquote>
 <p>The original post used Python and I’m teaching an undergraduate data science course using R at the moment, so I wanted an R version. There were two issues in converting the code: my laptop doesn’t really have enough memory for the data, and the model was fitted using scikitlearn.</p>
 <p>The first problem can be fixed with <code>dbplyr</code>.</p>
-<p>We download the mid-sized GloVe word-vector embeddings from <a href="https://nlp.stanford.edu/projects/glove/">their home at Stanford</a>. These represent words by points in a 3-d space, chosen so that vector differences between words correlate somewhat well with semantic relationships.</p>
+<p>We download the mid-sized GloVe word-vector embeddings from <a href="https://nlp.stanford.edu/projects/glove/">their home at Stanford</a>. These represent words by points in a Euclidean space, chosen so that vector differences between words correlate somewhat well with semantic relationships.</p>
 <p>The ‘42B’ file is based on 42 billion tokens of text, with nearly two million distinct words embedded into 300 dimensions. It’s relatively big. On my laptop, it just barely reads into R all at once, and takes hours to do so.</p>
 <p>Reading it in chunks works, but more efficient is to read it directly into a database</p>
 <pre><code>library(DBI)
