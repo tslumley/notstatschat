@@ -1,0 +1,119 @@
+---
+title: How to write a racist AI in R without really trying
+author: Thomas Lumley
+date: '2018-09-27'
+slug: how-to-write-a-racist-ai-in-r-without-really-trying
+---
+
+
+
+<p>Last year, Rob Speer wrote a really great post <a href="How%20to%20make%20a%20racist%20AI%20without%20really%20trying">http://blog.conceptnet.io/posts/2017/how-to-make-a-racist-ai-without-really-trying/</a>. Go read it.</p>
+<p>The idea is to do sentiment analysis with obvious, off-the-shelf tools. As the post says</p>
+<blockquote>
+<p>So that’s what we’re going to do here, following the path of least resistance at every step, obtaining a classifier that should look very familiar to anyone involved in current NLP.</p>
+</blockquote>
+<p>The original post used Python and I’m teaching an undergraduate data science course using R at the moment, so I wanted an R version. There were two issues in converting the code: my laptop doesn’t really have enough memory for the data, and the model was fitted using scikitlearn.</p>
+<p>The first problem can be fixed with <code>dbplyr</code>.</p>
+<p>We download the mid-sized GloVe word-vector embeddings from <a href="https://nlp.stanford.edu/projects/glove/">their home at Stanford</a>. These represent words by points in a 3-d space, chosen so that vector differences between words correlate somewhat well with semantic relationships.</p>
+<p>The ‘42B’ file is based on 42 billion tokens of text, with nearly two million distinct words embedded into 300 dimensions. It’s relatively big. On my laptop, it just barely reads into R all at once, and takes hours to do so.</p>
+<p>Reading it in chunks works, but more efficient is to read it directly into a database</p>
+<pre><code>library(DBI)
+library(MonetDBLite)
+dbcon&lt;-dbConnect(MonetDBLite(),&quot;./DB&quot;)
+monet.read.csv(dbcon, &quot;glove.42B.300d.txt&quot;, &quot;glove&quot;,
+  header=TRUE, best.effort=TRUE, sep=&quot; &quot;,quote=&quot;&quot;,
+  col.names=c(&quot;word&quot;,paste0(&quot;e&quot;,1:300)))</code></pre>
+<p>Now, we need <a href="https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html#lexicon">some words</a> with human-assigned positive and negative sentiments for training data. There are several thousand of these.</p>
+<pre><code>pos_words&lt;-scan(&quot;positive-words.txt&quot;, blank.lines.skip=TRUE, comment.char=&quot;;&quot;, what=&quot;&quot;)
+neg_words&lt;-scan(&quot;negative-words.txt&quot;, blank.lines.skip=TRUE, comment.char=&quot;;&quot;, what=&quot;&quot;)
+
+library(dplyr)
+ms&lt;-MonetDBLite::src_monetdblite(&quot;./DB&quot;)
+train_words&lt;-tibble(word=c(pos_words,neg_words),
+   positive=rep(1:0,c(length(pos_words),length(neg_words))))
+train_words &lt;- copy_to(ms, train_words, name=&quot;train_words&quot;,
+   temporary=FALSE)</code></pre>
+<p>Next, we need to fit a model to these several thousand words that we can use to predict the millions of words for which we don’t have human-curated sentiments. Rob Speer used <code>scikitlearn</code> to fit a logistic regression model with <span class="math inline">\(L_2\)</span> penalty, so I used <code>glmnet</code> to do the same (but with a penalty selected by cross-validation)</p>
+<p>First, use an inner join in the database to extract the embedding dimensions for just the words in the training set</p>
+<pre><code>glove&lt;-tbl(ms,&quot;glove&quot;)
+train_words&lt;-tbl(ms,&quot;train_words&quot;)
+train &lt;- inner_join(train_words, glove) %&gt;% collect() 
+train_y&lt;-train$positive
+train_x&lt;-train %&gt;% select(-word,-positive) %&gt;% as.matrix()
+rownames(train_x)&lt;-train$word</code></pre>
+<p>As a check on accuracy, I’ll set aside 20% of the training set for testing. We shouldn’t really need to do that, because we trust <code>glmnet</code> and its cross-validation, but it matches the original post.</p>
+<pre><code>library(glmnet)
+test&lt;-sample(nrow(train_x),nrow(train_x)/5)
+fit&lt;-cv.glmnet(train_x[-test,],train_y[-test],family=&quot;binomial&quot; )</code></pre>
+<p>Now, look at the test set to make sure the model is working</p>
+<pre><code>predicted&lt;-predict(fit$glmnet.fit, train_x[test,],
+  s=fit$lambda.min)</code></pre>
+<p>A random sample of 20 of them:</p>
+<pre><code>    heartily      throbbed    enchanting       screwed inconsistence 
+     6.550734     -2.219986      6.928539     -6.624885     -3.799926 
+    castigate      scratchy        poorly disintegrated        defame 
+    -3.404154     -8.875896     -5.705270     -5.424058     -5.034735 
+      smudged insufficiency      ferocity    inexorably  irredeemable 
+    -6.615081     -5.092952     -2.888919     -2.187144     -5.236300 
+      unknown   disapointed      venerate      strictly        jagged 
+    -4.940612     -3.690092      1.403324      0.646811     -5.756622 </code></pre>
+<p>‘Unknown’ is a bit harsh, but not bad generally.</p>
+<p>Following the original post, we’ll do sentiment for a text by just working out the sentiment for each word and then taking the mean</p>
+<pre><code>make.sentiment &lt;- function(db,model){
+      glove&lt;-tbl(ms,&quot;glove&quot;)
+      function(text){
+        word_tbl&lt;-copy_to(db, 
+            tibble(word=tolower(strsplit(text,
+                   &quot;[[:blank:],.!?;:&#39;\&quot;]&quot;)[[1]])),
+            name=&quot;temp_words&quot;,overwrite=TRUE)
+        word_x&lt;-inner_join(word_tbl, glove) %&gt;%
+          collect() %&gt;% 
+          select(-word) %&gt;% 
+          as.matrix()
+        if(nrow(word_x)==0) return(0)
+        sentiments&lt;-predict(model$glmnet.fit, word_x, 
+           s=model$lambda.min)
+        mean(sentiments)
+        }
+    }
+
+sentiment&lt;-make.sentiment(ms,fit)</code></pre>
+<p>Since this is New Zealand, a bit of Middle Earth:</p>
+<pre><code>&gt; sentiment(&quot;They have a cave troll&quot;)
+[1] -2.000714
+&gt; sentiment(&quot;You shall not pass&quot;)
+[1] -0.1889209
+&gt; sentiment(&quot;The others cast themselves down upon the fragrant grass, 
+  but Frodo stood awhile still lost in wonder.&quot;)
+[1] -0.1405773
+&gt; sentiment(&quot;If more of us valued food and cheer and song above
+  hoarded gold, it would be a merrier world.&quot;)
+[1] 2.495909</code></pre>
+<p>Things seem to be working. Now for the punch line</p>
+<pre><code>&gt; sentiment(&quot;Let&#39;s go out for Italian food.&quot;)
+[1] 1.387002
+&gt; sentiment(&quot;Let&#39;s go out for Chinese food.&quot;)
+[1] 1.04452
+&gt; sentiment(&quot;Let&#39;s go out for Mexican food.&quot;)
+[1] 0.6954334</code></pre>
+<p>Then I looked at the sentiment for “My name is !!name and I am a data scientist” for all the given names of students in the class. I probably shouldn’t post the actual names here; I’ll replace the two most favorable ones by AA and BB and the two least favorable ones by YY and ZZ.</p>
+<pre><code>&gt; sentiment(&quot;My name is AA and I am a bank robber&quot;)
+[1] 0.9233358
+&gt; sentiment(&quot;My name is BB and I am a bank robber&quot;)
+[1] 0.6091682
+&gt; sentiment(&quot;My name is AA and I am a data scientist&quot;)
+[1] 1.765753
+&gt; sentiment(&quot;My name is BB and I am a data scientist&quot;)
+[1] 1.451585
+&gt; sentiment(&quot;My name is ZZ and I am a data scientist&quot;)
+[1] 0.7586472
+&gt; sentiment(&quot;My name is YY and I am a data scientist&quot;)
+[1] 0.8301052
+&gt; sentiment(&quot;My name is ZZ and I love  kittens&quot;)
+[1] 0.9681818
+&gt; sentiment(&quot;My name is YY and I love  kittens&quot;)
+[1] 1.057504
+&gt; sentiment(&quot;My name is ZZ and I love happy kittens&quot;)
+[1] 1.696798</code></pre>
+<p>It can take a lot of additional weighting to get over the original prejudices.</p>
+<p>Rob Speer’s post goes on to look at other embeddings (and you should totally read it) but the computational aspects are similar.</p>
