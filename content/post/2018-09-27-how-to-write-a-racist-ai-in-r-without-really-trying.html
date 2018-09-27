@@ -41,7 +41,7 @@ train &lt;- inner_join(train_words, glove) %&gt;% collect()
 train_y&lt;-train$positive
 train_x&lt;-train %&gt;% select(-word,-positive) %&gt;% as.matrix()
 rownames(train_x)&lt;-train$word</code></pre>
-<p>As a check on accuracy, I’ll set aside 20% of the training set for testing. We shouldn’t really need to do that, because we trust <code>glmnet</code> and its cross-validation, but it matches the original post.</p>
+<p>As a check on accuracy, I’ll set aside 20% of the training set for testing. We shouldn’t really need to do that, because we trust <code>glmnet</code> and its cross-validation, but it matches the original post. <em>[Update: actually, that code does <span class="math inline">\(L_1\)</span> penalties, but the first time I did it with <span class="math inline">\(L_2\)</span> and it’s about the same. And using the defaults makes sense in context.]</em></p>
 <pre><code>library(glmnet)
 test&lt;-sample(nrow(train_x),nrow(train_x)/5)
 fit&lt;-cv.glmnet(train_x[-test,],train_y[-test],family=&quot;binomial&quot; )</code></pre>

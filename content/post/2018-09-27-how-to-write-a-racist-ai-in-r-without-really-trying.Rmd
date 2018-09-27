@@ -58,7 +58,7 @@ train_x<-train %>% select(-word,-positive) %>% as.matrix()
 rownames(train_x)<-train$word
 ```
 
-As a check on accuracy, I'll set aside 20% of the training set for testing. We shouldn't really need to do that, because we trust `glmnet` and its cross-validation, but it matches the original post.
+As a check on accuracy, I'll set aside 20% of the training set for testing. We shouldn't really need to do that, because we trust `glmnet` and its cross-validation, but it matches the original post. *[Update: actually, that code does $L_1$ penalties, but the first time I did it with $L_2$ and it's about the same. And using the defaults makes sense in context.]*
 
 ```
 library(glmnet)
