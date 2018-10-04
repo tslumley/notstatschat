@@ -28,7 +28,7 @@ make.prng<-function(candidates, vacancies, votes){
 	}
 ```
 
-There are two differences from the original generator. First, the internal state is only kept to 4 digits accuracy, which has to reduce the period to at most $10^{12} $ (and potentially quite a bit less). The extent to which this matters for vote-counting is difficult to understate.
+There are two differences from the original generator. First, the internal state is only kept to 4 digits accuracy, which has to reduce the period to at most $10^{12}$ (and potentially quite a bit less). The extent to which this matters for vote-counting is difficult to understate.
 
 The second issue is that the generator is no longer roughly uniform on $[0,9999]$. Instead, it has a roughly bell-shaped distribution on something like $[0, 30000]$
 ```{r}
