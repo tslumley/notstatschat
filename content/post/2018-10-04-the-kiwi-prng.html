@@ -1,0 +1,33 @@
+---
+title: The Kiwi PRNG
+author: Thomas Lumley
+date: '2018-10-04'
+slug: the-kiwi-prng
+---
+
+
+
+<p>As I’ve written <a href="https://notstatschat.rbind.io/2015/09/22/nz-flag-referendum-pseudorandom-numbers/">before</a>, New Zealand has a National Pseudo-Random Number Generator. It’s kept in Part 5 of Schedule 1A to the Local Electoral Regulations, <a href="http://www.legislation.govt.nz/regulation/public/2001/0145/latest/DLM57125.html">Clauses 41-48</a>. And there’s a bug in it.</p>
+<p>The generator is obviously intended to be the Wichmann-Hill generator, perhaps because of the paper by <a href="https://academic.oup.com/comjnl/article/30/3/277/364817">Hill, Wichmann, and Woodall (1987)</a> presenting a Pascal program to count Single Transferable Vote.</p>
+<p>Translating the regulations to code gives</p>
+<pre class="r"><code>make.prng&lt;-function(candidates, vacancies, votes){
+    
+    x &lt;-candidates+5
+    y &lt;- vacancies
+    z &lt;- (votes +1000*(votes %% 10)) %% 30323
+
+    function(){
+        x &lt;&lt;- (171*x) %% 30269
+        y &lt;&lt;- (172*y) %% 30307
+        z &lt;&lt;- (170*z) %% 30323
+        (10000*x) %/% 30269 + (10000*y) %/% 30307 + (10000* z) %/% 30323
+    }
+    }</code></pre>
+<p>There are two differences from the original generator. First, the internal state is only kept to 4 digits accuracy, which has to reduce the period to at most $10^{12} $ (and potentially quite a bit less). The extent to which this matters for vote-counting is difficult to understate.</p>
+<p>The second issue is that the generator is no longer roughly uniform on <span class="math inline">\([0,9999]\)</span>. Instead, it has a roughly bell-shaped distribution on something like <span class="math inline">\([0, 30000]\)</span></p>
+<pre class="r"><code>f&lt;-make.prng(15,7,4000)
+r&lt;-replicate(10000,f())
+hist(r, breaks=50)</code></pre>
+<p><img src="/post/2018-10-04-the-kiwi-prng_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>Even that doesn’t really matter for the elections, except that at later steps in counting, the random numbers are subtracted from 10000 to get new ones. And that would be ok as long as the person or computer doing the subtraction wasn’t counting on getting a positive result.</p>
+<p>But it still looks half-assed to specify the Wichmann-Hill generator and get it wrong. I keep being tempted to submit a bug report to the Department of Internal Affairs, but I’m sure it would be marked WONTFIX because of the cost of modifying software.</p>

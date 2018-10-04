@@ -1,0 +1,43 @@
+---
+title: The Kiwi PRNG
+author: Thomas Lumley
+date: '2018-10-04'
+slug: the-kiwi-prng
+---
+
+As I've written [before](https://notstatschat.rbind.io/2015/09/22/nz-flag-referendum-pseudorandom-numbers/), New Zealand has a National Pseudo-Random Number Generator. It's kept in Part 5 of Schedule 1A to the Local Electoral Regulations, [Clauses 41-48](http://www.legislation.govt.nz/regulation/public/2001/0145/latest/DLM57125.html). And there's a bug in it.
+
+The generator is obviously intended to be the Wichmann-Hill generator, perhaps because of the paper by [Hill, Wichmann, and Woodall (1987)](https://academic.oup.com/comjnl/article/30/3/277/364817) presenting a Pascal program to count Single Transferable Vote. 
+
+Translating the regulations to code gives
+
+```{r}
+
+make.prng<-function(candidates, vacancies, votes){
+	
+	x <-candidates+5
+	y <- vacancies
+	z <- (votes +1000*(votes %% 10)) %% 30323
+
+	function(){
+		x <<- (171*x) %% 30269
+		y <<- (172*y) %% 30307
+		z <<- (170*z) %% 30323
+		(10000*x) %/% 30269 + (10000*y) %/% 30307 + (10000* z) %/% 30323
+	}
+	}
+```
+
+There are two differences from the original generator. First, the internal state is only kept to 4 digits accuracy, which has to reduce the period to at most $10^{12} $ (and potentially quite a bit less). The extent to which this matters for vote-counting is difficult to understate.
+
+The second issue is that the generator is no longer roughly uniform on $[0,9999]$. Instead, it has a roughly bell-shaped distribution on something like $[0, 30000]$
+```{r}
+f<-make.prng(15,7,4000)
+r<-replicate(10000,f())
+hist(r, breaks=50)
+```
+
+Even that doesn't really matter for the elections, except that at later steps in counting, the random numbers are subtracted from 10000 to get new ones. And that would be ok as long as the person or computer doing the subtraction wasn't counting on getting a positive result. 
+
+But it still looks half-assed to specify the Wichmann-Hill generator and get it wrong. I keep being tempted to submit a bug report to the Department of Internal Affairs, but I'm sure it would be marked WONTFIX because of the cost of modifying software. 
+
