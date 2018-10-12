@@ -1,0 +1,16 @@
+---
+title: Survey package update
+author: Thomas Lumley
+date: '2018-10-12'
+slug: survey-package-update
+---
+
+There's a new version of the `survey` package on CRAN, version 3.34. Mostly this is bug fixes and minor enhancements accumulated over rather too long since the last update. There are a couple of things worth noting specifically, though.
+
+The first is a change to `svyglm` with replicate weights. When fitting generalised linear models with large weights (eg from US national surveys), you can run into numerical instabilities.  I've handled this for a long time by rescaling the weights inside `svyglm`. This doesn't affect means, so it doesn't affect regression parameters, standard errors, fitted values, etc. 
+
+The scaling does affect totals, so it affects the value of the pseud-deviance and the related AIC and BIC. Even there it doesn't affect inference, because the reference distribution for the likelihood ratio test is rescaled, and because the ordering of AIC and BIC over a set of models isn't changed. In the past, `svyglm` for replicate-weight designs scaled the weights to sum to 1 and for other designs scaled the weights to sum to the sample size.  Now it always scales them to sum to the sample size. As a result, the likelihood-based statistics look more the size you'd expect. Again: no change to inference, but cosmetic differences.
+
+The second change is that I've added Powell's `bobyqa` and `newuoa` optimisers from the `minqa` package to `svymle`. They are a huge improvement over `nlm` in the examples I've looked at.
+
+These optimisers are interesting: they work with a quadratic approximation to the objective function on some trust region. What's surprising is that they do this for a $p$-dimensional function with only $O(p)$ evaluations of the function and no derivatives, when a quadratic approximation has $p\choose 2$ degrees of freedom.  
