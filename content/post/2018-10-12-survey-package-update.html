@@ -1,0 +1,14 @@
+---
+title: Survey package update
+author: Thomas Lumley
+date: '2018-10-12'
+slug: survey-package-update
+---
+
+
+
+<p>There’s a new version of the <code>survey</code> package on CRAN, version 3.34. Mostly this is bug fixes and minor enhancements accumulated over rather too long since the last update. There are a couple of things worth noting specifically, though.</p>
+<p>The first is a change to <code>svyglm</code> with replicate weights. When fitting generalised linear models with large weights (eg from US national surveys), you can run into numerical instabilities. I’ve handled this for a long time by rescaling the weights inside <code>svyglm</code>. This doesn’t affect means, so it doesn’t affect regression parameters, standard errors, fitted values, etc.</p>
+<p>The scaling does affect totals, so it affects the value of the pseud-deviance and the related AIC and BIC. Even there it doesn’t affect inference, because the reference distribution for the likelihood ratio test is rescaled, and because the ordering of AIC and BIC over a set of models isn’t changed. In the past, <code>svyglm</code> for replicate-weight designs scaled the weights to sum to 1 and for other designs scaled the weights to sum to the sample size. Now it always scales them to sum to the sample size. As a result, the likelihood-based statistics look more the size you’d expect. Again: no change to inference, but cosmetic differences.</p>
+<p>The second change is that I’ve added Powell’s <code>bobyqa</code> and <code>newuoa</code> optimisers from the <code>minqa</code> package to <code>svymle</code>. They are a huge improvement over <code>nlm</code> in the examples I’ve looked at.</p>
+<p>These optimisers are interesting: they work with a quadratic approximation to the objective function on some trust region. What’s surprising is that they do this for a <span class="math inline">\(p\)</span>-dimensional function with only <span class="math inline">\(O(p)\)</span> evaluations of the function and no derivatives, when a quadratic approximation has <span class="math inline">\(p\choose 2\)</span> degrees of freedom.</p>
