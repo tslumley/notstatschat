@@ -1,0 +1,28 @@
+---
+title: Come work with us
+author: Thomas Lumley
+date: '2018-11-04'
+slug: come-work-with-us
+---
+
+We have [four academic positions open](https://www.opportunities.auckland.ac.nz/psp/ps/EMPLOYEE/HRMS/c/HRS_HRAM.HRS_CE.GBL?Page=HRS_CE_JOB_DTL&Action=A&JobOpeningId=20232&SiteId=1&PostingSeq=1) in the Department of Statistics. Come work with us!
+
+![](/post/2018-11-04-come-work-with-us_files/phonebox.jpg){width=80%}
+
+(j.e.mcgowan on Flickr, CC-BY)
+
+
+There are three standard academic positions, at lecture,  senior lecturer, and associate professor level. In American these would approximately translate as hard-money tenure-track assistant, associate, and full professor.  There is also one position for a professional teaching fellow -- a full-time, permanent job that focuses on teaching. 
+
+
+![](/post/2018-11-04-come-work-with-us_files/lantern.jpg){width=80%}
+
+(Salman Javed on Flickr, CC-BY-SA)
+
+The reason we have these positions is expansion of the academic program in Data Science. We are looking for people who can teach into the undergraduate and postgraduate data science programs. Much of this is standard statistical computing and regression modelling, but there is some need for expertise in modern flexible predictive modelling and causal inference. Teaching is important in our department: we expect high quality classroom teaching, supervision of postgraduate research projects, and contributions to curriculum design. 
+
+![](/post/2018-11-04-come-work-with-us_files/3621939004_7a9b6ea311_z.jpg){width=80%}
+
+(FraserElliot on Flickr, CC-BY-NC)
+
+Auckland is a nice place to live: a medium-sized cosmopolitan city with a mild marine climate. We've got the largest statistics department in Australasia,  giving a wide range of expertise. I should admit the  one obvious negative (it's a long way from anywhere else) and one less obvious (housing prices). 
