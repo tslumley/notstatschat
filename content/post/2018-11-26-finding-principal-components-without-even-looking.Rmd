@@ -1,0 +1,24 @@
+---
+title: Finding principal components without even looking?
+author: Thomas Lumley
+date: '2018-11-26'
+slug: finding-principal-components-without-even-looking
+categories: []
+tags: []
+---
+
+Via [Scott Aaronson's blog](https://www.scottaaronson.com/blog/) I found an [arXiv abstract](https://arxiv.org/abs/1811.00414) and then an early paper ([PDF](https://www.math.cmu.edu/~af1p/Texfiles/SVD.pdf)) about doing singular value decomposition of an $m\times n$ matrix in less than $O(mn)$ time. That is, you could estimate population structure with principal components of a genotype matrix or work out [tail probabilities for a quadratic-form-based test](https://notstatschat.rbind.io/2016/09/27/large-quadratic-forms/) in less time than it takes to actually look at the data. That's obviously impossible, and so that's not what the paper actually says.
+
+You **can** actually estimate the first $k$ singular values and a corresponding rank-$k$ approximation to the matrix in that sort of time, under an importance-sampling assumption. It looks like you should be able to compute $k$ population-structure principal components for $G$ SNPs and $N$ people in $O(Nk^2)$ time, and compute $k$ eigenvalues for the SKAT test in $O(G+N+k^3)$ time, both of which grow more slowly than the size of the data.
+Let's see how it works. 
+
+The key sampling assumption is that you can sample from rows or columns of a matrix $A$ with probability proportional to the $\ell_2$ norm, or at least bounded below by a multiple of the  $\ell_2$ norm: there is a $c$ not depending on $m$ and $n$ such that we can find $P_i$ with
+$$P_i\geq c\frac{\|A_{.i}\|_2}{\sum_i\|A_{.i}\|_2}.$$
+The idea is to subsample a matrix of slightly-more-than-$k$ columns with probabilities of this sort, and then rescale by $1/\sqrt{P_i}$ to correct the sampling bias, giving a matrix $S$, then subsample rows and rescale in the same way to get a small square matrix $W$.  I'll write $s$ for the number of columns we sample. If you want the singular values, you can just work with the small ($s\times s$) matrix $W$; if you want the singular vectors you need the matrix $S$ which is small in one direction ($s\times N$). 
+
+Now, what does the sampling assumption look like for genotype data?  When we're working out population structure by principal components, we have a centered and scaled genotype matrix where each column (SNP) has the same $\ell_2$ norm.  That means we can choose the $P_i$ to all be equal, and sampling $k$ columns takes only $O(k)$ time.  Sadly, what this means is that the clever new algorithm reduces to the well-known algorithm of using just a random subset of the SNPs to work out population structure. We already know a slightly better fast algorithm -- using an evenly spaced subset of SNPs -- and we know it needs quite a big subset to be good enough, at least in situations where the confounding by population structure is important.  On the other hand, it's reassuring that the algorithm is sensible and that we don't already know a much better one for genetics. 
+
+The same idea is a bit more promising for the SKAT association tests, because we don't need as much accuracy there. The computations are a bit slower, because the $\ell_2$-norm of a SNP column with minor allele frequency $f$ does depend on $f$: with the standard weights and no adjustment for covariates it's $$P_f=\sqrt{f(1-f)/(1-f)^{25}}=\sqrt{f/(1-f)^{24}}.$$
+With adjustment for covariates the $\ell_2$-norms will still be pretty close, so we can still use that as an approximation. We can sample proportional to $P_f$, and we've probably already computed the minor allele frequency for other reasons -- if not, it takes $MN$ time. It's probably good enough to use constant sampling probability for the rows, but the exact probabilities aren't hard.  Importantly, this **isn't** just the same as using a equal-probability subset of SNPs. 
+
+Since computing the SKAT test statistic takes $MN$ time, it's certainly enough to choose the number of columns and rows $s$ small enough that the $s^3$ time for the SVD is no worse that the $MN$ time for the test statistic, giving $s=\sqrt[3]{MN}$.  With $N=M=5000$ that's about $s=300$.  If that's not accurate enough, we can try to compete with the $O(MNk)$ time of the [fastSKAT](https://onlinelibrary.wiley.com/doi/full/10.1002/gepi.22136) algorithm using stochastic SVD.  Worth looking into.
