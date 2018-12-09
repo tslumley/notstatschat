@@ -1,0 +1,93 @@
+---
+title: svycontrast
+author: Thomas Lumley
+date: '2018-12-10'
+slug: svycontrast
+categories: []
+tags: []
+---
+
+
+
+<p>I got asked for more detail about the <code>svycontrast()</code> function, so I thought I’d post it here too. The function is related to the <code>CONTRASTS</code> you get in SAS, but focused on estimation rather than testing.</p>
+<p>The input to <code>svycontrast()</code> is a <span class="math inline">\(p\)</span>-vector of estimates <span class="math inline">\(\hat\theta\)</span> (which I’ll consider as a column vector) and an estimated <span class="math inline">\(p\times p\)</span> covariance matrix <span class="math inline">\(\hat\Xi\)</span></p>
+<p>There are two main cases:</p>
+<div id="linear" class="section level3">
+<h3>Linear</h3>
+<p>Given a <span class="math inline">\(p\)</span>-vector of coefficients <span class="math inline">\(b\)</span>, the function computes <span class="math inline">\(b^T\hat\theta\)</span> and <span class="math inline">\(b^T\hat\Xi b\)</span>. Given a list of <span class="math inline">\(k\)</span> <span class="math inline">\(p\)</span>-vectors of coefficients the function pastes them into a <span class="math inline">\(p\times k\)</span> matrix <span class="math inline">\(B\)</span> and computes <span class="math inline">\(B^T\theta\)</span> and <span class="math inline">\(B^T\hat\Xi B\)</span>.</p>
+<p>For example, from the help page</p>
+<pre class="r"><code>library(survey)
+data(api)
+dclus1&lt;-svydesign(id=~dnum, weights=~pw, data=apiclus1, fpc=~fpc)
+a &lt;- svymean(~api00+enroll+api99, dclus1)
+b&lt;-svycontrast(a, list(avg=c(0.5,0,0.5), diff=c(1,0,-1)))
+b</code></pre>
+<pre><code>##      contrast      SE
+## avg   625.574 23.8362
+## diff   37.191  3.0852</code></pre>
+<p>and doing it step by step</p>
+<pre class="r"><code>coef(a)</code></pre>
+<pre><code>##    api00   enroll    api99 
+## 644.1694 549.7158 606.9781</code></pre>
+<pre class="r"><code>crossprod(c(0.5,0,0.5),coef(a))</code></pre>
+<pre><code>##          [,1]
+## [1,] 625.5738</code></pre>
+<pre class="r"><code>crossprod(c(1,0,-1),coef(a))</code></pre>
+<pre><code>##          [,1]
+## [1,] 37.19126</code></pre>
+<pre class="r"><code>sqrt(crossprod(c(0.5,0,0.5), vcov(a))%*%c(0.5,0,0.5))</code></pre>
+<pre><code>##          [,1]
+## [1,] 23.83622</code></pre>
+<pre class="r"><code>sqrt(crossprod(c(1,0,-1), vcov(a))%*%c(1,0,-1))</code></pre>
+<pre><code>##          [,1]
+## [1,] 3.085197</code></pre>
+<p>These might be rounded differently when they print, but are the same,eg</p>
+<pre class="r"><code>crossprod(c(0.5,0,0.5),coef(a))-coef(b)[1]</code></pre>
+<pre><code>##      [,1]
+## [1,]    0</code></pre>
+<pre class="r"><code>sqrt(crossprod(c(1,0,-1), vcov(a))%*%c(1,0,-1)) - SE(b)[2]</code></pre>
+<pre><code>##      [,1]
+## [1,]    0</code></pre>
+<p>And the covariance term:</p>
+<pre class="r"><code>crossprod(c(0.5,0,0.5), vcov(a))%*%c(1,0,-1)</code></pre>
+<pre><code>##           [,1]
+## [1,] -16.30776</code></pre>
+<pre class="r"><code>vcov(b)[1,2]</code></pre>
+<pre><code>## [1] -16.30776</code></pre>
+<p>You can also use names to indicate coefficients, so that this is the same</p>
+<pre class="r"><code>svycontrast(a, list(avg=c(api00=0.5,api99=0.5), diff=c(api00=1,api99=-1)))</code></pre>
+<pre><code>##      contrast      SE
+## avg   625.574 23.8362
+## diff   37.191  3.0852</code></pre>
+</div>
+<div id="non-linear" class="section level3">
+<h3>Non-linear</h3>
+<p>Given a quoted expression in which the free variables are the names of the coefficients, <code>svycontrast()</code> treats it as a function <span class="math inline">\(f()\)</span> and computes <span class="math inline">\(f(\hat \theta)\)</span> and <span class="math inline">\(f&#39;(\hat\theta)^T\hat\Xi f&#39;(\hat\theta)\)</span>, using <code>deriv()</code> to do the symbolic differentiation.</p>
+<p>As a trivial case, you can, of course, do linear combinations this way and get the same as above</p>
+<pre class="r"><code>svycontrast(a, list(quote(api00/2+api99/2), quote(api00-api99)))</code></pre>
+<pre><code>##        nlcon      SE
+## [1,] 625.574 23.8362
+## [2,]  37.191  3.0852</code></pre>
+<p>Less trivially: geometric means, where <span class="math inline">\(f(\theta)=\exp\theta\)</span> and so <span class="math inline">\(f&#39;(\hat\theta)\)</span> is a diagonal <span class="math inline">\(2\times 2\)</span> matrix with diagonal entries <span class="math inline">\(\exp(\hat\theta)\)</span></p>
+<pre class="r"><code>meanlogs &lt;- svymean(~log(api00)+log(api99), dclus1)
+meanlogs</code></pre>
+<pre><code>##              mean     SE
+## log(api00) 6.4541 0.0378
+## log(api99) 6.3905 0.0411</code></pre>
+<pre class="r"><code>geomeans&lt;-svycontrast(meanlogs,
+         list(api00=quote(exp(`log(api00)`)), api99=quote(exp(`log(api99)`))))
+exp(coef(meanlogs))-coef(geomeans)</code></pre>
+<pre><code>## log(api00) log(api99) 
+##          0          0</code></pre>
+<pre class="r"><code>B&lt;-diag(exp(coef(meanlogs)))
+crossprod(B, vcov(meanlogs))%*%B - vcov(geomeans)</code></pre>
+<pre><code>##       api00 api99
+## api00     0     0
+## api99     0     0</code></pre>
+<p>Even less trivially, <code>svykappa()</code> does a bit of quasiquotation as well</p>
+<pre><code>svycontrast(probs, list(kappa = bquote((.(obs) - .(expect))/(1 - .(expect)))))</code></pre>
+<p>where <code>obs</code> are the names of diagonal entries of a square contingency table and <code>expect</code> are the products that define the expected values under independency. For a <span class="math inline">\(2\times 2\)</span> table the expression comes out as</p>
+<pre><code>(.a_..A_ + .b_..B_ - (.a_ * .A_ + .b_ * .B_))/(1 - (.a_ * .A_ + 
+    .b_ * .B_))</code></pre>
+<p>and <code>svycontrast()</code> uses the <code>deriv()</code> function to differentiate that expression with respect to all its entries.</p>
+</div>

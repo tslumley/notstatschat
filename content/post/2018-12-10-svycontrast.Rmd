@@ -1,0 +1,92 @@
+---
+title: svycontrast
+author: Thomas Lumley
+date: '2018-12-10'
+slug: svycontrast
+categories: []
+tags: []
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=FALSE, warning=FALSE)
+```
+
+
+I got asked for more detail about the `svycontrast()` function, so I thought I'd post it here too.  The function is related to the `CONTRASTS` you get in SAS, but focused on estimation rather than testing. 
+
+The input to `svycontrast()` is a $p$-vector of estimates $\hat\theta$ (which I'll consider as a column vector) and an estimated $p\times p$ covariance matrix $\hat\Xi$
+
+There are two main cases:
+
+### Linear
+Given a  $p$-vector of coefficients $b$, the function computes $b^T\hat\theta$ and $b^T\hat\Xi b$.  Given a list of $k$ $p$-vectors of coefficients the function pastes them into a $p\times k$ matrix $B$ and computes $B^T\theta$ and $B^T\hat\Xi B$. 
+
+For example, from the help page
+```{r}
+library(survey)
+data(api)
+dclus1<-svydesign(id=~dnum, weights=~pw, data=apiclus1, fpc=~fpc)
+a <- svymean(~api00+enroll+api99, dclus1)
+b<-svycontrast(a, list(avg=c(0.5,0,0.5), diff=c(1,0,-1)))
+b
+```
+
+and doing it step by step
+
+```{r}
+coef(a)
+crossprod(c(0.5,0,0.5),coef(a))
+crossprod(c(1,0,-1),coef(a))
+sqrt(crossprod(c(0.5,0,0.5), vcov(a))%*%c(0.5,0,0.5))
+sqrt(crossprod(c(1,0,-1), vcov(a))%*%c(1,0,-1))
+```
+
+These might be rounded differently when they print, but are the same,eg
+```{r}
+crossprod(c(0.5,0,0.5),coef(a))-coef(b)[1]
+sqrt(crossprod(c(1,0,-1), vcov(a))%*%c(1,0,-1)) - SE(b)[2]
+```
+
+And the covariance term:
+```{r}
+crossprod(c(0.5,0,0.5), vcov(a))%*%c(1,0,-1)
+vcov(b)[1,2]
+```
+
+You can also use names to indicate coefficients, so that this is the same
+```{r}
+svycontrast(a, list(avg=c(api00=0.5,api99=0.5), diff=c(api00=1,api99=-1)))
+```
+
+### Non-linear
+
+Given a quoted expression in which the free variables are the names of the coefficients, `svycontrast()` treats it as a function $f()$ and computes $f(\hat \theta)$ and $f'(\hat\theta)^T\hat\Xi f'(\hat\theta)$, using `deriv()` to do the symbolic differentiation.
+
+As a trivial case, you can, of course, do linear combinations this way and get the same as above
+```{r}
+svycontrast(a, list(quote(api00/2+api99/2), quote(api00-api99)))
+```
+ 
+Less trivially: geometric means, where $f(\theta)=\exp\theta$ and so $f'(\hat\theta)$ is a diagonal $2\times 2$ matrix with diagonal entries $\exp(\hat\theta)$
+```{r}
+meanlogs <- svymean(~log(api00)+log(api99), dclus1)
+meanlogs
+geomeans<-svycontrast(meanlogs,
+         list(api00=quote(exp(`log(api00)`)), api99=quote(exp(`log(api99)`))))
+exp(coef(meanlogs))-coef(geomeans)
+
+B<-diag(exp(coef(meanlogs)))
+crossprod(B, vcov(meanlogs))%*%B - vcov(geomeans)
+```    
+
+Even less trivially, `svykappa()` does a bit of quasiquotation as well
+```
+svycontrast(probs, list(kappa = bquote((.(obs) - .(expect))/(1 - .(expect)))))
+```
+where `obs` are the names of diagonal entries of a square contingency table and `expect` are the products that define the expected values under independency. For a $2\times 2$ table the expression comes out as
+```
+(.a_..A_ + .b_..B_ - (.a_ * .A_ + .b_ * .B_))/(1 - (.a_ * .A_ + 
+    .b_ * .B_))
+```
+and `svycontrast()` uses the `deriv()` function to differentiate that expression with respect to all its entries. 
