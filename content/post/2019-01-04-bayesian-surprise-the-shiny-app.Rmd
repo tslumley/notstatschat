@@ -1,0 +1,20 @@
+---
+title: Bayesian Surprise — the Shiny app
+author: Thomas Lumley
+date: '2019-01-04'
+slug: bayesian-surprise-the-shiny-app
+---
+
+I wrote [a while back](https://notstatschat.rbind.io/2017/09/22/bayesian-surprise/) about a toy case of the Bayesian surprise problem: what does Bayes Theorem tell you to believe when you get really surprising data. The one-dimensional case is a nice math-stat problem, if you like that sort of thing, but maybe you'd rather have the calculations done for you.
+
+Here's an app
+
+<iframe width="600" height="900" src="https://tslumley.shinyapps.io/bayes-surprise/"> </iframe>
+
+The mathematical setup is that you have a prior distribution for a location parameter $\theta$ centered at zero, and you see a data point $x$ that's a long way from zero. If $\pi(\theta)$ and $f(x-\theta)$ are the prior and likelihood, the posterior is proportional to $\pi(\theta)f(x-\theta)$.
+
+When the prior is heavy-tailed and the data distribution isn't, you're willing to believe $\theta$ can be weird, so a very large $x$ means your posterior for $\theta$ will be near $x$.  When the data distribution is heavy-tailed and the prior isn't, you're willing to believe $x$ can be a long way from $\theta$, but not that $\theta$ can be a long way from zero, so the prior ends up pretty much like the posterior -- you 'reject' the data.
+
+The details, though, depend on how heavy-tailed things are, and the app lets you play around with a range of possibilities. Laplace--Laplace and $t_{30}$--$t_{30}$ and $t_{30}$--Normal might be interesting.
+
+The code is [here](https://gist.github.com/tslumley/bf4e195502a00bde6839e5e4d57a6103)

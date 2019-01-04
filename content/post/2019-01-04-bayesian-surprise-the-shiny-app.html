@@ -1,0 +1,17 @@
+---
+title: Bayesian Surprise — the Shiny app
+author: Thomas Lumley
+date: '2019-01-04'
+slug: bayesian-surprise-the-shiny-app
+---
+
+
+
+<p>I wrote <a href="https://notstatschat.rbind.io/2017/09/22/bayesian-surprise/">a while back</a> about a toy case of the Bayesian surprise problem: what does Bayes Theorem tell you to believe when you get really surprising data. The one-dimensional case is a nice math-stat problem, if you like that sort of thing, but maybe you’d rather have the calculations done for you.</p>
+<p>Here’s an app</p>
+<iframe width="600" height="900" src="https://tslumley.shinyapps.io/bayes-surprise/">
+</iframe>
+<p>The mathematical setup is that you have a prior distribution for a location parameter <span class="math inline">\(\theta\)</span> centered at zero, and you see a data point <span class="math inline">\(x\)</span> that’s a long way from zero. If <span class="math inline">\(\pi(\theta)\)</span> and <span class="math inline">\(f(x-\theta)\)</span> are the prior and likelihood, the posterior is proportional to <span class="math inline">\(\pi(\theta)f(x-\theta)\)</span>.</p>
+<p>When the prior is heavy-tailed and the data distribution isn’t, you’re willing to believe <span class="math inline">\(\theta\)</span> can be weird, so a very large <span class="math inline">\(x\)</span> means your posterior for <span class="math inline">\(\theta\)</span> will be near <span class="math inline">\(x\)</span>. When the data distribution is heavy-tailed and the prior isn’t, you’re willing to believe <span class="math inline">\(x\)</span> can be a long way from <span class="math inline">\(\theta\)</span>, but not that <span class="math inline">\(\theta\)</span> can be a long way from zero, so the prior ends up pretty much like the posterior – you ‘reject’ the data.</p>
+<p>The details, though, depend on how heavy-tailed things are, and the app lets you play around with a range of possibilities. Laplace–Laplace and <span class="math inline">\(t_{30}\)</span>–<span class="math inline">\(t_{30}\)</span> and <span class="math inline">\(t_{30}\)</span>–Normal might be interesting.</p>
+<p>The code is <a href="https://gist.github.com/tslumley/bf4e195502a00bde6839e5e4d57a6103">here</a></p>
