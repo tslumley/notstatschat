@@ -1,0 +1,17 @@
+---
+title: 'Another way to see why mixed models in survey data are hard:'
+author: Thomas Lumley
+date: '2019-01-18'
+slug: another-way-to-see-why-mixed-models-in-survey-data-are-hard
+categories: []
+tags: []
+---
+
+
+
+<p>Suppose you have a (potentially unequal-probability) sample of schools, and within each school a (potentially unequal-probability) sample of students, and you want to fit a linear mixed model. In fact, let’s take the brutally simple example of a random intercept model: <span class="math display">\[Y_{ij}=X_{ij}\beta+b_i+e_{ij}\]</span> where <span class="math inline">\(b\sim N(0,\tau^2\)</span>)$.</p>
+<p>With population data, the penalised least squares formulation of this model (which Doug Bates likes) involves minimising <span class="math display">\[\sum_i\sum_j (y_{ij}-\hat y_{ij})^2+\sum_i u_i^2\]</span> where <span class="math inline">\(u_i=b_i/\tau\)</span>. You can use the EM algorithm (if you have all week) or you can rewrite as a least-squares problem in augmented data; right now I don’t care how you do it.</p>
+<p>With sample data it still looks fairly straightforward. The first term has a summand for every observed student and the second term has a summand for every observed school. We have sampling probabilities <span class="math inline">\(\pi_i\)</span> for schools and <span class="math inline">\(\pi_{j|i}\)</span> for students within schools, to give <span class="math inline">\(\pi_{ij}\)</span> for students overall. The first term should get weights of <span class="math inline">\(1/\pi_{ij}\)</span>, since it’s about students, and the second term should get weights of <span class="math inline">\(1/\pi_i\)</span>, since it’s about schools. You can generalise easily to more complicated random-effects models, even with multiple levels of random effects, since each <span class="math inline">\(u_i\)</span> is unambiguously attached to one level of the model and so has a corresponding sampling probability.</p>
+<p>This fails horribly.</p>
+<p>The problem: the first term doesn’t just get minimised over <span class="math inline">\(\beta\)</span>, it gets minimised over <span class="math inline">\(u_i\)</span> as well. Using (larger) student weights for the first term and (smaller) school weights for the second term gives more emphasis to <span class="math inline">\(u_i\)</span> explaining the residuals and less to <span class="math inline">\(u_i\)</span> being small. We end up overestimating <span class="math inline">\(\tau^2\)</span>, perhaps quite badly.</p>
+<p>If you think about an EM-type algorithm, the M-step for estimating <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\sigma^2\)</span> should use the school weights in the first term (and it doesn’t affect <span class="math inline">\(\tau^2\)</span>) but the E-step for estimating the <span class="math inline">\(u_i\)</span> should use something more like the sample size in the school than the population size in the school. Of course, that would stop the algorithm being the EM algorithm. It might still work, but we’re getting away from nice principled design-weighted inference into {} algorithm fiddling.</p>

@@ -1,0 +1,24 @@
+---
+title: 'Another way to see why mixed models in survey data are hard:'
+author: Thomas Lumley
+date: '2019-01-18'
+slug: another-way-to-see-why-mixed-models-in-survey-data-are-hard
+categories: []
+tags: []
+---
+
+Suppose you have a (potentially unequal-probability) sample of schools, and within each school a (potentially unequal-probability) sample of students, and you want to fit a linear mixed model. In fact, let's take the brutally simple example of a random intercept model:
+$$Y_{ij}=X_{ij}\beta+b_i+e_{ij}$$
+where $b\sim N(0,\tau^2$)$.
+
+With population data, the penalised least squares formulation of this model (which Doug Bates likes) involves minimising
+$$\sum_i\sum_j (y_{ij}-\hat y_{ij})^2+\sum_i u_i^2$$
+where $u_i=b_i/\tau$. You can use the EM algorithm (if you have all week) or you can rewrite as a least-squares problem in augmented data; right now I don't care how you do it.
+
+With sample data it still looks fairly straightforward. The first term has a summand for every observed student and the second term has a summand for every observed school.  We have sampling probabilities $\pi_i$ for schools and $\pi_{j|i}$ for students within schools, to give $\pi_{ij}$ for students overall.  The first term should get weights of $1/\pi_{ij}$, since it's about students, and the second term should get weights of $1/\pi_i$, since it's about schools. You can generalise easily to more complicated random-effects models, even with multiple levels of random effects, since each $u_i$ is unambiguously attached to one level of the model and so has a corresponding sampling probability.
+
+This fails horribly.
+
+The problem: the first term doesn't just get minimised over $\beta$, it gets minimised over $u_i$ as well.  Using (larger) student weights for the first term and (smaller) school weights for the second term gives more emphasis to $u_i$ explaining the residuals and less to $u_i$ being small. We end up overestimating $\tau^2$, perhaps quite badly. 
+
+If you think about an EM-type algorithm, the M-step for estimating $\beta$ and $\sigma^2$ should use the school weights in the first term (and it doesn't affect $\tau^2$) but the E-step for estimating the $u_i$ should use something more like the sample size in the school than the population size in the school. Of course, that would stop the algorithm being the EM algorithm. It might still work, but we're getting away from nice principled design-weighted inference into {\em ad hoc} algorithm fiddling.   
