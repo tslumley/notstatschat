@@ -1,0 +1,21 @@
+---
+title: 'The Ihaka Lectures 3: Rise of the Machine Learners'
+author: Thomas Lumley
+date: '2019-01-11'
+slug: the-ihaka-lectures-3-rise-of-the-machine-learners
+---
+They're back!
+
+On Wednesday evenings in March (and streaming on the internet) the University of Auckland Stats department will again be hosting the Ihaka Lectures.  This year the theme is statistical learning/machine learning/predictive algorithms, and we have four speakers
+
+**Bernhard Pfahringer** is Professor of Computer Science at the University of Waikato. He is a member of the Weka project, New Zealand's other famous open-source data science contribution. He will talk about the design and development of Weka and more recent projects.
+
+**JJ Allaire** is the founder and CEO of RStudio, and the author of R interfaces to Tensorflow and Keras.  He will talk about these interfaces for deep learning, and about applications of deep neural networks. 
+
+**Kristian Lum** is Lead Statistician at the Human Rights Data Analysis Group. Her research has concretely demonstrated the potential for machine learning- based predictive policing models to reinforce and, in some cases, amplify historical racial biases in law enforcement. She will talk about algorithmic fairness, and about ways in which policy, rather than data science, influence the development of these models and their choice over non-algorithmic approaches.
+
+**Robert Tibshirani** is Professor of Statistics and Biomedical Data Science at Stanford University. He is best known for proposing the 'lasso', a sparse regression estimator, and describing its relationship to the idea of boosting in supervised classification. He will talk about modern sparse supervised learning approaches that extend the lasso. 
+
+The Ihaka Lectures are at 6:30pm on Wednesday 13, 20, and 27 March and 3 April, in lecture theatre PLT1, Science Building 303, on the City Campus. 
+
+
