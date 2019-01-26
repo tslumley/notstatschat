@@ -1,0 +1,53 @@
+---
+title: Two quick survey items
+author: Thomas Lumley
+date: '2019-01-26'
+slug: two-quick-survey-items
+categories: []
+tags: []
+---
+
+# Can we invent the case-control design?
+
+Classical survey analysis is about means and totals, and the way to adapt it to more interesting parameters is to write the parameter as the mean of its influence functions (delta-betas, jackknife values, etc)
+
+Suppose we knew for everyone in a population (maybe an HMO) whether they had a disease ($Y=1$ or didn't ($Y=0$) and we wanted to take a sample, measure a variable $X$, and do logistic regression.  What sampling probabilities should we use?
+
+The optimal stratified sampling design for estimating a total is `Neyman allocation', where the number of people we sample in each stratum is proportional to the size of the stratum in the population and to the standard deviation of the variable.
+
+In our case the variable is the influence function for a logistic regression coefficient $\beta$, which is proportional to the score function, which is 
+$$U_i=X_i(Y_i-p_i)$$
+where $p_i$ is the fitted probability for person $i$. 
+
+Let's assume we have a rare disease ($E[Y]=p_0$) and modest covariate effects, so $p_i\ll 1$ for all $i$.  In the case stratum, $U_i=X_i(1-p_i)$, so
+$$\mathrm{var}[U_i|Y=1]\approx \mathrm{var}[X_i|Y_i=1]\approx \mathrm{var}[X]$$
+where the last approximate equality is exact if $\beta=0$ or if $X$ is Normal and is pretty good otherwise.
+
+In the control stratum  $U_i=-X_ip_i$, so
+$$\mathrm{var}[U_i|Y=0]\approx p_0^2\mathrm{var}[X].$$
+This approximation isn't as good as the case one, since $p_i$ could vary quite a bit while $1-p_i$ stays roughly constant: typically the control variance will be a bit bigger. 
+
+Neyman allocation says we need to take the population stratum sizes $N_h$ and the population stratum standard deviations $S_h$ and compute $N_hS_h$ for each stratum $h$. Under our approximations, these come to $Np_0\sqrt{\mathrm{var[X]}}$ for cases and $N(1-p_0)\sqrt{p_0^2\mathrm{var}[X]}$ for controls, which are about equal.  We should take the same number of cases and controls when covariate effects are small; we should probably take a few more cases when covariate effects are large. 
+
+Note that this is for the design-weighted logistic regression estimator, but it's pretty insenstive to how efficient this weighted estimator is (which ranges from fully efficient to horribly inefficient depending on $\beta$ and the distribution of $X$.)
+
+# Variances in two-phase designs
+
+This is an explanation of the internals of `twophase2.R` in the survey package.
+
+In a two-phase sample you take a sample, then take a sample from it.  Two-phase sampling generalises two-stage sampling in that the sampling probabilities for the second phase are allowed to depend on data observed at the first phase. 
+
+The sampling weight $\pi^*_i$ for unit $i$ is the product of the probability of sampling unit $i$ at phase one ($\pi_i1$) multiplied by the probability of sampling unit $i$ at phase two, conditional on the whole phase-one sample we took ($\pi_{i,2|1}$). This is **not** the marginal probability of sampling unit $i$, as in the Horvitz-Thompson estimator.  The marginal probability $\pi_i$ would be the average of $\pi_i^*$ over all phase-1 samples that include unit $i$, which in your case you have not got.  Fortunately, you can use $\pi_i^*$ just like you'd use $\pi_i$. (An interesting question: if you did have $\pi_i$ would it be better or worse to use it instead?)
+
+In particular, we can use the same form of variance estimator as for the Horvitz-Thompson estimator, which has the deceptively compact form
+$$\widehat{\mathrm{var}}[{\hat T}_X]= \sum_{i,j}\check{\Delta}_{ij}\check{X}_i\check{X}_j.$$
+Here, $\Delta_{ij}$ is the covariance of the sampling indicators for units $i$ and $j$, and the hacek/caron accent indicates weighting. That is $\check{X}_i=X_i/\pi^*_i$ and 
+$$\check{\Delta}_{ij}=\Delta_{ij}/\pi_{ij}^*$$
+where $\pi^*_{ij}$ is the pairwise inclusion version of $\pi_i^*$.
+
+The advantage of this form is that $\check{\Delta}$ composes nicely over stages and phases of sampling. If you have one stage or phase of sampling with $\check{\Delta}_1$ and another with $\check{\Delta}_2$, the overall weighted covariance is
+$$\check{\Delta}=\check{\Delta}_1+\check{\Delta}_2-\check{\Delta}_1\check{\Delta}_2.$$
+
+We still need to know what $\check{\Delta}_{ij}$ is.  If we have simple random sampling (potentially of clusters, within strata) of $n$ units out of $N$, then 
+$$\check{\Delta}= -(1-n/N)/(n-1)=-(1-\pi_i)/(n-1).$$
+The last form is especially useful, because when we're working with a particular stage of sampling we're going to have the probabilities at that stage and the sample size at that stage conveniently available, but we might not have $N$ conveniently available.  
