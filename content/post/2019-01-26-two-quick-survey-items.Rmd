@@ -43,7 +43,7 @@ In particular, we can use the same form of variance estimator as for the Horvitz
 $$\widehat{\mathrm{var}}[{\hat T}_X]= \sum_{i,j}\check{\Delta}_{ij}\check{X}_i\check{X}_j.$$
 Here, $\Delta_{ij}$ is the covariance of the sampling indicators for units $i$ and $j$, and the hacek/caron accent indicates weighting. That is $\check{X}_i=X_i/\pi^*_i$ and 
 $$\check{\Delta}_{ij}=\Delta_{ij}/\pi_{ij}^*$$
-where $\pi^*_{ij}$ is the pairwise inclusion version of $\pi_i^*$. Strictly speaking, it's $\check{\Delta}^*=\pi_{ij}^*-\pi_i^*\pi_j^*$ but that's too many stars to bother writing.
+where $\pi^*_{ij}$ is the pairwise inclusion version of $\pi_i^*$. Strictly speaking, it's ${\Delta}^*=\pi_{ij}^*-\pi_i^*\pi_j^*$ but that's too many stars to bother writing.
 
 The advantage of this form is that $\check{\Delta}$ composes nicely over stages and phases of sampling. If you have one stage or phase of sampling with $\check{\Delta}_1$ and another with $\check{\Delta}_2$, the overall weighted covariance is
 $$\check{\Delta}=\check{\Delta}_1+\check{\Delta}_2-\check{\Delta}_1\cdot\check{\Delta}_2.$$
@@ -52,3 +52,5 @@ $$\check{\Delta}=\check{\Delta}_1+\check{\Delta}_2-\check{\Delta}_1\cdot\check{\
 We still need to know what $\check{\Delta}_{ij}$ is.  If we have simple random sampling (potentially of clusters, within strata) of $n$ units out of $N$, then 
 $$\check{\Delta}= -(1-n/N)/(n-1)=-(1-\pi_i)/(n-1).$$
 The last form is especially useful, because when we're working with a particular stage of sampling we're going to have the probabilities at that stage and the sample size at that stage conveniently available, but we might not have $N$ and $\pi_{ij}$ conveniently available.  
+
+This same approach could obviously be used for three or more phases, and that might appear in the survey package at some point (earlier if people have an actual use for it).
