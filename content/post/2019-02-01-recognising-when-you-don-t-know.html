@@ -1,0 +1,19 @@
+---
+title: Recognising when you don’t know
+author: Thomas Lumley
+date: '2019-02-01'
+slug: recognising-when-you-don-t-know
+categories: []
+tags: []
+---
+
+
+
+<p>Saying that you don’t know something can be hard for people; it’s also hard for prediction algorithms.</p>
+<p>There’s an <a href="https://rdrr.io/cran/xgboost/man/agaricus.train.html">example</a> in the <code>xgboost</code> package for R involving the classification of mushrooms. The goal is to use information about the appearance of the mushrooms to decide if they are edible or not. It’s clear that this is a machine learning problem rather than a data science problem, because the version of the data in the <code>xgboost</code> package doesn’t say which output value means ‘edible’ and which one means ‘inedible’. If you go to the original at the UCI Machine Learning archive you can find out, though.</p>
+<p>The training data are taken from a North American guide to mushrooms; specifically, from the sections on the genera <em>Agaricus</em> and <em>Lepiota</em> (the documentation says ‘family’, but those genera are in the same family). It’s fairly straightforward to build a classifier that gets almost perfect accuracy; an un-tuned run of <code>xgboost</code> manages 2.2% error rate with two trees.</p>
+<p>It gets more interesting if you apply the classifer to other well-known mushroom species. The best-known edible species – the cultivated mushroom and the field mushroom – are both <em>Agaricus</em>, and are handly correctly. The fly agaric (<em>Amanita muscaria</em>, the children’s-book red one with white spots) correctly comes out as inedible.</p>
+<p>On the other hand, many examples of the death cap, <em>Amanita phalloides</em>, are predicted as edible. Since the death cap is (per <a href="https://en.wikipedia.org/wiki/Amanita_phalloides#Toxicity">Wikipedia</a>) responsible for the majority of fatal mushroom poisonings worldwide, that’s about as wrong as you can possibly get.</p>
+<p>The problem is that the classifer has never seen an <em>Amanita</em> before. The correlations between toxicity and the colour and form of a mushroom are just that, correlations, so generalising to different genera and families is unreliable. But there isn’t any simple way to train <code>xgboost</code> to say “Don’t Know” to a new observation that’s outside its training set.</p>
+<p>In a low-dimensional problem you could flag observations that were a long way from the training data and only trust the classifier for observations that were near the training data. In high-dimensional problems, though, <a href="/2015/09/14/high-dimensional-space-is-big./">‘near’ and ‘far’ don’t work that way</a>, and any point the classifier hasn’t seen before is likely to be far from the training data.</p>
+<p>The fact that this is a hard problem is reinforced by how hard it is for people. Sometimes, knowledge about plants from one part of the world transfers well to other parts of the world, and sometimes it doesn’t. Mushrooms are a frequently-tragic example of where it doesn’t.</p>

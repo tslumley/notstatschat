@@ -1,0 +1,24 @@
+---
+title: Recognising when you don’t know
+author: Thomas Lumley
+date: '2019-02-01'
+slug: recognising-when-you-don-t-know
+categories: []
+tags: []
+---
+
+Saying that you don't know something can be hard for people; it's also hard for prediction algorithms.
+
+There's an [example](https://rdrr.io/cran/xgboost/man/agaricus.train.html) in the `xgboost` package for R involving the classification of mushrooms.  The goal is to use information about the appearance of the mushrooms to decide if they are edible or not. It's clear that this is a machine learning problem rather than a data science problem, because the version of the data in the `xgboost` package doesn't say which output value means 'edible' and which one means 'inedible'.  If you go to the original at the UCI Machine Learning archive you can find out, though. 
+
+The training data are taken from a North American guide to mushrooms; specifically, from the sections on the genera *Agaricus* and *Lepiota* (the documentation says 'family', but those genera are in the same family). It's fairly straightforward to build a classifier that gets almost perfect accuracy; an un-tuned run of `xgboost` manages 2.2% error rate with two trees. 
+
+It gets more interesting if you apply the classifer to other well-known mushroom species. The best-known edible species -- the cultivated mushroom and the field mushroom -- are both *Agaricus*, and are handly correctly.  The fly agaric (*Amanita muscaria*, the children's-book red one with white spots) correctly comes out as inedible.  
+
+On the other hand, many examples of the death cap, *Amanita phalloides*,  are predicted as edible. Since the death cap is (per [Wikipedia](https://en.wikipedia.org/wiki/Amanita_phalloides#Toxicity)) responsible for the majority of fatal mushroom poisonings worldwide, that's about as wrong as you can possibly get. 
+
+The problem is that the classifer has never seen an *Amanita* before. The correlations between toxicity and the colour and form of a mushroom are just that, correlations, so generalising to different genera and families is unreliable. But there isn't any simple way to train `xgboost` to say "Don't Know" to a new observation that's outside its training set. 
+
+In a low-dimensional problem you could flag observations that were a long way from the training data and only trust the classifier for observations that were near the training data. In high-dimensional problems, though, ['near' and 'far' don't work that way](/2015/09/14/high-dimensional-space-is-big./), and any point the classifier hasn't seen before is likely to be far from the training data. 
+
+The fact that this is a hard problem is reinforced by how hard it is for people.  Sometimes, knowledge about plants from one part of the world transfers well to other parts of the world, and sometimes it doesn't.  Mushrooms are a frequently-tragic example of where it doesn't.
