@@ -13,7 +13,7 @@ There's an [example](https://rdrr.io/cran/xgboost/man/agaricus.train.html) in th
 
 The training data are taken from a North American guide to mushrooms; specifically, from the sections on the genera *Agaricus* and *Lepiota* (the documentation says 'family', but those genera are in the same family). It's fairly straightforward to build a classifier that gets almost perfect accuracy; an un-tuned run of `xgboost` manages 2.2% error rate with two trees. 
 
-It gets more interesting if you apply the classifer to other well-known mushroom species. The best-known edible species -- the cultivated mushroom and the field mushroom -- are both *Agaricus*, and are handly correctly.  The fly agaric (*Amanita muscaria*, the children's-book red one with white spots) correctly comes out as inedible.  
+It gets more interesting if you apply the classifer to other well-known mushroom species. The best-known edible species -- the cultivated mushroom and the field mushroom -- are both in *Agaricus*, and are handled correctly.  The fly agaric (*Amanita muscaria*, the children's-book red one with white spots) correctly comes out as inedible.  
 
 On the other hand, many examples of the death cap, *Amanita phalloides*,  are predicted as edible. Since the death cap is (per [Wikipedia](https://en.wikipedia.org/wiki/Amanita_phalloides#Toxicity)) responsible for the majority of fatal mushroom poisonings worldwide, that's about as wrong as you can possibly get. 
 
