@@ -1,0 +1,48 @@
+---
+title: How do you tell what packages to trust?
+author: Thomas Lumley
+date: '2019-02-04'
+slug: how-do-you-tell-what-packages-to-trust
+categories: []
+tags: []
+---
+
+
+
+<div class="figure">
+<img src="/post/2019-02-04-how-do-you-tell-what-packages-to-trust_files/trust.png" style="width:80.0%" />
+
+</div>
+<p>I’m not on that list, but I do have reckons anyway.</p>
+<p>First, there are really two questions: is the method useful to you, and is the implementation doing it the way you want?</p>
+<p>The first question is important. There’s no benefit in having a well-coded implementation of the Shapiro-Wilk test unless you have a good reason to use the Shapiro-Wilk test<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>. The first question is not a coding question, but the answer is similar to the answer for the coding question.</p>
+<p>Good reasons to use a particular method include:</p>
+<ul>
+<li>everyone does it (standards are valuable in reducing communication costs)</li>
+<li>someone you trust uses it, or recommends it in a review paper</li>
+<li>someone you trust proposed it</li>
+<li>you’ve read the paper that proposed it, and the math and/or examples were convincing</li>
+<li>it’s been around a while and doesn’t seem to give unreasonable results</li>
+<li>you’ve worked out the math yourself and it makes sense</li>
+</ul>
+<p>For packages:</p>
+<ul>
+<li>everyone uses it (standards are valuable in reducing communication costs)</li>
+<li>someone you trust wrote it</li>
+<li>someone you trust recommends it</li>
+<li>you’ve read the paper that proposed it and the simulations and/or examples were convincing</li>
+<li>it’s been heavily downloaded for a while and has a reasonable selection of tests</li>
+<li>you’ve run it in simulations where it gives good results</li>
+</ul>
+<p>Naturally, the higher the stakes, the more effort it’s worth putting into checking up on the implementation – and on the method.</p>
+<p>In addition to peer-reviewed journals such as <em>Journal of Statistical Software</em> and <em>Journal of Open-Source Software</em>, there was at least one attempt at crowd-sourcing information on package use and reliability. Sadly, <a href="crantastic.org">crantastic!</a> didn’t get enough users to be really helpful</p>
+<p>When talking about trust important caveat is whether the package (or the method) has been used in situations <strong>similar to the one you want to use it in</strong>. I’ll give two historical examples.</p>
+<p>The first, minor, one is the <code>leaps</code> package in R, which I made over twenty years ago by wrapping Fortran 77 code written by Alan Miller. As I wrote a <a href="/2017/01/09/fixing-an-infelicity-inleaps/">couple of years ago</a>, the context for forward and backward selection has changed since then, and the package was giving answers that were correct as designed, but not what people nowadays expected.</p>
+<p>The second one caused wailing and gnashing of teeth in the air pollution community in 2002. The <code>gam</code> software in S-PLUS would have satisfied all the criteria for being reliable and trusted. It had recently been introduced into air pollution epidemiology as an improved way of doing high-pass filtering– stripping out the longer-term covariation in pollution and deaths that would be contaminated by confounding, in order to see very small effects of pollution.</p>
+<p>Unfortunately, the default convergence settings weren’t stringent enough, and an approximation used in getting standard errors wasn’t good enough in the air pollution time series setting. Even more unfortunately, this was discovered shortly after the deadline for research to be considered in setting the new particulate air pollution standards. Everything was fixed, but it was a stressful time even for statisticians who were just in the same field. The reason a natural reliance on the developers of <code>gam</code> didn’t work, was that the situation was different from prior examples: models with a lot more wiggles, much smaller effects, and a larger computational budget all meant that the appropriate settings and approximations were different.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>you don’t<a href="#fnref1">↩</a></p></li>
+</ol>
+</div>
