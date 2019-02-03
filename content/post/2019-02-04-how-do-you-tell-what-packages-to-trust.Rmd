@@ -37,7 +37,7 @@ Naturally, the higher the stakes, the more effort it's worth putting into checki
 
 In addition to peer-reviewed journals such as *Journal of Statistical Software* and *Journal of Open-Source Software*, there was at least one attempt at crowd-sourcing information on package use and reliability. Sadly, [crantastic!](crantastic.org) didn't get enough users to be really helpful
 
-When talking about trust important caveat is whether the package (or the method) has been used in situations **similar to the one you want to use it in**.  I'll give two historical examples.
+When talking about trust, one important caveat is whether the package (or the method) has been used in situations **similar to the one you want to use it in**.  I'll give two historical examples.
 
 The first, minor, one is the `leaps` package in R, which I made over twenty years ago by wrapping Fortran 77 code written by Alan Miller. As I wrote a [couple of years ago](/2017/01/09/fixing-an-infelicity-inleaps/), the context for forward and backward selection has changed since then, and the package was giving answers that were correct as designed, but not what people nowadays expected. 
 
