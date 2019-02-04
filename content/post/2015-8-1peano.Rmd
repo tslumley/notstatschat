@@ -15,16 +15,16 @@ Suppose you could make the following observations:
 1.  Ling (零) was a pianist
 2.  Every pianist has a favourite student
 3.  Different pianists have different favourite students
-4.  Ling was not the favourite student of any pianist*
+4.  Ling was not the favourite student of any pianist^[he was a brilliant pianist, but he liked thrash metal and dyed his hair]
 5.  Anything that Ling knew and that every pianist teaches to his favourite student ends up known by everyone in the Ling School of Piano (it’s like martial arts)
 
-If the first three observations continue to be true, the Ling School of Piano will obviously go on forever. From all five,  you can deduce a lot of mathematical results about it, starting with most of arithmetic . Piano arithmetic turns out to be just the same as ordinary arithmetic†.
+If the first three observations continue to be true, the Ling School of Piano will obviously go on forever. From all five, you can deduce a lot of mathematical results about it, starting with most of arithmetic . Piano arithmetic turns out to be just the same as ordinary arithmetic^[at least, as applied to the ‘standard’ members of the Ling School — there could be nonstandard members who aren’t the favourite student of any standard member].
 
 On the other hand, if you make these observations (per Dennett)
 
 1.  I am a mammal  
     
-2.  The mother of every mammal is a mammal#  
+2.  The mother of every mammal is a mammal^[that’s kind of the point of mammals]  
     
 
 you can deduce that there have been infinitely many mammals. Which turns out not to be the case.
@@ -36,7 +36,7 @@ The problem was identified by the Greeks, if not earlier, as the logical paradox
 2.  If I remove a single grain of sand from a heap, I still have a heap of sand  
     
 
-From this, we can deduce that even when I’ve removed every grain of sand I will still have a heap of sand. Which seems silly. Most philosophers‡ who have considered the question say that the argument is wrong somehow.
+From this, we can deduce that even when I’ve removed every grain of sand I will still have a heap of sand. Which seems silly. Most philosophers^[but not all; these are philosophers we’re talking about] who have considered the question say that the argument is wrong somehow.
 
 There is a randomised-trial version of the sorites: “Should we randomise the last patient?”
 
@@ -52,16 +52,4 @@ Note that:
 From these principles we could deduce that randomised trials of non-zero size are never ethical.
 
 While this is a coherent viewpoint, it’s an extreme one. The output of the argument seems much stronger than the inputs. The paradox of the heap is reassuring: not that it implies randomising the last patient is actually ethical, but that it supports thinking about the question in real settings rather than as an exercise in piano arithmetic.
-
-  
-
-  
-
-_\*he was a brilliant pianist, but he liked thrash metal and dyed his hair_
-
-_† at least, as applied to the ‘standard’ members of the Ling School — there could be nonstandard members who aren’t the favourite student of any standard member_
-
-_\# that’s kind of the point of mammals_
-
-_‡ but not all; these are philosophers we’re talking about_
 
