@@ -1,0 +1,53 @@
+---
+title: What have I got against the Shapiro-Wilk test?
+author: Thomas Lumley
+date: '2019-02-09'
+slug: what-have-i-got-against-the-shapiro-wilk-test
+categories: []
+tags: []
+---
+
+The Shapiro-Wilk test is a test of the null hypothesis that data come from a Normal distribution, with power against a wide range of alternatives. So what do I have against it?
+
+Well, to start with, it's a test of the null hypothesis that data come from a Normal distribution, with power against a wide range of alternatives.  
+
+There are two reasons you might want a test of the hypothesis that data come from a particular distribution $P$ or a particular set of distributions (ie, model) ${\cal P}_\theta$. First, that might actually be the question you're interested in. Second, it might be an important step in deciding what analysis you are going to do to answer the question you're actually interested in. The reason these are unusual for the Normal distribution is the Central Limit Theorem.
+
+The Central Limit Theorem says that a lot of processes tend to produce Normal distributions (or maybe log-normal). Having (approximately) a Normal distribution for the unexplained variation is not distinctive; it doesn't provide a good test of a theory. I don't think I've ever seen an example where a scientist wanted to test whether data had a Normal distribution because theory implied that it should. 
+
+That's in contrast to power-law distributions, for example. There are  mathematical models that imply power-law distributions for, say,  earthquake sizes, or number of links to a web page. The fact that these data are a terrible fit^[https://arxiv.org/abs/0706.1062] to a power-law distribution is^[or should be] of scientific interest: a scientific theory is being subjected to a severe test, and failing. People have done this for albatross flight durations -- proposing the distribution^[https://www.nature.com/articles/381413a0],  rejecting it^[https://www.ncbi.nlm.nih.gov/pubmed/17960243], and then arguing it fits if you model it right^[https://arxiv.org/abs/0802.1762].
+
+Similarly, there are situations where scientific theory says a set of points should be be a fairly good fit to a Poisson process, and people test the fit because of that theory. And the genome-wide association literature is full of people looking at fit to a uniform distribution for $p$-values -- well, to an exponential distribution for log $p$-values, typically -- to pick up population substructure or modelling failures, though not usually with a formal test, an issue I'll get to later.
+
+The reason people test for fit to the Normal distribution is... well, to be honest, it's typically because they read a statistics textbook written by a statistician who should have known better. Given how old some statistics textbooks are, the statistician probably does know better now.  
+
+If you want $\bar X$ to have a Normal distribution, and the $X$s are independent, it is necessary and sufficient that the $X$s are Normal^[Yes, **necessary**. The [Lévy-Cramér Theorem](https://www.encyclopediaofmath.org/index.php/L%C3%A9vy-Cram%C3%A9r_theorem). I learned this from Pollard's *Users' Guide to Measure-Theoretic Probability*].  If you just want $\bar X$ to have approximately a Normal distribution -- as you do -- it is sufficient, but far from necessary. 
+
+If the sample size is large enough, $\bar X$ will always have approximately a Normal distribution.   In small-enough samples your test will not have useful power; in large-enough samples you don't need $X$ to be Normal; there's potentially a middle ground. "Large enough" depends on the distribution of $X$, and primarily on outliers in $X$: if the $X$s all have the same distribution, it's primarily the skewness and kurtosis of $X$. So if that's why you're doing a Normality test you should want a test that pays most attention to the skewness and kurtosis. There are tests like that; you have to worry about how to weight the two moments, and so on, and they look a bit *ad hoc*, but that's basically Latin for "actually relevant to the question we're talking about", so I'm ok with it.
+
+According to Patrick Royston^[Royston, Patrick (September 1992). "Approximating the Shapiro–Wilk W-test for non-normality". Statistics and Computing. 2 (3): 117–119. doi:10.1007/BF01891203], who knows a lot about the Shapiro-Wilk test, 
+
+> Its power characteristics are well known and may be summarized by saying that it is strongest against short-tailed (platykurtic) and skew distributions and weakest against symmetric moderately long- tailed (leptokurtic) distributions.
+
+That's not what we're looking for as a pre-test before analysing means. It's powerful against too many alternatives, including some we don't care about, so it has to have lost power against the alternatives we do care about. 
+
+On top of that, the Shapiro-Wilk test is an example of an approach I don't like. One reasonably good way of looking at distributional fit is to draw a quantile-quantile plot. The plot is easy to draw (we have to do a bit of thinning for large data sets) and reasonably easy to interpret.  The basic shape of the plot isn't sensitive to the sample size. Shapiro and Wilk said
+
+> This study was initiated, in part, in an attempt to summarize formally certain indications of probability plots. In particular, could one condense departures from statistical linearity of probability plots into one or a few 'degrees of freedom' in the manner of the application of analysis of variance in regression analysis
+
+One obviously could: Shapiro and Wilk's $W$ statistic (proportional to) the slope of a linear regression of $X$ on the qq-plot (after scaling $X$ to unit variance). The maximum possible value of $W$ is 1. If the $X$s are all from the same Normal distribution, $W$ converges to 1 as the sample size increases, and if they aren't it converges to some number less than 1. The actual sampling distribution of $W$, however, is ridiculously complicated. Well, Shapiro and Wilk derived it for $n=3$, but it quickly becomes complicated.
+The paper by Patrick Royston that I mentioned? It empirically fits a three-parameter log-normal distribution to $\log(1-W)$ for $4\leq n\leq 11$ and a two-parameter log-normal to $1-W$ for $12\leq n\leq 2000$. Those formulas are what R uses. 
+
+You might incautiously think the bootstrap would be helpful. It isn't. Because the null hypothesis is at the edge of the possible range, there's no reason to believe the bootstrap would give the right sampling distribution for $W$. What it does work for, however, is to make the test even less necessary, since you could just use the bootstrap on whatever analysis you were doing and relax a little about assumptions. 
+
+There is a solution, of course. The test is location and scale invariant, so  if we were inventing the test now we could save a lot of effort by just computing $W$ on a few thousand samples of size $n$ from $N(0,1)$ whenever you wanted to use it.  So in that sense the baroquely complicated mathematical analysis isn't a problem any more.
+
+We haven't got to the biggest problem, though. I said you might want to test because *it might be an important step in deciding what analysis you are going to do*. If it is, you're now doing a different analysis. Instead of doing a t-test on $X$ you're randomly (ie, based on the data) deciding to do either a $t$-test on $X$ or on $\log X$. Or worse, randomly (ie, based on the data) deciding to do either a $t$-test on $X$ or a Wilcoxon test on $X$. You now need to worry about the operating characteristics of that whole combined procedure. Your $t$-test $p$-value and confidence interval aren't right any more; you need a maybe-$t-test-maybe-not $p$-value and confidence interval. These could be similar or they could be very different. In this particular case, Murphy is not on your side and they are noticeably different^[https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/1471-2288-12-81]. 
+
+> Preliminary testing for normality seriously altered the conditional Type I error rates of the subsequent main analysis for both parametric and nonparametric tests.
+
+Finally, I talked about testing for Normality perhaps being useful in a Goldilocks middle ground of sample sizes. Actually, it's not at all clear the middle ground exists, and the test may well go from too cold to too hot without any 'just right'. 
+
+So, overall. You usually don't want to test for fit to a Normal distribution. If you do, you usually don't care primarily about the alternatives to which the Shapiro-Wilk test is popular. Unless the conclusion is very clear, pre-testing is going to completely munt your subsequent tests. And if the conclusion is clear then you can look at the qq-plot; you don't need to get maths to look at it for you, and you might learn something else about the data.
+
+Check out my ~~SoundCloud~~ [paper that you can cite if you need a reference about not-testing being ok](https://www.ncbi.nlm.nih.gov/pubmed/11910059)
