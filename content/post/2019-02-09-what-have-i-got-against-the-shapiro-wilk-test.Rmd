@@ -48,6 +48,6 @@ We haven't got to the biggest problem, though. I said you might want to test bec
 
 Finally, I talked about testing for Normality perhaps being useful in a Goldilocks middle ground of sample sizes. Actually, it's not at all clear the middle ground exists, and the test may well go from too cold to too hot without any 'just right'. 
 
-So, overall. You usually don't want to test for fit to a Normal distribution. If you do, you usually don't care primarily about the alternatives to which the Shapiro-Wilk test is popular. Unless the conclusion is very clear, pre-testing is going to completely munt your subsequent tests. And if the conclusion is clear then you can look at the qq-plot; you don't need to get maths to look at it for you, and you might learn something else about the data.
+So, overall. You usually don't want to test for fit to a Normal distribution. If you do, you usually don't care primarily about the alternatives to which the Shapiro-Wilk test is sensitive. Unless the conclusion is very clear, pre-testing is going to completely munt your subsequent tests. And if the conclusion is clear then you can look at the qq-plot; you don't need to get maths to look at it for you, and you might learn something else about the data.
 
 Check out my ~~SoundCloud~~ [paper that you can cite if you need a reference about not-testing being ok](https://www.ncbi.nlm.nih.gov/pubmed/11910059)
