@@ -1,0 +1,83 @@
+---
+title: Absolutely no warranty?
+author: Thomas Lumley
+date: '2019-02-18'
+slug: absolutely-no-warranty
+categories: []
+tags: []
+---
+
+Someone on Twitter (who I'm reluctant to out, considering) said they'd got reviews back from an epidemiology journal, and one reviewer had cautioned against the use of R, because *"the opening sentence in an R output points out that basically you use it at your own risk and the contributors to R are not accountable for any errors."*  It's been while since I've seen this one, which is a clear symptom of not having read licence agreements for *other* statistical software.
+
+If you look at, say, SAS, you find that there is a warranty. But not much of one:
+
+> SAS warrants that each commercially available release of the Software shall substantially conform to its Documentation including any updates thereto. As Customer’s exclusive remedy for breach of
+this warranty, SAS, at its option, shall: (a) repair the Software; (b) replace the Software; or (c)
+terminate the Software license and refund the fees paid for the Software at issue during the then current annual license period.
+
+I'm pretty confident that base R also substantially conforms to its documentation, and if you'd paid me for a license to use R, I might well be happy to return your money if you found it didn't. Since you didn't pay, well, if it breaks you get to keep both pieces^[as Peter Dalgaard puts it].
+
+For people worried about, say, FDA certification, the SAS agreement goes on:^[shoutiness in the original]
+
+> **SAS DOES NOT WARRANT OR REPRESENT THAT CUSTOMER’S USE OF THE
+PRODUCT, SYSTEM OR WORK PRODUCT, AS APPLICABLE, WILL RESULT IN CUSTOMER’S
+COMPLIANCE, FULFILLMENT OR CONFORMITY WITH THE LAWS, RULES, REGULATIONS,
+REQUIREMENTS OR GUIDELINES OF ANY GOVERNMENTAL AGENCY**
+
+
+
+
+Stata is similar, except you only get three months, because the license is perpetual
+
+> StataCorp represents and warrants for a period of 90 days from the date of the order that the Licensed Software substantially conforms to the functional specifications in the Stata 15 Reference Manual. StataCorp will repair or replace the Licensed Software if this warranty is breached unless it cannot do so within a reasonable period of time, then StataCorp will refund the fee paid for that license under the order (this Agreement will then terminate). Customer must notify StataCorp during the warranty period or 30 days after it ends of any alleged breach of the warranty. THIS SECTION CONTAINS CUSTOMER’S EXCLUSIVE REMEDY AND STATACORP’S SOLE LIABILITY FOR BREACH OF THIS WARRANTY.
+
+They also have an exclusion for "Enhancements" they distribute, which have no warranty whatsover. 
+
+The SPSS agreement is harder to find, but I think this IBM one is the right one 
+
+> IBM warrants that the Program, when used in its specified operating environment, will
+conform to its specifications. The Program’s specifications, and specified operating environment
+information, can be found in documentation accompanying the Program (such as a read-me
+file) or other information published by IBM (such as an announcement letter). Licensee agrees
+that such documentation and other Program content may be supplied only in the English
+language, unless otherwise required by local law without the possibility of contractual waiver
+or limitation.
+The warranty applies only to the unmodified portion of the Program. IBM does not warrant
+uninterrupted or error-free operation of the Program, or that IBM will correct all Program
+defects. Licensee is responsible for the results obtained from the use of the Program.
+During the Warranty Period, IBM provides Licensee with access to IBM databases containing
+information on known Program defects, defect corrections, restrictions, and bypasses at no
+additional charge. 
+If the Program does not function as warranted during the Warranty Period and the problem
+cannot be resolved with information available in the IBM databases, Licensee may return the
+Program and its PoE to the party (either IBM or its reseller) from whom Licensee obtained it
+and receive a refund of the amount Licensee paid.
+
+Genstat is like Stata
+
+> 6.2	VSN warrants to the Licensee that the Software, as delivered by VSN to the Licensee, will, for 90 days after the Start Date, function substantially in accordance with the Documentation when properly used on the equipment and operating system specified in the Registration Form.
+
+> 6.3	Provided the Licensee provides a copy of its data and anything else needed to reconstruct the problem, VSN will investigate any purported breach of warranty reported by the Licensee in writing within the period specified in clause 6.2 and, where appropriate, VSN will endeavour to correct any Error within a reasonable time, or to provide avoidance or remedial information, or VSN will refund the license fee paid by the Licensee for the Software.
+
+> 6.4	VSN’s refund of any license fees under clause 6.3 will be in full and final settlement of any liability VSN may have to the Licensee (under this Agreement or under any other agreement in connection with the licensing, supply, development, implementation, configuration, support or maintenance of the Software) and will automatically terminate the license.
+
+Minitab (do people still *use* Minitab?)
+
+> We warrant that the functions contained in this Software will operate in accordance with its documentation and without substantial program errors, but We do not warrant that the functions contained in the Software will meet Your requirements or will operate without interruption or error, or that all defects will be corrected. Except for Our obligations regarding Indemnification, Our entire liability, and Your exclusive remedy for the breach of the foregoing limited warranty, shall at Our option either be replacement of the Software with a reasonable alternative, or the refund of the license fees paid by You for Your use of the Software within the last twelve months. This Limited Warranty does not extend to any claim resulting from Your unauthorized modification of Our Software or from use or incorporation of Our Software in any manner for which it is not designed or permitted.
+
+And, of course, the world's most popular statistical software
+
+>LIMITATION ON AND EXCLUSION OF DAMAGES. YOU CAN RECOVER FROM MICROSOFT AND ITS SUPPLIERS ONLY DIRECT DAMAGES UP TO THE AMOUNT YOU PAID FOR THE SOFTWARE. YOU CANNOT RECOVER ANY OTHER DAMAGES, INCLUDING CONSEQUENTIAL, LOST PROFITS, SPECIAL, INDIRECT OR INCIDENTAL DAMAGES.
+This limitation applies to
+
+> -  anything related to the software, services, content (including code) on third party Internet sites, or third party programs; and
+
+> -  claims for breach of contract, breach of warranty, guarantee or condition, strict liability, negligence, or other tort to the extent permitted by applicable law.
+
+> It also applies even if
+  repair, replacement or a refund for the software does not fully compensate you for any losses; or
+  Microsoft knew or should have known about the possibility of the damages.
+
+Basically *no-one* guarantees that ordinary retail software is bug-free, or provides anything more than a refund even for serious errors. This doesn't mean the software doesn't *work*, it just means that the people making it work have to have motivations other than the risk of paying out damages.
+
+People relying on R, like people relying on other statistical software, *should* think a bit about the risks --  the risk of using the sofware incorrectly or misunderstand what it does as well as the risk of it not working correctly. Ways people mitigate these risks include choosing software that's widely used (and so probably checked), doing their own checking on known examples or simulations,  carrying professional liability insurance, and paying consultants who know more about statistics and computing. Just relying on the warranty is not going to get you much further with SPSS than it does with R.
