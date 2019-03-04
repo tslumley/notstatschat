@@ -1,0 +1,45 @@
+---
+title: Normal horizontiles
+author: Thomas Lumley
+date: '2019-03-04'
+slug: normal-horizontiles
+categories: []
+tags: []
+---
+
+
+
+<p>From XKCD today</p>
+<p><img src="https://imgs.xkcd.com/comics/normal_distribution.png"></p>
+<p>How can we check this calculation?</p>
+<p>First, we need to know where the lines are on the y-axis. They are separated by 52.7% of the height of the distribution, and looks as if they are meant to exclude the same height above and below. We don’t need to worry about the mean of the distribution (obviously), or the scale (less obviously). The reason the scale is not needed is that rescaling the x axis shrinks all three of the areas under the curve by the same factor, and since they add up to 1, they stay the same. If we write <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span> for the two heights, we have</p>
+<p><span class="math display">\[\begin{eqnarray*}
+p-q &amp;=&amp; \phi(0)\times 0.572\\
+p+q&amp;=&amp;\phi(0)
+\end{eqnarray*}
+\]</span> from which we get <span class="math display">\[q = \phi(0)\times (1-0.527)/2\]</span> or in R</p>
+<pre class="r"><code>q&lt;- dnorm(0)*(1-0.527)/2
+p&lt;- dnorm(0)-q</code></pre>
+<p>Let <span class="math inline">\(-a\)</span> and <span class="math inline">\(a\)</span> be the x-axis values for the lower ends of the filled strip and <span class="math inline">\(-b\)</span> and <span class="math inline">\(b\)</span> be the corresponding upper ends. The area we want can be worked out at least three ways.</p>
+<p>First, take the area above the lower line and subtract the area above the upper line <span class="math display">\[\int_{-a}^a (\phi(x)-q)\,dx-\int_{-b}^b (\phi(x)-p)\,dx\]</span></p>
+<p>Second, define a function that’s the height of the coloured strip at <span class="math inline">\(x\)</span>: it’s the maximum of (the minimum of <span class="math inline">\(\phi(x)-q\)</span> and 0) and <span class="math inline">\(p-q\)</span>: <span class="math display">\[\int_{-a}^a ((\phi(x)-q)\vee 0)\wedge (p-q)\,dx\]</span></p>
+<p>Third, take out the rectangle in the middle of the strip, which is <span class="math inline">\(2b\)</span> wide and <span class="math inline">\(p-q\)</span> high, and then use integration on the curvy bits on each side: <span class="math display">\[\int_{-a}^{-b} \phi(x)-q\,dx+ 2b(p-q)+\int_b^a \phi(x)-q\,dx\]</span></p>
+<p>In R, first we need to solve <span class="math inline">\(\phi(x)=q\)</span> and <span class="math inline">\(\phi(x)=p\)</span>, for which we need a bound on <span class="math inline">\(p\)</span> and <span class="math inline">\(q\)</span>; I’m using 5, which is clearly enough, since <span class="math inline">\(\phi(5)=10^{-\textrm{substantial}}\)</span></p>
+<pre class="r"><code>a&lt;- uniroot(function(x) dnorm(x)-q, lower=0, upper=5)$root
+b&lt;- uniroot(function(x) dnorm(x)-p, lower=0, upper=5)$root</code></pre>
+<p>Now do the integration three ways</p>
+<pre class="r"><code>integrate( function(x) dnorm(x)-q,lower=-a, upper=a)$value-
+  integrate( function(x) dnorm(x)-p,lower=-b, upper=b)$value</code></pre>
+<pre><code>## [1] 0.5001705</code></pre>
+<pre class="r"><code>integrate(function(x) dnorm(x)-q,lower=-a, upper=-b)$value+
+  2*b*(p-q)+
+  integrate(function(x) dnorm(x)-q,lower=b, upper=a)$value</code></pre>
+<pre><code>## [1] 0.5001705</code></pre>
+<pre class="r"><code>integrate(function(x) pmin(pmax(dnorm(x)-q,0),p-q),lower=-a, upper=a)$value</code></pre>
+<pre><code>## [1] 0.5001658</code></pre>
+<p>And it works</p>
+<div class="figure">
+<img src="/post/2019-03-04-normal-horizontiles_files/11635736575_04907cc4cc_z.jpg" style="width:90.0%" />
+
+</div>
+<p>[Snipe by slobirdr on <a href="https://www.flickr.com/photos/slobirdr/11635736575">Flickr</a>]</p>
