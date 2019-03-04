@@ -69,7 +69,7 @@ abline(h=0,col=&quot;white&quot;)
 </div>
 <div id="graph-percentage-punctuality" class="section level2">
 <h2>Graph: percentage punctuality</h2>
-<p>Instead of a vertical axis showing deviation from schedule in minutes, we could look at numbers of buses. cumsum(table(cut(.$delay/60, c(-Inf,-10,-5,5,10,Inf)))))</p>
+<p>Instead of a vertical axis showing deviation from schedule in minutes, we could look at numbers of buses. The green buses are on time. The orange buses are 5-10 minutes early (at the bottom) or late (at the top), and the dark red buses are more than 10 minutes early (at the bottom) or late (at the top)</p>
 <pre class="r"><code>par(mfrow=c(5,1),mar=c(3,3,.5,.5),las=1)
 
 buscount&lt;-function(data){

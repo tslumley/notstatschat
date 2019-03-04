@@ -88,8 +88,8 @@ There are a few specific days that deserve extra comment. Monday, February 6 has
 
 ## Graph: percentage punctuality
 
-Instead of a vertical axis showing deviation from schedule in minutes, we could look at numbers of buses. 
-cumsum(table(cut(.$delay/60, c(-Inf,-10,-5,5,10,Inf)))))
+Instead of a vertical axis showing deviation from schedule in minutes, we could look at numbers of buses.  The green buses are on time. The orange buses are 5-10 minutes early (at the bottom) or late (at the top), and the dark red buses are more than 10 minutes early (at the bottom) or late (at the top)
+
 ```{r}
 par(mfrow=c(5,1),mar=c(3,3,.5,.5),las=1)
 
