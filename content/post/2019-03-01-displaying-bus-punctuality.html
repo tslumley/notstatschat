@@ -1,0 +1,163 @@
+---
+title: Displaying bus punctuality
+author: Thomas Lumley
+date: '2019-03-01'
+slug: displaying-bus-punctuality
+categories: []
+tags: []
+---
+
+
+
+<p>A couple of years ago, I stored a lot of Auckland bus location data for what was going to be a news story. It’s about time I did something with it, so I’m updating the analysis and I’ll be using it as a class example.</p>
+<p>The data come from the Auckland Transport real-time API, for which Auckland Transport should be congratulated. Anyone can get an API key and use the data. Here I’m looking at an analysis of saved data across a a five-week period, so you don’t see the code for doing the downloads – look at the <a href="https://github.com/tslumley/busbot">code</a> for twitter bot <code>@tuureiti</code> if you want an example.</p>
+<div id="load-the-raw-data" class="section level2">
+<h2>Load the raw data</h2>
+<p>My script saves a CSV file every ten minutes, so we can load them as a list of data frames. We’ll need the file names, which are time stamps.</p>
+<pre class="r"><code>files&lt;-list.files(path=&quot;~/BUSDATA&quot;,pattern=&quot;csv&quot;,full.names=TRUE)
+metadata&lt;-tibble(
+  timestamps = gsub(&quot;.*/BUSDATA/([0-9]{10})\\.csv&quot;,&quot;\\1&quot;,files)
+)
+datas&lt;-map(files, ~read_csv(.,col_types=cols()))
+names(datas)&lt;-metadata$timestamps</code></pre>
+<p>Now, extract time, day, day of the week, week number, and weekend/weekday from the time stamps. We’re going to use different colours for weekdays vs weekends in the graph</p>
+<pre class="r"><code>metadata&lt;-mutate(metadata,
+    times = as.POSIXct(as.integer(timestamps),origin=&quot;1970-01-01&quot;),
+    days = factor(as.POSIXlt(times)$wday)) %&gt;%
+  mutate(weekdays = ifelse(days %in% c(6,0),0,1)) %&gt;%
+  mutate(week = (as.POSIXlt(times)$yday+1) %/% 7) %&gt;%
+  mutate(col90 = ifelse(weekdays==1, &quot;goldenrod&quot;,&quot;skyblue&quot;),
+    col75 = ifelse(weekdays==1, &quot;sienna&quot;,&quot;royalblue&quot;))</code></pre>
+</div>
+<div id="graph-distribution-of-deviation-from-schedule" class="section level2">
+<h2>Graph: distribution of deviation from schedule</h2>
+<p>These are essentially a series of really narrow boxplots. The y-axis is delay relative to the schedule. Each vertical line represents a ten-minute period between 6am and 10pm. The black segment contains the middle 50% of buses; the dark colour is the middle 75%, and the light colour is the middle 90%. (This could also be done with Earo Wang’s <code>sugrrants</code> calendar package.)</p>
+<pre class="r"><code>quantiles&lt;-map(metadata$timestamps,
+                  ~quantile(datas[[.]]$delay/60, c(0.05,0.125,0.25,0.75,0.875,0.95), na.rm=TRUE)) %&gt;%
+           invoke(.f=rbind)
+
+
+
+par(mfrow=c(5,1),mar=c(3,3,.5,.5),las=1)
+
+for(i in 5:9){
+xl&lt;-with(metadata, min(times[week==i]))
+xu&lt;-xl+6*24*60*60+17*60*60
+plot(quantiles[,1]~times, subset=week==i,
+     type=&quot;h&quot;,col=col90, data=metadata,
+     xlim=range(xl,xu),ylim=c(-10,30), 
+     xlab=&quot;&quot;,ylab=&quot;Deviation from schedule&quot;)
+
+
+points(quantiles[,6]~times,subset=week==i,
+       col=col90, data=metadata, type=&quot;h&quot;)
+points(quantiles[,2]~times,subset=week==i,
+       col=col75, data=metadata, type=&quot;h&quot;)
+points(quantiles[,5]~times,subset=week==i,
+       col=col75, data=metadata, type=&quot;h&quot;)
+points(quantiles[,3]~times,subset=week==i,
+       col=&quot;black&quot;, data=metadata, type=&quot;h&quot;)
+points(quantiles[,4]~times,subset=week==i,
+       col=&quot;black&quot;, data=metadata, type=&quot;h&quot;)
+
+abline(h=0,col=&quot;white&quot;)
+
+}</code></pre>
+<p><img src="/post/2019-03-01-displaying-bus-punctuality_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Some of the visible patterns have clear explanations. On weekdays there is a morning peak and a double afternoon peak: school and work commutes overlap in the morning but not in the evening. There is no clear peak on weekend days, though there is a slight slowdown around midday on Saturdays. Importantly, the deviations from schedule are in both directions; buses are early as well as late. Major improvements in on-time performance would need the variation in travel times to be reduced – for example, with bus lanes. Some improvement is possible by adjusting the published schedule to reflect where buses are often late, but this will tend to make more buses early.</p>
+<p>There are a few specific days that deserve extra comment. Monday, February 6 has the same pattern as typical weekend days; it was Waitangi Day, a public holiday. On the Saturday, February 11, the Auckland Lantern Festival closed a number of streets near Auckland Domain, and many people attending the festival would have tried to take buses in the evening. The large delays there are for a relatively small number of buses. March 7 and March 11 saw heavy rain in Auckland, slowing down all traffic and delaying the buses. My data collection script failed on the morning of Tuesday, February 7; the sporadic vertical white lines result from occasional timeouts when calling the Auckland Transport API.</p>
+</div>
+<div id="graph-percentage-punctuality" class="section level2">
+<h2>Graph: percentage punctuality</h2>
+<p>Instead of a vertical axis showing deviation from schedule in minutes, we could look at numbers of buses. cumsum(table(cut(.$delay/60, c(-Inf,-10,-5,5,10,Inf)))))</p>
+<pre class="r"><code>par(mfrow=c(5,1),mar=c(3,3,.5,.5),las=1)
+
+buscount&lt;-function(data){
+    mutate(data, delaycat=cut(delay/60, c(-Inf,-10,-5,5,10,Inf))) %&gt;%
+    select(delaycat) %&gt;%
+    table %&gt;%
+    cumsum
+}
+
+latecounts&lt;-map(datas, buscount) %&gt;%
+           invoke(.f=rbind)
+
+for(i in 5:9){
+xl&lt;-with(metadata, min(times[week==i]))
+xu&lt;-xl+6*24*60*60+17*60*60
+
+plot(latecounts[,1]~times, data=metadata, subset=week==i,type=&quot;n&quot;,
+     ylab=&quot;number of buses active&quot;, xlab=&quot;Day (6am-10pm)&quot;, 
+     xlim=range(xl,xu),ylim=range(0,latecounts))
+
+with(metadata, {
+segments(times[week==i],0,times[week==i],latecounts[,1][week==i],col=&quot;darkred&quot;)
+segments(times[week==i],latecounts[,1][week==i],times[week==i],latecounts[,2][week==i],col=&quot;orange&quot;)
+segments(times[week==i],latecounts[,2][week==i],times[week==i],latecounts[,3][week==i],col=&quot;green&quot;)
+segments(times[week==i],latecounts[,3][week==i],times[week==i],latecounts[,4][week==i],col=&quot;orange&quot;)
+segments(times[week==i],latecounts[,4][week==i],times[week==i],latecounts[,5][week==i],col=&quot;darkred&quot;)
+})
+}</code></pre>
+<p><img src="/post/2019-03-01-displaying-bus-punctuality_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>The weekday/weekend differnece in services is dramatic. Buses tend to be late during the peaks (as we saw before), and perhaps more of them are late on the trailing edge of the peak. The rain effect on March 11 show up clearly, but you need to look carefully to see the impact of the Lantern Festival on February 11 – the rain affected many more buses.</p>
+</div>
+<div id="punctuality-by-stop-number" class="section level2">
+<h2>Punctuality by stop number</h2>
+<p>The official Auckland Transport punctuality metric is the percentage of trips leaving the first stop on the route within 5 minutes of the scheduled time. I don’t know how this metric was chosen, but I can imagine it being a good choice for contracts with bus companies: it’s easy to audit and is more under the control of the company than punctuality at later stops. It’s a terrible way to report punctuality to passengers, though.</p>
+<p>Let’s see how punctuality varies over a trip.</p>
+<pre class="r"><code>stopdelays &lt;- datas %&gt;% 
+  invoke(.f=rbind) %&gt;%
+  filter(delay&gt; -10*60 &amp; delay &lt; 30*60) %&gt;%
+  filter(stop.sequence &lt;= 15) 
+ ggplot(stopdelays, aes(x=delay/60, y=stop.sequence, group=stop.sequence))+
+    geom_density_ridges(scale = 1.5)</code></pre>
+<pre><code>## Picking joint bandwidth of 0.324</code></pre>
+<p><img src="/post/2019-03-01-displaying-bus-punctuality_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code> stopdelays %&gt;% 
+   mutate(not_late= delay&lt;= 5*60) %&gt;% 
+   group_by(stop.sequence) %&gt;% 
+   summarise(ontime=mean(not_late)) %&gt;%
+   ggplot(aes(x=stop.sequence,y=ontime))+geom_point()+geom_line()</code></pre>
+<p><img src="/post/2019-03-01-displaying-bus-punctuality_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<p>Buses are <strong>much</strong> closer to the schedule at the first stop than at even the second stop. Partly that’s just because it’s easier to be on time at the start, but such a large difference does also suggest that the first-stop performance is being optimised because it is reported.</p>
+</div>
+<div id="which-bus-companies" class="section level2">
+<h2>Which bus companies?</h2>
+<p>At the time I was collecting the data, there were allegations that the new south Auckland routes had worse performance. Since these routes are run by a company, Go Bus, that didn’t run any of the routes, it’s fairly easy to do a comparison.</p>
+<p>One complication: the route and trip id fields in the data have a lot of versioning information, which I’ll just strip off. I’ll also take out school buses, which have separate problems.</p>
+<pre class="r"><code>routes&lt;-read_csv(&quot;~/routes.txt&quot;, col_types=cols())
+routes &lt;- mutate(routes, route_id=substr(route_id,1,5))
+trips&lt;-read_csv(&quot;~/trips.txt&quot;,col_types=cols())
+trips &lt;- mutate(trips, route_id=substr(route_id,1,5))
+
+notschool &lt;- left_join(trips, routes) %&gt;% 
+      filter( trip_headsign != &quot;Schools&quot;) %&gt;% 
+      distinct(route_id, .keep_all=TRUE)</code></pre>
+<pre><code>## Joining, by = &quot;route_id&quot;</code></pre>
+<pre class="r"><code>longnames&lt;-tibble(agency_id=c(&quot;ABEXP&quot;,&quot;BTL&quot;,&quot;GBT&quot;,
+                              &quot;HE&quot;,&quot;NZBGW&quot;,&quot;NZBML&quot;,
+                              &quot;NZBNS&quot;,&quot;RTH&quot;,&quot;UE&quot;,
+                              &quot;WBC&quot;),
+      longname=c( &quot;SkyBus&quot;,&quot;Birkenhead Transport&quot;, &quot;Go Bus&quot;, 
+&quot;Howick and Eastern&quot;, &quot;Go West (NZ Bus)&quot;, &quot;Metrolink (NZ Bus)&quot;, 
+&quot;North Star (NZ Bus)&quot;,  &quot;Ritchies Transport&quot;, &quot;Urban Express&quot;, 
+&quot;Waiheke Bus Company&quot;)  
+)
+
+notschool &lt;- left_join(notschool,longnames)</code></pre>
+<pre><code>## Joining, by = &quot;agency_id&quot;</code></pre>
+<pre class="r"><code>datas %&gt;% 
+  invoke(.f=rbind) %&gt;%
+  mutate(route_id=substr(route,1,5)) %&gt;% 
+  inner_join(notschool) %&gt;%
+  mutate(not_late=delay &lt; 5*60, on_time = delay &lt; 5*60 &amp; delay&gt; -1*60) %&gt;%
+  group_by(longname) %&gt;%
+  summarise(on_time=mean(on_time), not_late=mean(not_late)) -&gt; agency_late</code></pre>
+<pre><code>## Joining, by = &quot;route_id&quot;</code></pre>
+<pre class="r"><code>ggplot(agency_late, aes(x=on_time, y=longname))+geom_point()+xlab(&quot;Proportion on time&quot;)+ylab(&quot;&quot;)</code></pre>
+<p><img src="/post/2019-03-01-displaying-bus-punctuality_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(agency_late, aes(x=not_late, y=longname))+geom_point()+xlab(&quot;Proportion not late&quot;)+ylab(&quot;&quot;)</code></pre>
+<p><img src="/post/2019-03-01-displaying-bus-punctuality_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
+<p>The outlier is the Waiheke Bus Company, who are in a special situation in that their buses are scheduled to meet the ferry and so will depart late if the ferry is late. There was nothing distinctive about Go Bus and the south Auckland routes.</p>
+<p>The punctuality numbers look very poor for ‘Proportion on time’. This is slightly unfair; a few of the buses that are marked down as early will actually be waiting at the stop until they are on time. It’s only <em>slightly</em> unfair, though. Many buses really do run early except at a small number of major stops where they sit and wait.</p>
+</div>
