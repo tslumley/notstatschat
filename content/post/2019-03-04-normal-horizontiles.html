@@ -43,3 +43,17 @@ b&lt;- uniroot(function(x) dnorm(x)-p, lower=0, upper=5)$root</code></pre>
 
 </div>
 <p>[Snipe by slobirdr on <a href="https://www.flickr.com/photos/slobirdr/11635736575">Flickr</a>]</p>
+<p>Update: As Peter Dalgaard points out, the integrals can be replaced with calls to <code>pnorm</code>, since the integrand is just <span class="math inline">\(\phi(x)\)</span> and constants. For example, <span class="math display">\[\int_{-a}^{-b} \phi(x)-q\,dx+ 2b(p-q)+\int_b^a \phi(x)-q\,dx\]</span> gives</p>
+<pre class="r"><code>(pnorm(-b)-pnorm(-a))-q*(-b - -a)+2*b*(p-q)+(pnorm(a)-pnorm(b))-q*(a-b)</code></pre>
+<pre><code>## [1] 0.5001705</code></pre>
+<p>Also, if you happen to know the formula <span class="math display">\[\phi(x)=\frac{1}{\sqrt{2\pi}}e^{-x^2/2}\]</span>, aka <code>dnorm(x)</code>, you could compute <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> directly <span class="math display">\[\phi^{-1}(d)= \sqrt{-2\log(d\sqrt{2\pi})}\]</span></p>
+<pre class="r"><code>argdnorm&lt;-function(d) sqrt(-2*log(d*sqrt(2*pi)))
+a</code></pre>
+<pre><code>## [1] 1.698121</code></pre>
+<pre class="r"><code>argdnorm(q)</code></pre>
+<pre><code>## [1] 1.698121</code></pre>
+<pre class="r"><code>b</code></pre>
+<pre><code>## [1] 0.7346321</code></pre>
+<pre class="r"><code>argdnorm(p)</code></pre>
+<pre><code>## [1] 0.7346321</code></pre>
+<p>I think it’s worth not doing this: while it happens to be the case that <span class="math inline">\(\phi(x)\)</span> has a closed-form inverse, there isn’t any good reason I know of that it should have one, and I’m happy to invert <code>dnorm</code> numerically.</p>

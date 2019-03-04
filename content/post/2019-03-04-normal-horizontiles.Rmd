@@ -64,3 +64,25 @@ And it works
 ![](/post/2019-03-04-normal-horizontiles_files/11635736575_04907cc4cc_z.jpg){width=90%}
 
 [Snipe by slobirdr on [Flickr](https://www.flickr.com/photos/slobirdr/11635736575)]
+
+Update: As Peter Dalgaard points out, the integrals can be replaced with calls to `pnorm`, since the integrand is just $\phi(x)$ and constants. For example, 
+$$\int_{-a}^{-b} \phi(x)-q\,dx+ 2b(p-q)+\int_b^a \phi(x)-q\,dx$$
+gives
+```{r}
+(pnorm(-b)-pnorm(-a))-q*(-b - -a)+2*b*(p-q)+(pnorm(a)-pnorm(b))-q*(a-b)
+```
+
+Also, if you happen to know the formula 
+$$\phi(x)=\frac{1}{\sqrt{2\pi}}e^{-x^2/2}$$, aka `dnorm(x)`, you could compute $a$ and $b$ directly
+$$\phi^{-1}(d)= \sqrt{-2\log(d\sqrt{2\pi})}$$
+
+
+```{r}
+argdnorm<-function(d) sqrt(-2*log(d*sqrt(2*pi)))
+a
+argdnorm(q)
+b
+argdnorm(p)
+```
+
+I think it's worth not doing this: while it happens to be the case that $\phi(x)$ has a closed-form inverse, there isn't any good reason I know of that it should have one, and I'm happy to invert `dnorm` numerically.
