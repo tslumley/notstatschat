@@ -1,0 +1,17 @@
+---
+title: The school climate strike
+author: Thomas Lumley
+date: '2019-03-12'
+slug: the-school-climate-strike
+categories: []
+tags: []
+---
+I have seen the school ‘climate strike’ in NZ being described as a publicity stunt that won’t provide any real solutions. No shit. 
+
+That’s not a criticism, any more than it’s a criticism of Shaun Hendy’s no-fly-year in 2018. The point of public protest — everything from ‘peaceably assemble and petition the government’ to dumping manure on the streets of Paris — isn’t to solve a problem, it’s to get the problem on the agenda. School kids aren’t in a position to provide a climate quick-fix; they have already got considerable extra news coverage. They'll probably get more, especially if some schools do go ahead with their stated policies of treating it as an ordinary unexcused absence. 
+
+You might think climate change is already on the agenda, but a [piece on Stuff  yesterday](https://www.stuff.co.nz/business/industries/111017854/coal-will-keep-burning-across-canterbury-for-decades) talked about Fonterra’s use of coal in Canterbury, saying the company “will not install any more coal boilers from 2030.” The same piece described a Synlait milk-processing plant as having consent to run coal boilers until 2049.  
+
+Synlait is unlikely to be running those boilers until 2049; the real question is what will stop them.  Will the consents be bought out or simply revoked? Will the ETS get serious and make coal unaffordable? Will technological improvements simplify the replacement of coal? Will our trading partners impose carbon tariffs? Or will the dairy industry simply collapse? 
+
+Projections thirty years into the future under climate business-as-usual can no longer be treated as simple facts. We don’t know what the world will manage to do about climate change, but ignoring it can’t be the assumed default. 
