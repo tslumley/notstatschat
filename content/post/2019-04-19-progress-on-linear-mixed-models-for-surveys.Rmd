@@ -32,9 +32,9 @@ To make estimation work, we need some fix to the penalised sum of squares. The l
 
 I'm implementing this approach (for two-stage designs/two-level models so far) in a branch of [`svylme`](https://github.com/tslumley/svylme/tree/gllamm). As you might guess from the branch name, the estimator is the same as (a special case of) those developed by Sophia Rabe-Hesketh and Anders Skrondal in their foundational and widely-used package for Stata.   
 
-My implementation relies on the (`lme4pureR`)[https://github.com/lme4/lme4pureR] package, which provides a pure R implementation of `lmer`. Being pure R, it's a lot easier to fiddle with than the full `lmer`, especially with the help of (the JSS paper)[https://www.jstatsoft.org/article/view/v067i01] on `lme4` and it turns out to be fast enough at the moment. I use `lme4::lmer` for starting values and data setup. 
+My implementation relies on the [`lme4pureR`](https://github.com/lme4/lme4pureR) package, which provides a pure R implementation of `lmer`. Being pure R, it's a lot easier to fiddle with than the full `lmer`, especially with the help of [the JSS paper](https://www.jstatsoft.org/article/view/v067i01) on `lme4` and it turns out to be fast enough at the moment. I use `lme4::lmer` for starting values and data setup. 
 
-Here's an example, from the PISA study of schools. I downloaded the data using the (`PISA2012lite`)[https://github.com/pbiecek/PISA2012lite] package, and cut it down to just New Zealand data on maths.  I'm going to fit a model looking at maths achievment in terms of gender (`ST04Q01`), some school characteristics, and some individual learning characteristics.
+Here's an example, from the PISA study of schools. I downloaded the data using the [`PISA2012lite`](https://github.com/pbiecek/PISA2012lite) package, and cut it down to just New Zealand data on maths.  I'm going to fit a model looking at maths achievment in terms of gender (`ST04Q01`), some school characteristics, and some individual learning characteristics.
 
 ```{r}
 library(svylme)
