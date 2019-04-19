@@ -1,0 +1,66 @@
+---
+title: Progress on linear mixed models for surveys
+author: Thomas Lumley
+date: '2019-04-19'
+slug: progress-on-linear-mixed-models-for-surveys
+categories: []
+tags: []
+---
+
+In our last episode, we worried about the penalised least squares criterion for linear mixed models. The linear mixed model is
+$$Y=X\beta+Zb+\epsilon$$
+where $b\sim N(0, \sigma^2V_\theta)$ and $\epsilon\sim\sigma^2$, and where $\theta$ are variance parameters. It's convenient to write $b=\Lambda_\theta u$ for iid standard Normal $u$, where $\Lambda_\theta$ is then a square root of $V_\theta$. The penalised least squares approach says that for given $\theta$, we choose $b$ and $\beta$ to minimise
+$$\|Y-X\beta-Zb\|_2^2+\|u\|_2^2.$$
+
+In the simple case of linear mixed models, the sampling design and model structure line up so that each $u$ represents one sampling unit at some stage of sampling, and so  $u_i$ has a sampling probability $\pi^{(u)}_j$. Each residual $r_i$ will also have a sampling probability, the probability of sampling for that $Y$, which we can write $\pi^{(y)}_i$.  I'll write $R^{(u)}_j$ and $R^{(y)}_i$ for the corresponding indicator variables that observation $i$ or random effect $j$ is sampled. 
+
+We can easily estimate the population penalised residual sum of squares by 
+$$\sum_i \frac{R^{(y)}_i}{\pi^{(y)}_i}(Y-X\beta-Zb)^2+\sum_j \frac{R^{(u)}_j}{\pi^{(u)}_j}u_j^2.$$
+More tidily, write $w$ for weights that are the reciprocals of $\pi$:
+$$\sum_{i\textrm{ in sample}} w^{(y)}_i(Y-X\beta-Zb)^2+\sum_{j\textrm{ in sample}} w^{(u)}_iu_j^2.$$
+This doesn't work.
+
+The problem is that there's a tradeoff between the two terms, and this tradeoff depends on the sample size. The first term wants to make $b$ larger, to capture more of the residual; the second term wants to make $b$ smaller, to fit with the penalising prior.
+
+If a given tradeoff would be optimal in the population, with, say, 20 observations per cluster, it can't be optimal in the sample with, say, 4 observations per cluster. Using weights this way will lead to $b$ being too large, with larger variance than $\sigma^2V_\theta$, so the variance components will be underestimated. 
+
+You might think this couldn't happen because the weighted penalised sum of squares is an unbiased estimator of the population penalised sum of squares. Being unbiased, though, is nowhere near enough when the number of parameters is increasing with the sample size.  In a setting where the sample size in every cluster goes to infinity, maximising the weighted penalised sum of squares does work, but that's not usually the relevant asymptotics. 
+
+You do get consistent estimation of $\beta$ without cluster sizes going to infinity, if the mean model is correct, but if the mean model is correct you get consistent estimation of $\beta$ just from ordinary weighted linear regression so that's not very impressive.
+
+To make estimation work, we need some fix to the penalised sum of squares. The literature only provides *ad hoc* approaches. I've implemented one simple one:  rescale $w^{(u)}$ so that the sum of $w^{(y)}$ over a cluster equals the sample size for the cluster times $w^{(u)}$. Unfortunately, this rescaling means that even the estimators of $\beta$ can be inconsistent under sufficiently perverse sampling schemes. 
+
+I'm implementing this approach (for two-stage designs/two-level models so far) in a branch of [`svylme`](https://github.com/tslumley/svylme/tree/gllamm). As you might guess from the branch name, the estimator is the same as (a special case of) those developed by Sophia Rabe-Hesketh and Anders Skrondal in their foundational and widely-used package for Stata.   
+
+My implementation relies on the (`lme4pureR`)[https://github.com/lme4/lme4pureR] package, which provides a pure R implementation of `lmer`. Being pure R, it's a lot easier to fiddle with than the full `lmer`, especially with the help of (the JSS paper)[https://www.jstatsoft.org/article/view/v067i01] on `lme4` and it turns out to be fast enough at the moment. I use `lme4::lmer` for starting values and data setup. 
+
+Here's an example, from the PISA study of schools. I downloaded the data using the (`PISA2012lite`)[https://github.com/pbiecek/PISA2012lite] package, and cut it down to just New Zealand data on maths.  I'm going to fit a model looking at maths achievment in terms of gender (`ST04Q01`), some school characteristics, and some individual learning characteristics.
+
+```{r}
+library(svylme)
+data(nzmaths)
+des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
+	weights=~W_FSCHWT+condwt, data=nzmaths)
+options(survey.lonely.psu="average")
+```
+
+
+
+First, we specify the survey design using `survey::svydesign`. One key difference from many survey analyses is that we need probabilities or weights *at each stage of sampling*, not just overall. We need these to construct $w^{(u)}$ -- that's not just a code limitation, it's a feature of the problem.   Also, because we have some strata with only a single school, we need to pick some approach to single-PSU variance estimation.
+
+Now, the model:
+
+```{r}
+svyseqlme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
+	design=des,scale="sample_size")
+```
+
+The individual characters `MATHEFF` and `OPENPS` are indexes of mathematics self-efficacy and openness to problem-solving.  Roughly speaking,if you score high on these, you think you can do maths and you like solving problems. The school characteristics are the percentage of girls at the school and the staff:student ratio in mathematics.  `PV1MATH` has that strange name because it's one of five 'plausible values' for the maths score -- 'plausible values' are the education term for multiple imputations.  
+
+We see that girls do better in schools with more girls, and boys do worse. The staff:student ratio doesn't seem to matter, but students with higher maths self-efficacy and openness to problem solving do better.  There's quite a lot of variability between schools (the random intercept standard deviation is 26.8) but not that much variability in the gender association. 
+
+For comparison, here's the same model fitted by pairwise composite likelihood, the other approach we've been studying:
+```{r}
+svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
+	design=des)
+```

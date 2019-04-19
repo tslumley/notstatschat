@@ -1,0 +1,80 @@
+---
+title: Progress on linear mixed models for surveys
+author: Thomas Lumley
+date: '2019-04-19'
+slug: progress-on-linear-mixed-models-for-surveys
+categories: []
+tags: []
+---
+
+
+
+<p>In our last episode, we worried about the penalised least squares criterion for linear mixed models. The linear mixed model is <span class="math display">\[Y=X\beta+Zb+\epsilon\]</span> where <span class="math inline">\(b\sim N(0, \sigma^2V_\theta)\)</span> and <span class="math inline">\(\epsilon\sim\sigma^2\)</span>, and where <span class="math inline">\(\theta\)</span> are variance parameters. It’s convenient to write <span class="math inline">\(b=\Lambda_\theta u\)</span> for iid standard Normal <span class="math inline">\(u\)</span>, where <span class="math inline">\(\Lambda_\theta\)</span> is then a square root of <span class="math inline">\(V_\theta\)</span>. The penalised least squares approach says that for given <span class="math inline">\(\theta\)</span>, we choose <span class="math inline">\(b\)</span> and <span class="math inline">\(\beta\)</span> to minimise <span class="math display">\[\|Y-X\beta-Zb\|_2^2+\|u\|_2^2.\]</span></p>
+<p>In the simple case of linear mixed models, the sampling design and model structure line up so that each <span class="math inline">\(u\)</span> represents one sampling unit at some stage of sampling, and so <span class="math inline">\(u_i\)</span> has a sampling probability <span class="math inline">\(\pi^{(u)}_j\)</span>. Each residual <span class="math inline">\(r_i\)</span> will also have a sampling probability, the probability of sampling for that <span class="math inline">\(Y\)</span>, which we can write <span class="math inline">\(\pi^{(y)}_i\)</span>. I’ll write <span class="math inline">\(R^{(u)}_j\)</span> and <span class="math inline">\(R^{(y)}_i\)</span> for the corresponding indicator variables that observation <span class="math inline">\(i\)</span> or random effect <span class="math inline">\(j\)</span> is sampled.</p>
+<p>We can easily estimate the population penalised residual sum of squares by <span class="math display">\[\sum_i \frac{R^{(y)}_i}{\pi^{(y)}_i}(Y-X\beta-Zb)^2+\sum_j \frac{R^{(u)}_j}{\pi^{(u)}_j}u_j^2.\]</span> More tidily, write <span class="math inline">\(w\)</span> for weights that are the reciprocals of <span class="math inline">\(\pi\)</span>: <span class="math display">\[\sum_{i\textrm{ in sample}} w^{(y)}_i(Y-X\beta-Zb)^2+\sum_{j\textrm{ in sample}} w^{(u)}_iu_j^2.\]</span> This doesn’t work.</p>
+<p>The problem is that there’s a tradeoff between the two terms, and this tradeoff depends on the sample size. The first term wants to make <span class="math inline">\(b\)</span> larger, to capture more of the residual; the second term wants to make <span class="math inline">\(b\)</span> smaller, to fit with the penalising prior.</p>
+<p>If a given tradeoff would be optimal in the population, with, say, 20 observations per cluster, it can’t be optimal in the sample with, say, 4 observations per cluster. Using weights this way will lead to <span class="math inline">\(b\)</span> being too large, with larger variance than <span class="math inline">\(\sigma^2V_\theta\)</span>, so the variance components will be underestimated.</p>
+<p>You might think this couldn’t happen because the weighted penalised sum of squares is an unbiased estimator of the population penalised sum of squares. Being unbiased, though, is nowhere near enough when the number of parameters is increasing with the sample size. In a setting where the sample size in every cluster goes to infinity, maximising the weighted penalised sum of squares does work, but that’s not usually the relevant asymptotics.</p>
+<p>You do get consistent estimation of <span class="math inline">\(\beta\)</span> without cluster sizes going to infinity, if the mean model is correct, but if the mean model is correct you get consistent estimation of <span class="math inline">\(\beta\)</span> just from ordinary weighted linear regression so that’s not very impressive.</p>
+<p>To make estimation work, we need some fix to the penalised sum of squares. The literature only provides <em>ad hoc</em> approaches. I’ve implemented one simple one: rescale <span class="math inline">\(w^{(u)}\)</span> so that the sum of <span class="math inline">\(w^{(y)}\)</span> over a cluster equals the sample size for the cluster times <span class="math inline">\(w^{(u)}\)</span>. Unfortunately, this rescaling means that even the estimators of <span class="math inline">\(\beta\)</span> can be inconsistent under sufficiently perverse sampling schemes.</p>
+<p>I’m implementing this approach (for two-stage designs/two-level models so far) in a branch of <a href="https://github.com/tslumley/svylme/tree/gllamm"><code>svylme</code></a>. As you might guess from the branch name, the estimator is the same as (a special case of) those developed by Sophia Rabe-Hesketh and Anders Skrondal in their foundational and widely-used package for Stata.</p>
+<p>My implementation relies on the (<code>lme4pureR</code>)[<a href="https://github.com/lme4/lme4pureR" class="uri">https://github.com/lme4/lme4pureR</a>] package, which provides a pure R implementation of <code>lmer</code>. Being pure R, it’s a lot easier to fiddle with than the full <code>lmer</code>, especially with the help of (the JSS paper)[<a href="https://www.jstatsoft.org/article/view/v067i01" class="uri">https://www.jstatsoft.org/article/view/v067i01</a>] on <code>lme4</code> and it turns out to be fast enough at the moment. I use <code>lme4::lmer</code> for starting values and data setup.</p>
+<p>Here’s an example, from the PISA study of schools. I downloaded the data using the (<code>PISA2012lite</code>)[<a href="https://github.com/pbiecek/PISA2012lite" class="uri">https://github.com/pbiecek/PISA2012lite</a>] package, and cut it down to just New Zealand data on maths. I’m going to fit a model looking at maths achievment in terms of gender (<code>ST04Q01</code>), some school characteristics, and some individual learning characteristics.</p>
+<pre class="r"><code>library(svylme)</code></pre>
+<pre><code>## Loading required package: survey</code></pre>
+<pre><code>## Loading required package: grid</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## Loading required package: survival</code></pre>
+<pre><code>## 
+## Attaching package: &#39;survey&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:graphics&#39;:
+## 
+##     dotchart</code></pre>
+<pre class="r"><code>data(nzmaths)
+des&lt;-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
+    weights=~W_FSCHWT+condwt, data=nzmaths)
+options(survey.lonely.psu=&quot;average&quot;)</code></pre>
+<p>First, we specify the survey design using <code>survey::svydesign</code>. One key difference from many survey analyses is that we need probabilities or weights <em>at each stage of sampling</em>, not just overall. We need these to construct <span class="math inline">\(w^{(u)}\)</span> – that’s not just a code limitation, it’s a feature of the problem. Also, because we have some strata with only a single school, we need to pick some approach to single-PSU variance estimation.</p>
+<p>Now, the model:</p>
+<pre class="r"><code>svyseqlme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
+    design=des,scale=&quot;sample_size&quot;)</code></pre>
+<pre><code>## Linear mixed model fitted by sequential pseudolikelihood
+## Formula: NULL
+## Random effects:
+##             Std.Dev.
+## (Intercept)  26.8449
+## ST04Q01Male   4.5293
+## Residual:     69.9843
+##  Fixed effects:
+##                          beta      SE       t      p
+## (Intercept)          465.5453 23.3111 19.9710 0.0000
+## ST04Q01Male           52.7128 24.5357  2.1484 0.0317
+## PCGIRLS               61.0298 18.5572  3.2887 0.0010
+## SMRATIO                0.0640  0.1394  0.4590 0.6462
+## MATHEFF               40.4074  2.6053 15.5100 0.0000
+## OPENPS                16.6688  2.5697  6.4868 0.0000
+## ST04Q01Male:PCGIRLS -100.5453 32.4310 -3.1003 0.0019
+## ST04Q01Male:SMRATIO   -0.0099  0.1210 -0.0822 0.9345</code></pre>
+<p>The individual characters <code>MATHEFF</code> and <code>OPENPS</code> are indexes of mathematics self-efficacy and openness to problem-solving. Roughly speaking,if you score high on these, you think you can do maths and you like solving problems. The school characteristics are the percentage of girls at the school and the staff:student ratio in mathematics. <code>PV1MATH</code> has that strange name because it’s one of five ‘plausible values’ for the maths score – ‘plausible values’ are the education term for multiple imputations.</p>
+<p>We see that girls do better in schools with more girls, and boys do worse. The staff:student ratio doesn’t seem to matter, but students with higher maths self-efficacy and openness to problem solving do better. There’s quite a lot of variability between schools (the random intercept standard deviation is 26.8) but not that much variability in the gender association.</p>
+<p>For comparison, here’s the same model fitted by pairwise composite likelihood, the other approach we’ve been studying:</p>
+<pre class="r"><code>svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
+    design=des)</code></pre>
+<pre><code>## Linear mixed model fitted by pairwise likelihood
+## Formula: PV1MATH ~ (1 + ST04Q01 | SCHOOLID) + ST04Q01 * (PCGIRLS + SMRATIO) + 
+##     MATHEFF + OPENPS
+## Random effects:
+##             Std.Dev.
+## (Intercept)  22.9365
+## ST04Q01Male  10.8911
+## Residual:     69.4969
+##  Fixed effects:
+##                          beta      SE       t      p
+## (Intercept)          490.7900 16.7334 29.3299 0.0000
+## ST04Q01Male           69.4271 20.6898  3.3556 0.0008
+## PCGIRLS               54.2815 16.2410  3.3423 0.0008
+## SMRATIO               -0.0287  0.0886 -0.3243 0.7457
+## MATHEFF               46.4944  1.9748 23.5438 0.0000
+## OPENPS                14.0187  2.6437  5.3027 0.0000
+## ST04Q01Male:PCGIRLS -128.9796 32.7574 -3.9374 0.0001
+## ST04Q01Male:SMRATIO   -0.0709  0.1144 -0.6194 0.5357</code></pre>
