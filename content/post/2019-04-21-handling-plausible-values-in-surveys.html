@@ -1,0 +1,60 @@
+---
+title: Handling ‘plausible values’ in surveys
+author: Thomas Lumley
+date: '2019-04-21'
+slug: handling-plausible-values-in-surveys
+categories: []
+tags: []
+---
+
+
+
+<p>Surveys (especially educational surveys) have a thing called ‘plausible values’, which are a form of multiple imputation, only by design rather than because of non-response. To reduce effort, not everyone answers every question. Often, there are a lot of variables that don’t need imputing, and a few that do.</p>
+<p>The data example I showed in the last post, for mixed models, has five plausible values for the maths score. I only used <code>PV1MATH</code>. This time, I’ve written code to handle the plausible values in a reasonably general way. The code is currently in <a href="https://gist.github.com/tslumley/9ebe5e16bc001ba22978c2d4edb057ac">a GitHub gist</a>, but will make its way to the survey package in due course.</p>
+<p>The idea of the code is that you specify mappings that tell R which variables in the dataset are the same actual variable, and what you want to call it in your analysis. You also specify your analysis as a function or quoted expression, and the code goes off to construct appropriate survey design objects behind the scenes.</p>
+<p>For a simple example, we’ll use the same data set on maths achievment as in the previous post</p>
+<pre class="r"><code>library(svylme)
+library(mitools)
+source(&quot;https://gist.githubusercontent.com/tslumley/9ebe5e16bc001ba22978c2d4edb057ac/raw/7136ee5a7f9dc98784faf6cceecbd9257b04dc9c/withPV.R&quot;)
+
+data(nzmaths)
+des&lt;-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
+    weights=~W_FSCHWT+condwt, data=nzmaths)
+oo&lt;-options(survey.lonely.psu=&quot;remove&quot;)</code></pre>
+<p>Now, we want to fit a linear mixed model to each plausible value for the maths score. We specify the mapping <code>maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH</code> to say that each of these variables in turn will be used as <code>maths</code>, and in the <code>action</code> argument the variable <code>maths</code> is used. [As with detecting ‘attached’ in email messages, it might be useful to add a warning when the original variable appears in <code>action</code> instead of the mapped variable]</p>
+<pre class="r"><code>options(width=80)
+results_list&lt;-withPV(
+   mapping = maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH,
+   design = des,
+action = function(d) {svy2lme(maths~ (1+ ST04Q01 |SCHOOLID)+ ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=d)}
+)
+
+summary(MIcombine(results_list))</code></pre>
+<pre><code>## Multiple imputation results:
+##       withPV.survey.design(mapping = maths ~ PV1MATH + PV2MATH + PV3MATH + 
+##     PV4MATH + PV5MATH, design = des, action = function(d) {
+##     svy2lme(maths ~ (1 + ST04Q01 | SCHOOLID) + ST04Q01 * (PCGIRLS + 
+##         SMRATIO) + MATHEFF + OPENPS, design = d)
+## })
+##       MIcombine.default(results_list)
+##                           results          se       (lower      upper) missInfo
+## (Intercept)          495.42036072 18.14189679  459.8558021 530.9849194      3 %
+## ST04Q01Male           62.99564416 21.98507932   19.7946822 106.1966061     10 %
+## PCGIRLS               48.79661788 17.33506727   14.7248092  82.8684266     10 %
+## SMRATIO               -0.04053017  0.09886503   -0.2343792   0.1533188      4 %
+## MATHEFF               47.04499873  2.43224141   42.2666121  51.8233854      9 %
+## OPENPS                13.26229509  3.31646573    6.6483729  19.8762173     26 %
+## ST04Q01Male:PCGIRLS -121.97729327 35.18342318 -191.0941443 -52.8604423      9 %
+## ST04Q01Male:SMRATIO   -0.05421422  0.11669297   -0.2830117   0.1745833      4 %</code></pre>
+<p>You can do simpler analyses, of course</p>
+<pre class="r"><code>the_means &lt;- withPV(maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH,
+                    des,
+                    function(d) svymean(~maths,d))
+summary(MIcombine(the_means))</code></pre>
+<pre><code>## Multiple imputation results:
+##       withPV.survey.design(maths ~ PV1MATH + PV2MATH + PV3MATH + PV4MATH + 
+##     PV5MATH, des, function(d) svymean(~maths, d))
+##       MIcombine.default(the_means)
+##        results       se  (lower   upper) missInfo
+## maths 499.7499 4.203189 491.511 507.9888      2 %</code></pre>
+<p>The returned list will usually contain references to the environments where all the individual survey designs were created, so you don’t want to keep it around too long if those design objects are big.</p>

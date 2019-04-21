@@ -1,0 +1,50 @@
+---
+title: Handling ‘plausible values’ in surveys
+author: Thomas Lumley
+date: '2019-04-21'
+slug: handling-plausible-values-in-surveys
+categories: []
+tags: []
+---
+
+Surveys (especially educational surveys) have a thing called 'plausible values', which are a form of multiple imputation, only by design rather than because of non-response.  To reduce effort, not everyone answers every question.  Often, there are a lot of variables that don't need imputing, and a few that do. 
+
+The data example I showed in the last post, for mixed models, has five plausible values for the maths score. I only used `PV1MATH`.  This time, I've written code to handle the plausible values in a reasonably general way.  The code is currently in [a GitHub gist](https://gist.github.com/tslumley/9ebe5e16bc001ba22978c2d4edb057ac), but will make its way to the survey package in due course. 
+
+The idea of the code is that you specify mappings that tell R which variables in the dataset are the same actual variable, and what you want to call it in your analysis.  You also specify your analysis as a function or quoted expression, and the code goes off to construct appropriate survey design objects behind the scenes. 
+
+For a simple example, we'll use the same data set on maths achievment as in the previous post
+
+```{r message=F}
+library(svylme)
+library(mitools)
+source("https://gist.githubusercontent.com/tslumley/9ebe5e16bc001ba22978c2d4edb057ac/raw/7136ee5a7f9dc98784faf6cceecbd9257b04dc9c/withPV.R")
+
+data(nzmaths)
+des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
+	weights=~W_FSCHWT+condwt, data=nzmaths)
+oo<-options(survey.lonely.psu="remove")
+```
+
+Now, we want to fit a linear mixed model to each plausible value for the maths score.  We specify the mapping `maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH` to say that each of these variables in turn will be used as `maths`, and in the `action` argument the variable `maths` is used.  [As with detecting 'attached' in email messages, it might be useful to add a warning when the original variable appears in `action` instead of the mapped variable]
+
+```{r cache=TRUE}
+options(width=80)
+results_list<-withPV(
+   mapping = maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH,
+   design = des,
+action = function(d) {svy2lme(maths~ (1+ ST04Q01 |SCHOOLID)+ ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=d)}
+)
+
+summary(MIcombine(results_list))
+```
+
+
+You can do simpler analyses, of course
+```{r}
+the_means <- withPV(maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH,
+   des,
+   function(d) svymean(~maths,d)) summary(MIcombine(the_means))
+```
+
+The returned list will usually contain references to the environments where all the individual survey designs were created, so you don't want to keep it around too long if those design objects are big. 
