@@ -48,8 +48,8 @@ summary(MIcombine(results_list))</code></pre>
 ## ST04Q01Male:SMRATIO   -0.05421422  0.11669297   -0.2830117   0.1745833      4 %</code></pre>
 <p>You can do simpler analyses, of course</p>
 <pre class="r"><code>the_means &lt;- withPV(maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH,
-                    des,
-                    function(d) svymean(~maths,d))
+   des,
+   function(d) svymean(~maths,d))
 summary(MIcombine(the_means))</code></pre>
 <pre><code>## Multiple imputation results:
 ##       withPV.survey.design(maths ~ PV1MATH + PV2MATH + PV3MATH + PV4MATH + 

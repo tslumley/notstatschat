@@ -44,7 +44,8 @@ You can do simpler analyses, of course
 ```{r}
 the_means <- withPV(maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH,
    des,
-   function(d) svymean(~maths,d)) summary(MIcombine(the_means))
+   function(d) svymean(~maths,d))
+summary(MIcombine(the_means))
 ```
 
 The returned list will usually contain references to the environments where all the individual survey designs were created, so you don't want to keep it around too long if those design objects are big. 
