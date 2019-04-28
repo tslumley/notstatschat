@@ -1,0 +1,45 @@
+---
+title: Survey package update
+author: Thomas Lumley
+date: '2019-04-28'
+slug: survey-package-update
+categories: []
+tags: []
+---
+
+Version 3.36 of the `survey` package  and version 2.4 of `mitools` are up on CRAN. 
+
+There's one notable new feature in both of them: handling 'plausible values', where you have some sets of multiply-imputed variables just as additional columns in a largely non-imputed data set.
+
+There are two implementations behind `withPV`, controlled by the `rewrite=` option. You have variables `PV1MATH`, `PV2MATH`,...,`PV5MATH` and some code with a variable `maths` that you want to run with `maths` being each of the plausible values in turn.  The default implementation rewrites your code to point to each of the plausible values in turn (quasiquotation!). The backup implementation rewrites the data, creating new data sets with a variable `maths` that's assigned one of the plausible values. 
+
+The default is faster and uses less memory, but you could probably break its rewriting if you tried (eg by feeding it `tidyeval` code). The backup option is slower and uses more memory, but should be unbreakable. 
+
+```{r}
+options(width=100)
+suppressMessages(library(survey))
+library(mitools)
+data(pisamaths, package="mitools")
+des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
+	weights=~W_FSCHWT+condwt, data=pisamaths)
+
+oo<-options(survey.lonely.psu="remove")
+
+results<-withPV(list(maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH),
+   data=des,
+   action=quote(svyglm(maths~ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)),
+   rewrite=TRUE)
+
+results[[1]]
+
+summary(MIcombine(results))
+```
+
+
+
+
+---
+
+survey: [![](https://cranlogs.r-pkg.org/badges/survey)](https://cran.rstudio.com/web/packages/survey/index.html)
+
+mitools: [![](https://cranlogs.r-pkg.org/badges/mitools)](https://cran.rstudio.com/web/packages/mitools/index.html)

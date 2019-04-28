@@ -1,0 +1,67 @@
+---
+title: Survey package update
+author: Thomas Lumley
+date: '2019-04-28'
+slug: survey-package-update
+categories: []
+tags: []
+---
+
+
+
+<p>Version 3.36 of the <code>survey</code> package and version 2.4 of <code>mitools</code> are up on CRAN.</p>
+<p>There’s one notable new feature in both of them: handling ‘plausible values’, where you have some sets of multiply-imputed variables just as additional columns in a largely non-imputed data set.</p>
+<p>There are two implementations behind <code>withPV</code>, controlled by the <code>rewrite=</code> option. You have variables <code>PV1MATH</code>, <code>PV2MATH</code>,…,<code>PV5MATH</code> and some code with a variable <code>maths</code> that you want to run with <code>maths</code> being each of the plausible values in turn. The default implementation rewrites your code to point to each of the plausible values in turn (quasiquotation!). The backup implementation rewrites the data, creating new data sets with a variable <code>maths</code> that’s assigned one of the plausible values.</p>
+<p>The default is faster and uses less memory, but you could probably break its rewriting if you tried (eg by feeding it <code>tidyeval</code> code). The backup option is slower and uses more memory, but should be unbreakable.</p>
+<pre class="r"><code>options(width=100)
+suppressMessages(library(survey))
+library(mitools)
+data(pisamaths, package=&quot;mitools&quot;)
+des&lt;-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
+    weights=~W_FSCHWT+condwt, data=pisamaths)
+
+oo&lt;-options(survey.lonely.psu=&quot;remove&quot;)
+
+results&lt;-withPV(list(maths~PV1MATH+PV2MATH+PV3MATH+PV4MATH+PV5MATH),
+   data=des,
+   action=quote(svyglm(maths~ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)),
+   rewrite=TRUE)
+
+results[[1]]</code></pre>
+<pre><code>## Stratified 2 - level Cluster Sampling design (with replacement)
+## With (151, 2363) clusters.
+## svydesign(id = ~SCHOOLID + STIDSTD, strata = ~STRATUM, nest = TRUE, 
+##     weights = ~W_FSCHWT + condwt, data = pisamaths)
+## 
+## Call:  svyglm(formula = PV1MATH ~ ST04Q01 * (PCGIRLS + SMRATIO) + MATHEFF + 
+##     OPENPS, design = des)
+## 
+## Coefficients:
+##         (Intercept)          ST04Q01Male              PCGIRLS              SMRATIO  
+##           4.703e+02            5.443e+01            6.171e+01            5.224e-02  
+##             MATHEFF               OPENPS  ST04Q01Male:PCGIRLS  ST04Q01Male:SMRATIO  
+##           4.750e+01            1.344e+01           -1.110e+02           -3.435e-03  
+## 
+## Degrees of Freedom: 2362 Total (i.e. Null);  140 Residual
+##   (1928 observations deleted due to missingness)
+## Null Deviance:       22420000 
+## Residual Deviance: 14110000  AIC: 27340</code></pre>
+<pre class="r"><code>summary(MIcombine(results))</code></pre>
+<pre><code>## Multiple imputation results:
+##       withPV.survey.design(list(maths ~ PV1MATH + PV2MATH + PV3MATH + 
+##     PV4MATH + PV5MATH), data = des, action = quote(svyglm(maths ~ 
+##     ST04Q01 * (PCGIRLS + SMRATIO) + MATHEFF + OPENPS, design = des)), 
+##     rewrite = TRUE)
+##       MIcombine.default(results)
+##                           results         se       (lower      upper) missInfo
+## (Intercept)          4.729436e+02 18.0393855  437.5845852 508.3025560      2 %
+## ST04Q01Male          5.268461e+01 21.0694092   11.3661653  94.0030492      4 %
+## PCGIRLS              5.974293e+01 15.4147851   29.4989531  89.9869166      6 %
+## SMRATIO              3.552268e-02  0.1072370   -0.1747109   0.2457563      3 %
+## MATHEFF              4.736517e+01  2.7066937   42.0474147  52.6829207      9 %
+## OPENPS               1.317289e+01  2.6812880    7.9012159  18.4445630     11 %
+## ST04Q01Male:PCGIRLS -1.109811e+02 28.6338917 -167.1340465 -54.8282283      4 %
+## ST04Q01Male:SMRATIO  4.391909e-03  0.1179117   -0.2267333   0.2355171      2 %</code></pre>
+<hr />
+<p>survey: <a href="https://cran.rstudio.com/web/packages/survey/index.html"><img src="https://cranlogs.r-pkg.org/badges/survey" /></a></p>
+<p>mitools: <a href="https://cran.rstudio.com/web/packages/mitools/index.html"><img src="https://cranlogs.r-pkg.org/badges/mitools" /></a></p>
