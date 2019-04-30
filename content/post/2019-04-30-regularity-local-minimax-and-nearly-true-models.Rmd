@@ -1,0 +1,41 @@
+---
+title:  Local asymptotic minimax, and nearly-true models
+author: Thomas Lumley
+date: '2019-04-30'
+slug: regularity-local-minimax-and-nearly-true-models
+categories: []
+tags: []
+---
+
+I've written a [bunch](https://notstatschat.rbind.io/2014/10/25/semiparametric-efficiency-and-nearly-true-models/) of [times](https://notstatschat.rbind.io/2016/01/13/another-view-of-thenearly-true-model/) about nearly-true models.  The idea is that you have some regression model for $Y|X$ you're trying to fit with data from a two-phase sample with known sampling probabilities $\pi_i$ for individual $i$. You know $Y$ and some auxililary variables $A$ for everyone, but you know $X$ only for the subsample.  If you had complete data, you'd fit a particular parametric model for $Y|X$, with parameters $\theta$ you're interested in and nuisance parameters $\eta$, call it $P_{\theta,\eta}$.
+
+You can assume
+
+- **the sampling model:** just that the sampling probabilities are known
+- **the sampling+outcome model:** that, in addition, $Y|X$ truly follows $P_{\theta,\eta}$
+
+Under only the sampling model, the best estimator of $\theta$ is the optimal AIPW estimator $\hat\theta_w$ : it weights the observations where we know $X$ by probabilities based on $\pi_i$ but adjusted using $A$.  Under the sampling+outcome models you can do better, and we'll write $\hat\theta_e$ for the semiparametric-efficient estimator. 
+
+I'm interested in how the estimators compare when the outcome model is nearly true. That is, the data actually come from a model $Q$ which is close to $P_{\theta,\eta}$ for some $(\theta,\eta)$, close enough that you wouldn't be able to tell the difference given the amount of data you have. As $n$ increases, you can tell the difference better, so $Q$ needs to move closer: we have a sequence $Q_n$ contiguous to the 'nearly true' $P_n=P_{\theta_0,\eta_0}$.  
+
+I'm defining the 'true' value of $\theta$ as the value you would estimate with complete data, where the two estimators agree. What I've shown in the past is that (for large enough $n$) you can always find $Q_n$ where the outcome model can't be reliably rejected but where $\hat\theta_w$ has higher mean squared error than $\hat\theta_e$
+
+The standard theoretical result in this direction is the local asymptotic minimax theorem. Here's the version from van der Vaart & Wellner's book
+
+**3.11.5 Theorem (Minimax theorem)**. *Let the sequence of experiments $(X_n,{\cal A}_n, P_{n,h} :h\in H)$ be asymptotically normal and the sequence of parameters $\kappa_n(h)$ be regular. Suppose a tight, Borel measurable Gaussian element $G$, as in the statement of the convolution theorem, exists. Then for every asymptotically $B'$-measurable estimator sequence $T_n$ and $\tau(B')$-subconvex function $\ell$,
+$$\sup_{I\subset H} \liminf_{n\to\infty}\sup_{h\in I}E_{h\star}[r_n(T_n-\kappa_n(h))]\geq E[\ell(G)]$$
+Here the first supremum is taken over all finite subsets $I$ of $H$.*
+
+That might need a little translation. $H$ is the model space, which is a (possibly infinite-dimensional) vector space. $P_{n,h}$ is a way to define a distribution near some distribution $P$; think of it as being different by $h/\sqrt{n}$. In our setting $r_n=\sqrt{n}$; it says how fast everything needs to scale to be just interesting different.  The parameters $\kappa_n(h)$ are the parameters you're interested in: in our case, $\kappa_n(h)$ is the 'true' value of $\theta$ for the distribution $P_{n,h}$. We can tiptoe past the measurability assumption, because we're not Jon Wellner, and *$\tau(B')$-subconvex function* in our case is just the Euclidean squared error -- the point of having more generality in the theorem is to show that the result isn't something weird about squared-error loss. $E_h$ is the expectation under $P_{n,h}$ and $E$ is the expectation under the limiting $P$. Finally, $G$ is the limiting Normal distribution of the efficient estimator in whatever model we're working in.
+
+If we were working in a parametric model you could take $I$ to be a ball of some radius $\delta$, and the result would then say that for any $\delta_n\to\infty$ there's some sequence of $P_{n,h}$ at distances $\delta_n/\sqrt{n}$ from $P$ where the mean squared error of $T_n$ is asymptotically no better than it is for the efficient estimator.  That is, $T_n$ can't be better than the efficient estimator uniformly even over very small neighbourhoods of a point.  For technical reasons you can't use balls of small radius as small neighbourhoods in the infinite-dimensional case, but the idea is the same.
+
+We'd normally use the local asymptotic minimax theorem with the sampling+outcome model being $H$, in which case it would show us that no estimator $T_n$ could beat $\hat\theta_e$.  Instead, we're going to use it with the sampling model being $H$ (or some well-behaved large submodel that I won't try to specify here). The efficient estimator is $\hat\theta_w$, and $\hat\theta_e$ is our alternative estimator $T_n$, and we're working at a point $P$ where the sampling+outcome model is true. 
+
+The theorem now talks about nearby distributions $P_{n,h}$ where the sampling model is true but the outcome model isn't.  There are sequences of $P_{n,h}$ converging to $P$ where $\hat\theta_e$ (ie, $T_n$) doesn't beat the weighted estimator $\hat\theta_w$. The efficiency advantage of $\hat\theta_e$ doesn't generalise even a very little way away from where the outcome model is true.
+
+That's less persuasive (I think) than my construction. First, it doesn't show $\hat\theta_w$ is *better*, just that it's no worse. Second, the distance between the true and nearly-true model is $\delta_n/\sqrt{n}$ for $\delta_n$ potentially diverging to infinity.  In my construction, we reach equal mean squared error at an explicit, finite $\delta$, and it keeps getting worse for larger $\delta$.
+
+The reason I can do better is because of regularity. The full power of the local asymptotic minimax theorem is needed for estimators with unsmooth behaviour as a function of $h$: these can be silly counterexamples like [Hodges's superefficient estimator](https://notstatschat.rbind.io/2015/05/12/superefficiency/) or useful ideas like the lasso, or something in between, like a regression estimator that adjusts only for statistically significant confounders.
+
+A compromise estimator based on testing goodness of fit of the outcome model could mitigate the breakdown of $\hat\theta_e$. It still couldn't do uniformly *better* than $\hat\theta_w$ when the model was only nearly true -- the local asymptotic minimax theorem guarantees that. It's concievable that it could do well enough to be preferable. 
