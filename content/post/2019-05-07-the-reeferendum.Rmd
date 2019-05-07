@@ -1,0 +1,19 @@
+---
+title: The Reeferendum
+author: Thomas Lumley
+date: '2019-05-07'
+slug: the-reeferendum
+categories: []
+tags: []
+---
+
+Elections and opinion polls look a bit similar from a distance, but they're very different beasts.  An election is a decision mechanism, an opinion poll is an estimation procedure.  If you want an election, the Electoral Commission does an excellent job; if you want an opinion survey, you might try Colmar Brunton or Stats NZ. 
+
+Binding referendums^[the plural that passes the 'wug' test, *and* the OED etymology test], in the New Zealand model, are like elections. There's a proposed change in the law, which we hope has been carefully drafted, put out for public commemt, and the whole bit, and which is then put up for vote. If it wins, it's in; if it doesn't, it's out. 
+
+New Zealand also has non-binding referendums that combine the worst aspects of opinion polls and elections: they're still binary choices, but they don't decide anything. 
+
+The new referendum on cannabis legalisation is an attempt to interpolate between the models. It's not binding, but the government calls it binding; there's a draft law, but not a finalised law; there's a vote that won't make a decision, but will make an election promise for the parties currently in government. 
+
+I don't want to be too snarky about this^[well,...]. There's one very good aspect to today's announcement: there's an almost unlimited number of ways to legalise cannabis, and the government has come up with a proposal that it's prepared to back for a vote -- one that's more than a straw man, and is worth debating.  It's a more restricted model than even the state of Washington; much more restrictive than the NZ rules on alcohol. It's likely to avoid a lot of the potential harms of cannabis legalisation, but it might also avoid some of the potential benefits.
+
