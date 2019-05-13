@@ -34,6 +34,8 @@ I’ll be talking about this at the JSM and at useR.
 
 [package](https://github.com/tslumley/dbglm)
 
+[JCGS](https://doi.org/10.1080/10618600.2019.1610312)
+
 **Math stuff**
 
 Suppose we are fitting a generalised linear model with regression parameters $\beta$, outcome $Y$, and predictors $X$.  Let $\beta_0$ be the true value of $\beta$, $U_N(\beta)$ be the score at $\beta$ on $N$ observations and $I_N(\beta)$ theFisher information at $\beta$ on $N$ observations. Assume the second partial derivatives of the loglikelihood have uniformly bounded second moments on a compact neighbourhood $K$ of $\beta_0$. Let $\Delta_3$ be the tensor of third partial derivatives of the log likelihood, and assume its elements
