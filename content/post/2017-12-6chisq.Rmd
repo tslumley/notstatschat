@@ -55,8 +55,8 @@ The remainder is the Satterthwaite approximation to the $n-k$ remaining terms; h
     
 2.  For p-values much larger than machine epsilon, use the Davies or Farebrother algorithms (together with the leading-eigenvalue approximation if $m$ is large)  
     
-3.  For p-values that might not be much larger than machine epsilon, use the saddlepoint approximation if its relative error (sometimes as much as 10% or so) is acceptable. There’s no need to use the leading-eigenvalue approximation if you have the full set of eigenvalues, but you might want to use it to avoid needing them all.   
+3.  For p-values that might not be much larger than machine epsilon, use the saddlepoint approximation if its relative error (sometimes as much as 10% or so) is acceptable. There’s no need to use the leading-eigenvalue approximation if you have the full set of eigenvalues, but you might want to use it to avoid needing them all.  
     
 4.  If you need very high relative accuracy for very small tail probabilities, you’ll need Bausch’s method, and multiple-precision arithmetic. With any luck you’ll still be able to use the leading-eigenvalue approximation to cut down the work.   
 
-**Update**: If you need something to cite, the [paper is now online](https://www-sciencedirect-com.ezproxy.auckland.ac.nz/science/article/pii/S0167947319301136) in *Computational Statistics and Data Analysis*.  Yes, sorry, it's an Evil Elsevier journal, but it's also where previous papers on the subject have appeared.
+**Update**: If you need something to cite, the [paper is now online](https://doi.org/10.1016/j.csda.2019.05.002) in *Computational Statistics and Data Analysis*.  Yes, sorry, it's an Evil Elsevier journal, but it's also where previous papers on the subject have appeared.
