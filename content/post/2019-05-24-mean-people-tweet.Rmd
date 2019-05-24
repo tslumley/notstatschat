@@ -1,0 +1,164 @@
+---
+title: Mean People Tweet
+author: Thomas  Lumley
+date: '2019-05-24'
+slug: mean-people-tweet
+categories: []
+tags: []
+---
+
+There is discussion from time to time on Kiwi Twitter about which public figures get treated worse on Twitter. Eric Crampton suggested that it would be easy to answer this question empirically, by analysing tweet sentiment. I wasn't convinced, but I tried it. This post is about what I found.
+
+First, we need some way of classifying sentiment.  I've got lists of about 2000 positive and 5000 negative words, collected by [Bing Liu](https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html#lexicon). I've also got an L1-penalised logistic regression model that predicts positive/negative sentiment using the GLoVe 42-billion token word embeddings.  I wrote about this [last year](https://notstatschat.rbind.io/2018/09/27/how-to-write-a-racist-ai-in-r-without-really-trying/); the racist tendencies of the model that come from using general online text for training are probably an advantage here. Last year I used MonetDB for the database backend, but the connection package has vanished from CRAN, so I've fallen back on sqlite. 
+
+```{r cache=TRUE}
+library(twitteR)
+library(tokenizers)
+pos_words<-scan("~/TEACHING/369/WORDS/positive-words.txt", blank.lines.skip=TRUE, comment.char=";", what="")
+neg_words<-scan("~/TEACHING/369/WORDS/negative-words.txt", blank.lines.skip=TRUE, comment.char=";", what="")
+load("~/.ssh/twitter-bot-secrets.rda")
+with(secrets,setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret))
+
+
+
+library(glmnet)
+load("~/TEACHING/369/WORDS/fittedmodel.rda")
+library(dplyr)
+library(RSQLite)
+ms<-src_sqlite("~/TEACHING/369/WORDS/glove")
+```
+
+Here I'm defining some sentiment scoring functions, based on counting known words and based on the model. The function `make.sentiment` makes sentiment scoring functions from the predictive model: it looks up the embeddings for each word and computes the predicted log odds of being positive. The idea of the threshold is that we might not want to allow positive tweets to compensate for negative ones when we're looking at online nastiness.
+
+```{r}
+
+pos<-function(text){
+	sum(!is.na(match(text,pos_words)))
+}
+
+neg<-function(text){
+		sum(!is.na(match(text,neg_words)))	
+}
+
+make.sentiment <- function(db,model,threshold=NULL){
+      glove<-tbl(db,"glove")
+      function(words){
+        word_tbl<-copy_to(db, 
+            tibble(V1=words),
+            name="temp_words",overwrite=TRUE)
+        word_x<-inner_join(word_tbl, glove,by="V1") %>%
+          collect() %>% 
+          select(-V1) %>% 
+          as.matrix()
+        if(nrow(word_x)==0) return(0)
+        sentiments<-predict(model$glmnet.fit, word_x, 
+                            s=model$lambda.min)
+        if(is.null(threshold)) 
+          mean(sentiments)                    
+        else if(any(sentiments<threshold))
+            mean(sentiments[sentiments<threshold])
+        else threshold
+        }
+    }
+
+sentiment<-make.sentiment(ms,cvmodel)
+negsentiment<-make.sentiment(ms,cvmodel,0.3)
+```
+
+We need to get some tweets. Golriz Ghahraman and David Seymour are young Members of Parliament who are deeply unpopular with some of their opponents. Eric and I are in there as controls. Westpac NZ is a bank. `@dpfdpf` is David Farrar, who does polling (including for the National Party), and who asked what his scores were like when I tweeted some early results. You can look up the rest if you care.
+
+
+```{r cache=TRUE}
+a<-searchTwitter("@golrizghahraman",n=100,resultType="recent")
+d<-searchTwitter("@dbseymour",n=100,resultType="recent")
+f<-searchTwitter("@EricCrampton",n=100,resultType="recent")
+g<-searchTwitter("@tslumley",n=100,resultType="recent")
+h<-searchTwitter("@GerryBrownleeMP",n=100,resultType="recent")
+j<-searchTwitter("@JudithCollinsMP",n=100,resultType="recent")
+k<-searchTwitter("@MaramaDavidson",n=100,resultType="recent")
+l<-searchTwitter("@realDonaldTrump",n=100,resultType="recent")
+m<-searchTwitter("@dpfdpf",n=100,resultType="recent")
+n<-searchTwitter("@WestpacNZ",n=100,resultType="recent")
+```
+
+Looking at the data, it turns out that a lot of mentions for some people come from retweets of their own tweets.  I don't think these should count, so `filter_retweets` gets rid of them
+
+```{r}
+
+filter_retweets<-function(tweets, handle){
+	texts<-sapply(tweets, function(tweet) tweet$text)
+	drop <- grepl(paste0("^RT ",handle,":"), texts)
+	tweets[!drop]
+}
+
+
+sent<-function(tweets){
+	sapply(tweets, function(tweet) {
+		words<-tokenize_words(tweet$text)[[1]]
+		c(pos=pos(words),neg=neg(words),mean=sentiment(words),nmn=negsentiment(words))		
+		})
+	
+}
+```
+
+Now, the results
+
+```{r}
+rowMeans(sent(filter_retweets(a, "@golrizghahraman")))
+rowMeans(sent(filter_retweets(d, "@dbseymour")))
+rowMeans(sent(filter_retweets(f, "@EricCrampton")))
+rowMeans(sent(filter_retweets(g, "@tslumley")))
+rowMeans(sent(filter_retweets(h, "@GerryBrownleeMP")))
+rowMeans(sent(filter_retweets(j, "@JudithCollinsMP")))
+rowMeans(sent(filter_retweets(k, "@MaramaDavidson")))
+rowMeans(sent(filter_retweets(l, "@realDonaldTrump")))
+rowMeans(sent(filter_retweets(m, "@dpfdpf")))
+rowMeans(sent(filter_retweets(n, "@WestpacNZ")))
+```
+
+The results look a bit weird. Neither Eric nor I have a horrible Twitter experience, and turns out that most of the negative-sentiment tweets are related to things we think are bad that our followers or the internet audience agree are bad. 
+
+It's surprisingly hard to get around this problem.  One moderately useful step is to remove tweets from people we follow. 
+
+```{r cache=TRUE}
+searchNoFriends<-function(handle,n=100,...){
+	user<-getUser(handle)
+	friends<-user$getFriends()
+	tweets<-searchTwitter(handle,n=n,resultType="recent")
+	drop<- sapply(tweets, function(t) t$screenName) %in% sapply(friends, function(f) f$screenName)
+	tweets[!drop]
+}
+
+a1<-searchNoFriends("@golrizghahraman",n=100)
+d1<-searchNoFriends("@dbseymour",n=100)
+f1<-searchNoFriends("@EricCrampton",n=100)
+g1<-searchNoFriends("@tslumley",n=100)
+h1<-searchNoFriends("@GerryBrownleeMP",n=100)
+j1<-searchNoFriends("@JudithCollinsMP",n=100)
+k1<-searchNoFriends("@MaramaDavidson",n=100)
+l1<-searchNoFriends("@realDonaldTrump",n=100)
+m1<-searchNoFriends("@dpfdpf",n=100)
+n1<-searchNoFriends("@WestpacNZ",n=100)
+```
+
+These results should be a bit more representative, and you see that Eric and I get more positive ratings, and people with actually bad timelines get more negative ratings. 
+
+```{r}
+rowMeans(sent(filter_retweets(a1, "@golrizghahraman")))
+rowMeans(sent(filter_retweets(d1, "@dbseymour")))
+rowMeans(sent(filter_retweets(f1, "@EricCrampton")))
+rowMeans(sent(filter_retweets(g1, "@tslumley")))
+rowMeans(sent(filter_retweets(h1, "@GerryBrownleeMP")))
+rowMeans(sent(filter_retweets(j1, "@JudithCollinsMP")))
+rowMeans(sent(filter_retweets(k1, "@MaramaDavidson")))
+rowMeans(sent(filter_retweets(l1, "@realDonaldTrump")))
+rowMeans(sent(filter_retweets(m1, "@dpfdpf")))
+rowMeans(sent(filter_retweets(n1, "@WestpacNZ")))
+```
+
+Even this, though has a big problem.  It's possible to tell moderately well from the text of a single tweet whether it's positive or negative in sentiment, but it's much harder to tell what it's positive or negative **about**.  The ratings don't really distinguish people critising the analysis subject from those being supportive of the analysis subject by criticising their opponents.  And it's actually quite hard.  A model trained with politically partisan invective would know which side was the likely target of a term like "feral snowflake" or "fascist manbaby", but "menace to society" or "partisan hack" would still confuse it. In fact, I often needed to go back and look at an entire Twitter conversation to tell who was being targeted by invective in a single tweet.
+
+On top of this, we're looking at a single snapshot in time, and the results could well vary. And, of course, a lot of the more serious online hate isn't public and easy to analyse. Members of Parliament may have Twitter direct messages and Facebook and they definitely have email accounts. So even if we could come to a simple empirical decision from public tweets it wouldn't be decisive.
+
+But it's still interesting how difficult it is to come to an empirical conclusion -- and not just for the obvious reasons that a bag-of-words model on short texts is limited.
+

@@ -1,0 +1,180 @@
+---
+title: Mean People Tweet
+author: Thomas  Lumley
+date: '2019-05-24'
+slug: mean-people-tweet
+categories: []
+tags: []
+---
+
+
+
+<p>There is discussion from time to time on Kiwi Twitter about which public figures get treated worse on Twitter. Eric Crampton suggested that it would be easy to answer this question empirically, by analysing tweet sentiment. I wasn’t convinced, but I tried it. This post is about what I found.</p>
+<p>First, we need some way of classifying sentiment. I’ve got lists of about 2000 positive and 5000 negative words, collected by <a href="https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html#lexicon">Bing Liu</a>. I’ve also got an L1-penalised logistic regression model that predicts positive/negative sentiment using the GLoVe 42-billion token word embeddings. I wrote about this <a href="https://notstatschat.rbind.io/2018/09/27/how-to-write-a-racist-ai-in-r-without-really-trying/">last year</a>; the racist tendencies of the model that come from using general online text for training are probably an advantage here. Last year I used MonetDB for the database backend, but the connection package has vanished from CRAN, so I’ve fallen back on sqlite.</p>
+<pre class="r"><code>library(twitteR)
+library(tokenizers)
+pos_words&lt;-scan(&quot;~/TEACHING/369/WORDS/positive-words.txt&quot;, blank.lines.skip=TRUE, comment.char=&quot;;&quot;, what=&quot;&quot;)
+neg_words&lt;-scan(&quot;~/TEACHING/369/WORDS/negative-words.txt&quot;, blank.lines.skip=TRUE, comment.char=&quot;;&quot;, what=&quot;&quot;)
+load(&quot;~/.ssh/twitter-bot-secrets.rda&quot;)
+with(secrets,setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret))</code></pre>
+<pre><code>## [1] &quot;Using direct authentication&quot;</code></pre>
+<pre class="r"><code>library(glmnet)
+load(&quot;~/TEACHING/369/WORDS/fittedmodel.rda&quot;)
+library(dplyr)
+library(RSQLite)
+ms&lt;-src_sqlite(&quot;~/TEACHING/369/WORDS/glove&quot;)</code></pre>
+<p>Here I’m defining some sentiment scoring functions, based on counting known words and based on the model. The function <code>make.sentiment</code> makes sentiment scoring functions from the predictive model: it looks up the embeddings for each word and computes the predicted log odds of being positive. The idea of the threshold is that we might not want to allow positive tweets to compensate for negative ones when we’re looking at online nastiness.</p>
+<pre class="r"><code>pos&lt;-function(text){
+    sum(!is.na(match(text,pos_words)))
+}
+
+neg&lt;-function(text){
+        sum(!is.na(match(text,neg_words)))  
+}
+
+make.sentiment &lt;- function(db,model,threshold=NULL){
+      glove&lt;-tbl(db,&quot;glove&quot;)
+      function(words){
+        word_tbl&lt;-copy_to(db, 
+            tibble(V1=words),
+            name=&quot;temp_words&quot;,overwrite=TRUE)
+        word_x&lt;-inner_join(word_tbl, glove,by=&quot;V1&quot;) %&gt;%
+          collect() %&gt;% 
+          select(-V1) %&gt;% 
+          as.matrix()
+        if(nrow(word_x)==0) return(0)
+        sentiments&lt;-predict(model$glmnet.fit, word_x, 
+                            s=model$lambda.min)
+        if(is.null(threshold)) 
+          mean(sentiments)                    
+        else if(any(sentiments&lt;threshold))
+            mean(sentiments[sentiments&lt;threshold])
+        else threshold
+        }
+    }
+
+sentiment&lt;-make.sentiment(ms,cvmodel)
+negsentiment&lt;-make.sentiment(ms,cvmodel,0.3)</code></pre>
+<p>We need to get some tweets. Golriz Ghahraman and David Seymour are young Members of Parliament who are deeply unpopular with some of their opponents. Eric and I are in there as controls. Westpac NZ is a bank. <code>@dpfdpf</code> is David Farrar, who does polling (including for the National Party), and who asked what his scores were like when I tweeted some early results. You can look up the rest if you care.</p>
+<pre class="r"><code>a&lt;-searchTwitter(&quot;@golrizghahraman&quot;,n=100,resultType=&quot;recent&quot;)
+d&lt;-searchTwitter(&quot;@dbseymour&quot;,n=100,resultType=&quot;recent&quot;)
+f&lt;-searchTwitter(&quot;@EricCrampton&quot;,n=100,resultType=&quot;recent&quot;)
+g&lt;-searchTwitter(&quot;@tslumley&quot;,n=100,resultType=&quot;recent&quot;)</code></pre>
+<pre><code>## Warning in doRppAPICall(&quot;search/tweets&quot;, n, params = params,
+## retryOnRateLimit = retryOnRateLimit, : 100 tweets were requested but the
+## API can only return 98</code></pre>
+<pre class="r"><code>h&lt;-searchTwitter(&quot;@GerryBrownleeMP&quot;,n=100,resultType=&quot;recent&quot;)</code></pre>
+<pre><code>## Warning in doRppAPICall(&quot;search/tweets&quot;, n, params = params,
+## retryOnRateLimit = retryOnRateLimit, : 100 tweets were requested but the
+## API can only return 22</code></pre>
+<pre class="r"><code>j&lt;-searchTwitter(&quot;@JudithCollinsMP&quot;,n=100,resultType=&quot;recent&quot;)
+k&lt;-searchTwitter(&quot;@MaramaDavidson&quot;,n=100,resultType=&quot;recent&quot;)
+l&lt;-searchTwitter(&quot;@realDonaldTrump&quot;,n=100,resultType=&quot;recent&quot;)
+m&lt;-searchTwitter(&quot;@dpfdpf&quot;,n=100,resultType=&quot;recent&quot;)
+n&lt;-searchTwitter(&quot;@WestpacNZ&quot;,n=100,resultType=&quot;recent&quot;)</code></pre>
+<p>Looking at the data, it turns out that a lot of mentions for some people come from retweets of their own tweets. I don’t think these should count, so <code>filter_retweets</code> gets rid of them</p>
+<pre class="r"><code>filter_retweets&lt;-function(tweets, handle){
+    texts&lt;-sapply(tweets, function(tweet) tweet$text)
+    drop &lt;- grepl(paste0(&quot;^RT &quot;,handle,&quot;:&quot;), texts)
+    tweets[!drop]
+}
+
+
+sent&lt;-function(tweets){
+    sapply(tweets, function(tweet) {
+        words&lt;-tokenize_words(tweet$text)[[1]]
+        c(pos=pos(words),neg=neg(words),mean=sentiment(words),nmn=negsentiment(words))      
+        })
+    
+}</code></pre>
+<p>Now, the results</p>
+<pre class="r"><code>rowMeans(sent(filter_retweets(a, &quot;@golrizghahraman&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.3414634  0.5609756  0.1702128 -1.7266530</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(d, &quot;@dbseymour&quot;)))</code></pre>
+<pre><code>##         pos         neg        mean         nmn 
+##  0.40000000  0.63157895 -0.07195284 -1.60441181</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(f, &quot;@EricCrampton&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.4302326  0.2906977  0.5398656 -1.1307189</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(g, &quot;@tslumley&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.4342105  0.2894737  0.4234938 -1.3043339</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(h, &quot;@GerryBrownleeMP&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.3636364  0.1818182  0.5950657 -1.0555124</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(j, &quot;@JudithCollinsMP&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.2777778  0.5888889  0.3705713 -1.5172044</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(k, &quot;@MaramaDavidson&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.3506494  0.2077922  0.7366782 -1.5067170</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(l, &quot;@realDonaldTrump&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.3650794  0.2857143  0.1882573 -1.2162030</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(m, &quot;@dpfdpf&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.3043478  0.8586957 -0.0289278 -1.7399734</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(n, &quot;@WestpacNZ&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.6836735  0.2448980  1.0848726 -1.1189153</code></pre>
+<p>The results look a bit weird. Neither Eric nor I have a horrible Twitter experience, and turns out that most of the negative-sentiment tweets are related to things we think are bad that our followers or the internet audience agree are bad.</p>
+<p>It’s surprisingly hard to get around this problem. One moderately useful step is to remove tweets from people we follow.</p>
+<pre class="r"><code>searchNoFriends&lt;-function(handle,n=100,...){
+    user&lt;-getUser(handle)
+    friends&lt;-user$getFriends()
+    tweets&lt;-searchTwitter(handle,n=n,resultType=&quot;recent&quot;)
+    drop&lt;- sapply(tweets, function(t) t$screenName) %in% sapply(friends, function(f) f$screenName)
+    tweets[!drop]
+}
+
+a1&lt;-searchNoFriends(&quot;@golrizghahraman&quot;,n=100)
+d1&lt;-searchNoFriends(&quot;@dbseymour&quot;,n=100)
+f1&lt;-searchNoFriends(&quot;@EricCrampton&quot;,n=100)
+g1&lt;-searchNoFriends(&quot;@tslumley&quot;,n=100)</code></pre>
+<pre><code>## Warning in doRppAPICall(&quot;search/tweets&quot;, n, params = params,
+## retryOnRateLimit = retryOnRateLimit, : 100 tweets were requested but the
+## API can only return 98</code></pre>
+<pre class="r"><code>h1&lt;-searchNoFriends(&quot;@GerryBrownleeMP&quot;,n=100)</code></pre>
+<pre><code>## Warning in doRppAPICall(&quot;search/tweets&quot;, n, params = params,
+## retryOnRateLimit = retryOnRateLimit, : 100 tweets were requested but the
+## API can only return 22</code></pre>
+<pre class="r"><code>j1&lt;-searchNoFriends(&quot;@JudithCollinsMP&quot;,n=100)
+k1&lt;-searchNoFriends(&quot;@MaramaDavidson&quot;,n=100)
+l1&lt;-searchNoFriends(&quot;@realDonaldTrump&quot;,n=100)
+m1&lt;-searchNoFriends(&quot;@dpfdpf&quot;,n=100)
+n1&lt;-searchNoFriends(&quot;@WestpacNZ&quot;,n=100)</code></pre>
+<p>These results should be a bit more representative, and you see that Eric and I get more positive ratings, and people with actually bad timelines get more negative ratings.</p>
+<pre class="r"><code>rowMeans(sent(filter_retweets(a1, &quot;@golrizghahraman&quot;)))</code></pre>
+<pre><code>##         pos         neg        mean         nmn 
+##  0.27027027  0.56756757  0.08362896 -1.80462827</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(d1, &quot;@dbseymour&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.4137931  0.5747126 -0.0552590 -1.5820234</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(f1, &quot;@EricCrampton&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.3888889  0.3333333  0.4932705 -1.1519884</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(g1, &quot;@tslumley&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.4193548  0.2580645  0.8457364 -1.0536356</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(h1, &quot;@GerryBrownleeMP&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.3636364  0.1818182  0.5950657 -1.0555124</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(j1, &quot;@JudithCollinsMP&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.3157895  0.5921053  0.2999593 -1.5357380</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(k1, &quot;@MaramaDavidson&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.2608696  0.2173913  0.3185163 -1.7419573</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(l1, &quot;@realDonaldTrump&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.4444444  0.4861111  0.3453925 -1.2743030</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(m1, &quot;@dpfdpf&quot;)))</code></pre>
+<pre><code>##         pos         neg        mean         nmn 
+##  0.29545455  0.85227273  0.01217917 -1.70170687</code></pre>
+<pre class="r"><code>rowMeans(sent(filter_retweets(n1, &quot;@WestpacNZ&quot;)))</code></pre>
+<pre><code>##        pos        neg       mean        nmn 
+##  0.7826087  0.2898551  1.0975516 -1.2332805</code></pre>
+<p>Even this, though has a big problem. It’s possible to tell moderately well from the text of a single tweet whether it’s positive or negative in sentiment, but it’s much harder to tell what it’s positive or negative <strong>about</strong>. The ratings don’t really distinguish people critising the analysis subject from those being supportive of the analysis subject by criticising their opponents. And it’s actually quite hard. A model trained with politically partisan invective would know which side was the likely target of a term like “feral snowflake” or “fascist manbaby”, but “menace to society” or “partisan hack” would still confuse it. In fact, I often needed to go back and look at an entire Twitter conversation to tell who was being targeted by invective in a single tweet.</p>
+<p>On top of this, we’re looking at a single snapshot in time, and the results could well vary. And, of course, a lot of the more serious online hate isn’t public and easy to analyse. Members of Parliament may have Twitter direct messages and Facebook and they definitely have email accounts. So even if we could come to a simple empirical decision from public tweets it wouldn’t be decisive.</p>
+<p>But it’s still interesting how difficult it is to come to an empirical conclusion – and not just for the obvious reasons that a bag-of-words model on short texts is limited.</p>
