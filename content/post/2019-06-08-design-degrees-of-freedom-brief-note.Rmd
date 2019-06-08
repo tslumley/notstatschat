@@ -1,0 +1,21 @@
+---
+title: 'Design degrees of freedom: brief note'
+author: Thomas Lumley
+date: '2019-06-08'
+slug: design-degrees-of-freedom-brief-note
+categories: []
+tags: []
+---
+
+An important concept in multistage survey analysis is the *design degrees of freedom*, which describes (or estimates) how many independent observations go into calculating variances, in a similar way to error degrees of freedom in experimental designs.
+
+In straightforward multistage designs the design df is the number of primary sampling units minus the number of strata, because each PSU provides data to supply degree of freedom and each stratum implies a constraint that removes a degree of freedom. 
+
+When the design is not supplied as part of the data set, but replicate weights are supplied instead, it's not immediately obvious what the design df should be.  It can't be more than the number of replicates minus one, but it could easily be less.  For example, a survey bootstrap of a multistage design can have as many replicates as you like, but the design df still won't be any bigger than number of PSUs minus number of strata. 
+
+The definition used in the `survey` package is the rank of the matrix of replicate weights minus 1. This agrees with the usual definition when you have a complete set of jackknife or BRR weights.  If you have bootstrap weights, it is the number of replicates minus one if that's smaller than the usual definition, and otherwise the usual definition. 
+Using the rank also handles post-stratification nicely: post-stratifying removes degrees of freedom just like stratifying does. 
+
+I haven't seen this definition in the literature, but if it is known I'd be interested in finding out. 
+
+The rank of a matrix is not a numerically stable quantity, so to some extent the tolerance used will matter. I use a tolerance of $10^{-5}$ in R's `qr` function. 
