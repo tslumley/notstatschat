@@ -1,0 +1,111 @@
+---
+title: 'Confidence intervals: not a very strong property'
+author: ''
+date: '2019-06-11'
+slug: confidence-intervals-not-a-very-strong-property
+categories: []
+tags: []
+---
+
+
+
+<p>It’s important for non-Bayesians (or non-exclusively-Bayesians) to remember that being a 95% confidence interval procedure is a fairly weak property. It’s not that confidence intervals are necessarily bad, but if they aren’t, it’s because of other requirements.</p>
+<p>As an extreme case, consider the all-purpose data-free exact confidence interval procedure for any real quantity: roll a d20 and set the confidence interval to be the empty set if you roll 20, and otherwise to be <span class="math inline">\(\mathbb{R}\)</span>. That’s a <em>valid</em> confidence interval procedure, it’s just a stupid one.</p>
+<p>A much more interesting example comes from a recent paper by Kyle Burris and Peter Hoff, in the context of small-area sampling. First, suppose you have a random variable <span class="math inline">\(y\sim N(\theta, \sigma^2)\)</span> with <span class="math inline">\(\sigma^2\)</span> known. They say “it is easily verified that” for any function <span class="math inline">\(s:\mathbb{R}\to[0,1]\)</span>, <span class="math display">\[C_s = \{\theta:y+\sigma z_{\alpha(1-s(\theta))} &lt;\theta&lt;  y+\sigma z_{1-\alpha s(\theta)}  \}\]</span> defines a <span class="math inline">\(1-\alpha\)</span> confidence interval. If you stare at this for a while, you seee that you’re doing a level-<span class="math inline">\(\alpha\)</span> test at each value of <span class="math inline">\(\theta\)</span>, but that <span class="math inline">\(s(\theta)\)</span> tells you how to split <span class="math inline">\(\alpha\)</span> between upper and lower tails. With <span class="math inline">\(s(\theta)=1/2\)</span> you get the standard equal-side test; with <span class="math inline">\(s(\theta)=0\)</span> you get the lower side only; with <span class="math inline">\(s(\theta)=1\)</span> you get the upper side only.</p>
+<p>What’s unusual is that you get to choose <span class="math inline">\(s(\theta)\)</span> separately for each <span class="math inline">\(\theta\)</span>. That’s fine from the formal definition of confidence intervals: the <span class="math inline">\(1-\alpha\)</span> coverage property only needs to hold for the true <span class="math inline">\(\theta\)</span>, so we need only consider one <span class="math inline">\(\theta\)</span> at a time. But it’s a bit weird.</p>
+<p>In the small-area sampling context you have lots of <span class="math inline">\(\theta\)</span>s, <span class="math inline">\(y\)</span>s, <span class="math inline">\(\sigma\)</span>s, and so on, one for each small area, and you get sets of intervals <span class="math display">\[C^j_s = \{\theta:y_j+\sigma_j z_{\alpha(1-s_j(\theta))} &lt;\theta&lt;  y_j+\sigma_j z_{1-\alpha s_j(\theta)}  \}\]</span></p>
+<p>From a sampling/frequency point of view, the true <span class="math inline">\(\theta_j\)</span> are fixed, and <span class="math inline">\(y_j-\theta_j\)</span> depends only on sampling variability. So it’s perfectly ok to allow <span class="math inline">\(s_j(\theta)\)</span> to depend on data from areas other than area <span class="math inline">\(j\)</span>.</p>
+<p>In particular, you might have a prior for <span class="math inline">\(\theta_j\)</span> based on the data from all the other areas, say <span class="math inline">\(\theta_j\sim N(\mu_j,\tau^2_j)\)</span>, and you might want to have shorter confidence intervals when <span class="math inline">\(\theta_j\)</span> is near <span class="math inline">\(\mu_j\)</span>. You can do this by biasing the two-sided test to reject on the lower side for <span class="math inline">\(\theta_j &lt;\mu_j\)</span> and on the upper side for <span class="math inline">\(\theta_j&gt;\mu_j\)</span>. Specifically, Burris &amp; Hoff define <span class="math display">\[g(\omega)= \Phi^{-1}(\alpha\omega)-\Phi^{-1}(\alpha(1-\omega))\]</span> and then <span class="math display">\[s_j(\theta)= g^{-1}(2\sigma_j(\theta-\mu_j)/tau^2_j)\]</span> and show this all works, and something similar works in the more-plausible setting where you don’t know the <span class="math inline">\(\sigma\)</span>s.</p>
+<p>In R</p>
+<pre class="r"><code>make.s&lt;-function(mu, sigma,tau2,alpha){
+    g&lt;-make.g(alpha)
+    ginv&lt;-make.ginv(alpha)
+    
+    function(theta) ginv(2*sigma*(theta-mu)/tau2)
+}
+
+make.g&lt;-function(alpha){
+    function(omega) qnorm(alpha*omega)-qnorm(alpha*(1-omega))
+}
+make.ginv&lt;-function(alpha){
+    g&lt;-function(omega)  qnorm(alpha*omega)-qnorm(alpha*(1-omega))
+    function(x){
+        f&lt;-function(omega) g(omega)-x
+        if (x&lt;0) {
+            uniroot(f,c(pnorm(x/alpha),0.5))$root
+        } else if (x==0) {
+            0.5
+        } else 
+            uniroot(f,c(0.5,pnorm(x/alpha)))$root
+    }
+}
+
+ci&lt;-function(y, sigma, s,alpha){
+
+    f_low&lt;-function(theta) theta-(y+sigma*qnorm(alpha*(1-s(theta))))
+    f_up&lt;-function(theta) (y+sigma*qnorm(1-alpha*s(theta)))-theta
+
+    low0&lt;-y+qnorm(alpha/2)*sigma
+    low1&lt;-low0
+    low&lt;-if (f_low(low1)&gt;0){
+        while(f_low(low1)&gt;0) low1&lt;- y+(low1-y)*2
+        uniroot(f_low,c(low1,low0))$root
+    } else{
+        uniroot(f_low,c(low0,y))$root
+    }
+    hi0&lt;-y+qnorm(1-alpha/2)*sigma
+    hi1&lt;-hi0
+    high&lt;-if (f_up(hi1)&gt;0){
+        while(f_up(hi1)&gt;0) hi1&lt;- y+(hi1-y)*2
+        uniroot(f_up,c(hi0,hi1))$root
+    } else{
+        uniroot(f_up,c(y,hi0))$root
+    }
+    
+    c(low,high)
+}</code></pre>
+<p>There’s a sense in which this has got to be cheating. In some handwavy sense, you’re sort of getting away with a <span class="math inline">\(1-2\alpha\)</span> confidence interval near <span class="math inline">\(\mu_j\)</span> at the expense of overcoverage elsewhere. But not really. The intervals really have <span class="math inline">\(1-\alpha\)</span> coverage: if you generated data for any true <span class="math inline">\(\theta\)</span> and used this procedure, <span class="math inline">\(1-\alpha\)</span> of the intervals would cover that true <span class="math inline">\(\theta\)</span>, whatever it was. It’s all good.</p>
+<p>But there’s nothing in the maths that requires <span class="math inline">\(\mu_j\)</span> to be a prior mean. It could also be that <span class="math inline">\(\mu_j\)</span> is the value you want to convince people that <span class="math inline">\(\theta_j\)</span> has. Again, you’ll get shorter confidence intervals when they’re centered near your preferred value and longer ones when they aren’t; again, they’ll have <span class="math inline">\(1-\alpha\)</span> coverage</p>
+<p>Here’s an example with the true <span class="math inline">\(\theta=0\)</span>, with <span class="math inline">\(\sigma=1\)</span>, <span class="math inline">\(\mu=1\)</span>, <span class="math inline">\(\tau=1\)</span>, and with <span class="math inline">\(\alpha=0.1\)</span> to make it easier to see. So, we’d like to convince people that <span class="math inline">\(\theta\approx 1\)</span>, but we aren’t allowed to mess with the 90% confidence level</p>
+<pre class="r"><code>set.seed(2019-6-11)
+s&lt;-make.s(1,1,1,.1)
+rr&lt;-replicate(200,{a&lt;-rnorm(1);c(a,ci(a,1, s, 0.1))})
+cover&lt;-(rr[2,]&lt;0) &amp; (rr[3,]&gt;0)
+plot(1:200, rr[1,],ylim=range(rr),pch=19,col=ifelse(cover,&quot;grey&quot;,&quot;red&quot;),
+ylab=expression(theta),xlab=&quot;200 90% confidence intervals&quot;)
+segments(1:200,y0=rr[2,],y1=rr[3,],col=ifelse(cover,&quot;grey&quot;,&quot;red&quot;))
+abline(h=0,lty=2)</code></pre>
+<p><img src="/post/2019-06-11-confidence-intervals-not-a-very-strong-property_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>There are 21 intervals that miss zero, consistent with expectations. But they’re all centered at positive <span class="math inline">\(\theta\)</span>.</p>
+<p>What happens if we vary the true <span class="math inline">\(\theta\)</span>? Try <span class="math inline">\(\theta=1\)</span> (now the red intervals are those that don’t cover 1)</p>
+<pre class="r"><code>set.seed(2019-6-11)
+s&lt;-make.s(1,1,1,.1)
+rr&lt;-replicate(200,{a&lt;-rnorm(1,1);c(a,ci(a,1, s, 0.1))})
+cover&lt;-(rr[2,]&lt;1) &amp; (rr[3,]&gt;1)
+plot(1:200, rr[1,],ylim=range(rr),pch=19,col=ifelse(cover,&quot;grey&quot;,&quot;red&quot;),
+ylab=expression(theta),xlab=&quot;200 90% confidence intervals&quot;)
+segments(1:200,y0=rr[2,],y1=rr[3,],col=ifelse(cover,&quot;grey&quot;,&quot;red&quot;))
+abline(h=1,lty=2)</code></pre>
+<p><img src="/post/2019-06-11-confidence-intervals-not-a-very-strong-property_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Or <span class="math inline">\(\theta=2\)</span></p>
+<pre class="r"><code>set.seed(2019-6-11)
+s&lt;-make.s(1,1,1,.1)
+rr&lt;-replicate(200,{a&lt;-rnorm(1,2);c(a,ci(a,1, s, 0.1))})
+cover&lt;-(rr[2,]&lt;2) &amp; (rr[3,]&gt;2)
+plot(1:200, rr[1,],ylim=range(rr),pch=19,col=ifelse(cover,&quot;grey&quot;,&quot;red&quot;),
+ylab=expression(theta),xlab=&quot;200 90% confidence intervals&quot;)
+segments(1:200,y0=rr[2,],y1=rr[3,],col=ifelse(cover,&quot;grey&quot;,&quot;red&quot;))
+abline(h=2,lty=2)</code></pre>
+<p><img src="/post/2019-06-11-confidence-intervals-not-a-very-strong-property_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Or <span class="math inline">\(\theta=-1\)</span></p>
+<pre class="r"><code>set.seed(2019-6-11)
+s&lt;-make.s(1,1,1,.1)
+rr&lt;-replicate(200,{a&lt;-rnorm(1,-1);c(a,ci(a,1, s, 0.1))})
+cover&lt;-(rr[2,]&lt; -1) &amp; (rr[3,]&gt; -1)
+plot(1:200, rr[1,],ylim=range(rr),pch=19,col=ifelse(cover,&quot;grey&quot;,&quot;red&quot;),
+ylab=expression(theta),xlab=&quot;200 90% confidence intervals&quot;)
+segments(1:200,y0=rr[2,],y1=rr[3,],col=ifelse(cover,&quot;grey&quot;,&quot;red&quot;))
+abline(h=-1,lty=2)</code></pre>
+<p><img src="/post/2019-06-11-confidence-intervals-not-a-very-strong-property_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>There’s nothing actually <strong>wrong</strong> here, but it’s messing with people’s natural misunderstandings of confidence intervals in order to push the impression that <span class="math inline">\(\theta\approx 1\)</span>.</p>
+<p>I think I like it. Or maybe I don’t. One or the other.</p>
