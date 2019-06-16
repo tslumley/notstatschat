@@ -18,4 +18,4 @@ Using the rank also handles post-stratification nicely: post-stratifying removes
 
 I haven't seen this definition in the literature, but if it is known I'd be interested in finding out. 
 
-The rank of a matrix is not a numerically stable quantity, so to some extent the tolerance used will matter. I use a tolerance of $10^{-5}$ in R's `qr` function. 
+The rank of a matrix is not a numerically stable quantity, so to some extent the tolerance used will matter. I use a tolerance of $10^{-5}$ in R's `qr` function.  

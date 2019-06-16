@@ -1,0 +1,226 @@
+---
+title: Analysing the mouse microbiome autism data
+author: Thomas Lumley
+date: '2019-06-16'
+slug: analysing-the-mouse-autism-data
+categories: []
+tags: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The issue
+
+A paper reporting the induction of autism-type behaviour in mice by fecal microbiome transplants from humans was recently published in [Cell](https://www.cell.com/cell/fulltext/S0092-8674(19)30502-1).  Some people on Twitter were discussing subplots E, F, and G of Figure 1, which report behavioral comparisons of the mice between fecal donors with and without ASD. 
+
+![](/post/2019-06-16-analysing-the-mouse-autism-data_files/autism-mouse.png){width=90%}
+
+The expressed view on Twitter was the the plots weren't consistent with the $p$-values given. They didn't entirely need to be, since the $p$-values weren't from a simple two-group comparison, but even taking that into account I was surprised.  I thought it was worth doing the actual comparison the researchers reported before going all 'someone is wrong on the internet' about it. That turned out to be relatively tricky. 
+
+## The data
+
+The data are available from https://doi.org/10.17632/ngzmj4zkms. I downloaded the data for Figure 1, parts E--H.
+
+```{r}
+cell<-read.csv("https://data.mendeley.com/datasets/ngzmj4zkms/1/files/fb7927df-a1ea-4257-bf2f-33fecc4090e9/Fig1EFGH_subset8.csv?dl=1")
+```
+
+First, check the plots to make sure the data look right
+
+```{r}
+library(beeswarm)
+cell$ASD_diagnosis<-relevel(cell$ASD_diagnosis, ref="NT")
+beeswarm(MB_buried~ASD_diagnosis,data=cell,method="center",pch=19,pwcol=Donor)
+beeswarm(DSI_Social_duration~ASD_diagnosis,data=cell,pch=19,pwcol=Donor)
+beeswarm(OFT_Distance~ASD_diagnosis,data=cell,pch=19,pwcol=Donor)
+```
+
+These look like the ones in the paper. The first one shows a visually convincing difference; the other two do not. We can easily do formal tests that correspond to these visual comparisons
+
+```{r}
+t.test(MB_buried~ASD_diagnosis,data=cell)
+t.test(DSI_Social_duration~ASD_diagnosis,data=cell)
+t.test(OFT_Distance~ASD_diagnosis,data=cell)
+```
+
+However, the aggregate comparison is wrong. The researchers say in the panel caption that *"Hypothesis testing for differences of the means were done by a mixed effects analysis using donor diagnosis and mouse sex as fixed effects and donor ID as a random effect."*
+
+That's a plausible analysis. So let's do it.  I'll use `lmer`, with the `lmerTest` package to get small-sample approximations.
+
+```{r}
+library(lmerTest)
+marbles<-lmer(MB_buried~ASD_diagnosis+Gender+(1|Donor),data=cell)
+dsi<-lmer(DSI_Social_duration~ASD_diagnosis+Gender+(1|Donor),data=cell)
+oft<-lmer(OFT_Distance~ASD_diagnosis+Gender+(1|Donor),data=cell)
+
+summary(marbles)
+summary(dsi)
+summary(oft)
+anova(marbles)
+anova(dsi)
+anova(oft)
+```
+
+Taking account of within-donor correlation reduces the effective sample size and the standard errors get much bigger. There's modest evidence for the marbles, but basically none for the other outcomes.  We could redo with the (slightly improved) Kenward-Roger version of the anova tests.
+```{r}
+anova(marbles, ddf="Kenward-Roger")
+anova(dsi, ddf="Kenward-Roger")
+anova(oft, ddf="Kenward-Roger")
+```
+
+Still unimpressive. 
+
+If we look at the statistical analysis section at the end of the paper it says *"Comparison of behavioral outcomes between TD Controls and ASD donors were tested using longitudinal linear mixed effects analyses, with test cycles and donors treated as repeated factors. Analyses were performed in SPSS (v 24);a priori alpha = 0.05. All outcomes were tested for normality and trans-formed as required. Diagonal covariance matrices were used so that intra-cycle and intra-donor correlations were accounted for inthe modeling. "*
+
+I'm not sure quite what that means-- mice don't repeat over donors or cycles-- but it would make sense to have a `Cycle` effect for the marbles and OFT analyses; the DSI was only done in one cycle, so there can't be a "cycle effect". The impact shouldn't be huge, since cycle is roughly orthogonal to ASD. With only two cycles, I would have made it a fixed effect, but we can try either way.   
+
+```{r}
+library(lmerTest)
+marbles<-lmer(MB_buried~ASD_diagnosis+Gender+(1|Cycle)+(1|Donor),data=cell)
+oft<-lmer(OFT_Distance~ASD_diagnosis+Gender+(1|Cycle)+(1|Donor),data=cell)
+
+
+anova(marbles, ddf="Kenward-Roger")
+anova(oft, ddf="Kenward-Roger")
+
+
+marbles2<-lmer(MB_buried~ASD_diagnosis+Gender+Cycle+(1|Donor),data=cell)
+oft2<-lmer(OFT_Distance~ASD_diagnosis+Gender+Cycle+(1|Donor),data=cell)
+
+
+anova(marbles2, ddf="Kenward-Roger")
+anova(oft2, ddf="Kenward-Roger")
+
+```
+
+And it doesn't matter much. 
+
+The Statistical analysis section also says *"Additional statistical analysis was done using R (3.4.1) or Python (3.6.4), using various packages to test mixed effects testing diagnosis (TD or ASD) as a fixed effect and donor and testing round as random effects."*.  I think 'various packages' is a bit unspecific, but let's try `Round` as a random effect.
+
+```{r}
+library(lmerTest)
+marbles<-lmer(MB_buried~ASD_diagnosis+Gender+(1|Round)+(1|Donor),data=cell)
+dsi<-lmer(DSI_Social_duration~ASD_diagnosis+Gender+(1|Round)+(1|Donor),data=cell)
+oft<-lmer(OFT_Distance~ASD_diagnosis+Gender+(1|Round)+(1|Donor),data=cell)
+
+anova(marbles, ddf="Kenward-Roger")
+anova(dsi, ddf="Kenward-Roger")
+anova(oft, ddf="Kenward-Roger")
+```
+
+Again, not much change. *(The warning message is harmless: it jut means that that `Round` random effect is estimated to have zero variance.)*
+
+
+There's an Excel spreadsheet with test statistics and p-values as table S4. It doesn't say exactly what the tests were, and I don't have access to SPSS on a holiday long weekend, but there are two notable things about it. First, it has interaction p-values for Diagnosis by Gender. Second, the F statistics for Diagnosis have 169, 79, and 95 denominator degrees of freedom for the marbles, DSI, and OFT outcomes respectively.
+
+Information for the Diagnosis contrast only comes from comparisons between the 5 donor humans with ASD and the 3 donor controls, so the degrees of freedom should be no more than 7, and probably less. 
+
+Let's try one more time, though, with a sex by diagnosis interaction:
+
+```{r}
+library(lmerTest)
+marbles<-lmer(MB_buried~ASD_diagnosis*Gender+(1|Round)+(1|Donor),data=cell)
+dsi<-lmer(DSI_Social_duration~ASD_diagnosis*Gender+(1|Round)+(1|Donor),data=cell)
+oft<-lmer(OFT_Distance~ASD_diagnosis*Gender+(1|Round)+(1|Donor),data=cell)
+
+anova(marbles, ddf="Kenward-Roger")
+anova(dsi, ddf="Kenward-Roger")
+anova(oft, ddf="Kenward-Roger")
+```
+
+and, finally, using sum-to-zero contrasts instead of treatment contrasts
+```{r}
+library(lmerTest)
+cell$ASD_sum<-C(cell$ASD_diagnosis,"contr.sum")
+cell$Gender_sum<-C(cell$Gender,"contr.sum")
+marbles<-lmer(MB_buried~ASD_sum*Gender_sum+(1|Round)+(1|Donor),data=cell)
+dsi<-lmer(DSI_Social_duration~ASD_sum*Gender_sum+(1|Round)+(1|Donor),data=cell)
+oft<-lmer(OFT_Distance~ASD_sum*Gender_sum+(1|Round)+(1|Donor),data=cell)
+
+anova(marbles, ddf="Kenward-Roger")
+anova(dsi, ddf="Kenward-Roger")
+anova(oft, ddf="Kenward-Roger")
+```
+
+
+So, in the end I can't reproduce anything close to the $p$-values given in the paper.  I suspect based on the analyses I've done and the degrees of freedom given in the paper that the $p$-values in the paper are wrong.  However, since I can't come close to reproducing them, I can't be sure. 
+
+Given that the authors were clearly computationally literate and familiar with mixed model software in R, it's a pity these analyses weren't done in R (or Python or something) so that code could be distributed with the data. 
+
+## A New Hope
+I tried to work out what the SPSS commands reported in the paper might be doing, in particular the bit about "diagonal covariance matrices".  SPSS has an option for "Diagonal" in specifying within-subject covariance matrices, which models heteroscedasticity but not correlation.  If you already had random effects in the model that would be what you wanted, but if you didn't it would end up treating all the observations as independent.
+
+It's a new day, and I could try this with a copy of SPSS. Now I can duplicate the test statistics and p-values exactly with the following SPSS syntax (generated by the SPSS GUI)
+
+```
+MIXED OFT_Distance BY Gender ASD_diagnosis 
+  /CRITERIA=CIN(95) MXITER(100) MXSTEP(10) SCORING(1) SINGULAR(0.000000000001) HCONVERGE(0, 
+    ABSOLUTE) LCONVERGE(0, ABSOLUTE) PCONVERGE(0.000001, ABSOLUTE) 
+  /FIXED=Gender ASD_diagnosis Gender*ASD_diagnosis | SSTYPE(3) 
+  /METHOD=REML 
+  /REPEATED=Donor | SUBJECT(V1) COVTYPE(DIAG)
+```
+
+and then replacing `OFT_Distance` with `MB_buried` or `DSI_Social_duration`.
+
+The output in SPSS is like this (only pretty)
+```
+    Type III Tests of Fixed Effects a				
+Source	        Numerator df	Denominator df	F	      Sig.
+Intercept	              1 	      95.967	  4336.047	.000
+Gender	                1	        95.967	     2.378	.126
+ASD_diagnosis	          1	        95.967	    15.346  .000
+Gender * ASD_diagnosis	1	        95.967	     1.871	.175
+a Dependent Variable: OFT_Distance.				
+```
+
+This, as far as I can tell from the documentation, is a regression model with all observations independent, but with the variance depending on `Donor`. Which is not an analysis I would consider to be appropriate. To get a random effect of donor in SPSS, you'd use a `/RANDOM = Donor` line.
+
+I can at least approximately get this analysis in R using `gls`. There are a lot of details in how these models are fitted, and SPSS and R's `gls` have differences. But the model it fits is the one I think SPSS is fitting and the results for the $F$-statistics are almost identical.  The degrees of freedom are off, and therefore the p-values aren't the same, because `gls` uses a much cruder df computation. However, the p-values are close because the analysis (incorrectly) specifies that there are lots and lots of denominator degrees of freedom: the difference between 95 and 202 doesn't make much difference. 
+
+```{r}
+library(nlme)
+cell$ASD_sum<-C(cell$ASD_diagnosis,"contr.sum")
+cell$Gender_sum<-C(cell$Gender,"contr.sum")
+marbles_gls <- gls(MB_buried~ASD_sum*Gender_sum, weights=varIdent(form=~1|Donor),data=cell)
+dsi_gls <- gls(DSI_Social_duration~ASD_sum*Gender_sum, weights=varIdent(form=~1|Donor),data=cell,na.action=na.omit)
+oft_gls <- gls(OFT_Distance~ASD_sum*Gender_sum, weights=varIdent(form=~1|Donor),data=cell)
+
+marbles_gls
+dsi_gls
+oft_gls
+
+anova(marbles_gls, type="marginal")
+anova(dsi_gls,type="marginal")
+anova(oft_gls,type="marginal")
+```
+
+In conclusion, I'm fairly confident I understand the analysis, and I think it's wrong, and arguably due in part to a poor GUI design from SPSS.  On the other hand, the people who looked at the dotplots thinking them to be independent points, and said you couldn't get those p-values without some sort of paired analysis were also wrong. 
+
+## The researchers write back
+
+I reported my concerns to the first author on the paper, and got an email thanking me for my effort and saying they'd publish analysis code 'soon'.
+
+They now have
+![](/post/2019-06-16-analysing-the-mouse-autism-data_files/mouse-spss.png){width=90%}
+
+As you can see, this is basically the model I thought they were fitting.  The `SUBJECT(Round*MouseID)` specification specifies that `Round*MouseID` identifies *independent* subjects. Since these subjects have only one observation each, there's no modelling of correlation at all, but the variance is allowed to depend on donor. 
+
+They also gave a new description
+
+>  *Statistical analyses, part of Figure 1, specify linear mixed effects modeling of individual mice, nested within donor, and round of testing. Fixed effects included donor ASD diagnosis, mouse sex, and the interaction of these factors. You will note that we also ran models stratified by mouse sex, because DSI was only evident in male mice. Diagonal covariance matrices were specified so that mice sharing donors would be allowed to share variability while maintaining independence from other donors. Likewise, this was also used for testing Round. Because the number of donors was not large, more complex models specifying random effects did not converge and were not stable, and thus we decided to adhere to a parsimonious model to address our research question. We are providing the original SPSS output of the statistical analysis presented in Figures 1E –G for reference; the syntax use for analyses is included therein*
+
+Without the code, the description would still be potentially misleading.  Since there **should be** a random effect for donor, it would be natural to interpreted *"mixed effects modeling of individual mice, nested within donor"* as a donor random effect. The same goes for *"mice sharing donors would be allowed to share variability while maintaining independence from other donors"*. The model **does not** have a random effect for donor. Mice sharing the donors are assumed to have the same mean for the behavioural outcomes, and only allowed to have different variance. The correlation between mice having the same donor is not incorporated in the model. Even assuming these were the only behavioural outcomes they looked at, the data provide very little support for an effect of donor ASD status.
+
+
+I'm also dubious about *"more complex models specifying random effects did not converge and were not stable"*.  A whole bunch of models like that are in this post, and converged perfectly well for me. 
+
+
+## The git clone wars
+
+This sort of thing is much simpler when you distribute code as well as data, which is unfortunately not standard even in statistics. 
+
+The code you used will always specify the analysis you performed, and while I still would have had to work out what the SPSS code did, it would have been simpler than trying to reverse-engineer the analysis.  The reviewers would have had more opportunities to notice something wrong: the surprisingly small p-value, the unreasonably large denominator degrees of freedom, and the code itself. 
+
