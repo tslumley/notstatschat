@@ -17,7 +17,7 @@ A paper reporting the induction of autism-type behaviour in mice by fecal microb
 
 ![](/post/2019-06-16-analysing-the-mouse-autism-data_files/autism-mouse.png){width=90%}
 
-The expressed view on Twitter was the the plots weren't consistent with the $p$-values given. They didn't entirely need to be, since the $p$-values weren't from a simple two-group comparison, but even taking that into account I was surprised.  I thought it was worth doing the actual comparison the researchers reported before going all 'someone is wrong on the internet' about it. That turned out to be relatively tricky. 
+The expressed view on Twitter was the the plots weren't consistent with the $p$-values given. They didn't entirely need to be, since the $p$-values weren't from a simple two-group comparison, but even taking that into account I was surprised.  I thought it was worth doing the actual comparison the researchers reported before going all 'someone is wrong on the internet' about it. That turned out to be relatively tricky.  
 
 ## The data
 
