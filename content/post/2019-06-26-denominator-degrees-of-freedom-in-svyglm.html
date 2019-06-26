@@ -37,9 +37,18 @@ where <span class="math inline">\(P\)</span> is the projection on to the <span c
 <li>Also, the variance of <span class="math inline">\(\widehat{\textrm{cov}}[\hat\beta]\)</span> depends on the distribution of both <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> – in contrast to the model-based estimator we don’t really have <span class="math inline">\(F\)</span> distributions. The variance depends on the distributions mostly through the kurtosis of the cluster-level totals of the influence functions. Unfortunately, if the number of clusters is small (and otherwise we don’t care about residual df) the kurtosis will be poorly estimated.</li>
 </ul>
 </div>
+<div id="update" class="section level3">
+<h3>Update</h3>
+<ul>
+<li>Richard Valliant and Keith Rust have done<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> the Satterthwaite approximation calculation for means/totals. For regression models we’d need to do the same thing with the influence functions.</li>
+<li>Post-stratification/calibration will also use up degrees of freedom, but as with covariates in the model, only when the auxiliary variables are cluster-level</li>
+<li>The obvious place to do all the computations is inside <code>svyrecvar</code>, since it’s (by design) the one place where the projections on to calibrated, stratum-centered, cluster totals happen. But, at the moment, <code>svyrecvar</code> doesn’t necessarily see influence functions; in fact, <code>svyglm</code> passes it score functions.</li>
+</ul>
+</div>
 <div class="footnotes">
 <hr />
 <ol>
 <li id="fn1"><p>the intercept is already aliased with the strata<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>Valliant &amp; Rust (2010) <em>Journal of Official Statistics</em> 26:585-602<a href="#fnref2" class="footnote-back">↩</a></p></li>
 </ol>
 </div>

@@ -45,3 +45,8 @@ At a simple parameter-counting level, then, the rank of $\widehat{\textrm{cov}}[
 - Also, the variance of $\widehat{\textrm{cov}}[\hat\beta]$ depends on the distribution of both $X$ and $Y$ -- in contrast to the model-based estimator we don't really have $F$ distributions.  The variance depends on the distributions mostly through the kurtosis of the cluster-level totals of the influence functions. Unfortunately, if the number of clusters is small (and otherwise we don't care about residual df) the kurtosis will be poorly estimated. 
 
 
+### Update
+
+- Richard Valliant and Keith Rust have done^[Valliant & Rust (2010) *Journal of Official Statistics* 26:585-602] the Satterthwaite approximation calculation for means/totals. For regression models we'd need to do the same thing with the influence functions. 
+- Post-stratification/calibration will also use up degrees of freedom, but as with covariates in the model, only when the auxiliary variables are cluster-level
+- The obvious place to do all the computations is inside `svyrecvar`, since it's (by design) the one place where the projections on to calibrated, stratum-centered, cluster totals happen. But, at the moment, `svyrecvar` doesn't necessarily see influence functions; in fact, `svyglm` passes it score functions. 
