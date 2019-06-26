@@ -1,0 +1,47 @@
+---
+title: Denominator degrees of freedom in svyglm
+author: Thomas Lumley
+date: '2019-06-26'
+slug: denominator-degrees-of-freedom-in-svyglm
+categories: []
+tags: []
+---
+
+*Attention Conservation Notice: This is a working note; when I understand it better, there will be changes in the `survey` package. *
+
+
+The design degrees of freedom for a stratified, clustered design with $M$ clusters and $H$ strata is $d=M-H$.   This is a straightforward definition, since the Horvitz--Thompson variance estimator for a mean or total is a variance of $M$ cluster summaries after subtracting off $H$ stratum means. While the definition is only straightforward for single-stage designs, the public-use versions of nearly all surveys are analysed as if they were single-stage designs. 
+
+Suppose we fit a generalised linear model with $p$ coefficients plus the intercept^[the intercept is already aliased with the strata] to the design. How many df do we have now? The standard answer is $d-p$, but it's more complicated than that.
+
+Let's break the predictors $X$ into $(X_1, X_2)$ and assume we want to test the coefficients $\beta_1$ of $X_1$. Write $q$ for the number of columns of $X_1$. 
+
+
+
+### Rank of variance matrix
+
+The estimated $(p+1)\times (p+1)$ variance matrix $\hat V=\widehat{\mathrm{cov}}[\hat\beta]$ has rank at most $d$, so it is singular if $d\leq p$.  Similarly, the covariance matrix of $\hat\beta_1$ is singular if $d<q$. In that sense we have *at most* $d-q$ residual degrees of freedom. 
+
+
+
+### Cluster-level covariates
+
+If the covariates were all constant within clusters, it would be possible to aggregate everything to the cluster level and do the regression there. There would genuinely be only $M-H-p=d-p$ degrees of freedom, because the variance matrix of $\hat\beta$ would be an outer product of $M$ things projected orthogonal to a space of dimension $p+H$. 
+
+
+### Real life
+A test with $q$ numerator df should have at most  $d-q$ residual df, because of the first point above. It should typically have more than $d-p$ residual df, depending on how many of the $p-q$ covariates in $X_2$ are at the cluster level. 
+
+The middle of the sandwich variance estimator is $$\widehat{\textrm{cov}}[\hat\beta]=(X^TW(Y-\mu)P)^{\otimes 2}$$
+where $P$ is the projection on to the $d$-dimensional space of centered cluster totals.  If $H^\perp=I-H$ is the projection on to the residuals, that's 
+$$\widehat{\textrm{cov}}[\hat\beta]=(X^TWH^\perp YP)^{\otimes 2}$$
+
+At a simple parameter-counting level, then, the rank of $\widehat{\textrm{cov}}[\hat\beta]$ is the rank of $H^\perp P$, ie, $d$ minus the number of cluster-level covariates.  The denominator df for testing $\beta_1=0$ should be $d-q$ minus the number of cluster-level covariates in $X_2$.
+
+### To be done
+
+- In principle, the various modified sandwich estimators that adjust the residuals for influence should be helpful. They won't be very helpful, because it's influence *at the cluster level* that matters most. 
+- Ideally you'd want something a bit smoother than the rank of $H^\perp P$: if a covariate is 'almost' cluster-level, we should lose 'almost' a degree of freedom. 
+- Also, the variance of $\widehat{\textrm{cov}}[\hat\beta]$ depends on the distribution of both $X$ and $Y$ -- in contrast to the model-based estimator we don't really have $F$ distributions.  The variance depends on the distributions mostly through the kurtosis of the cluster-level totals of the influence functions. Unfortunately, if the number of clusters is small (and otherwise we don't care about residual df) the kurtosis will be poorly estimated. 
+
+

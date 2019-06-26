@@ -1,0 +1,45 @@
+---
+title: Denominator degrees of freedom in svyglm
+author: Thomas Lumley
+date: '2019-06-26'
+slug: denominator-degrees-of-freedom-in-svyglm
+categories: []
+tags: []
+---
+
+
+
+<p><em>Attention Conservation Notice: This is a working note; when I understand it better, there will be changes in the <code>survey</code> package. </em></p>
+<p>The design degrees of freedom for a stratified, clustered design with <span class="math inline">\(M\)</span> clusters and <span class="math inline">\(H\)</span> strata is <span class="math inline">\(d=M-H\)</span>. This is a straightforward definition, since the Horvitz–Thompson variance estimator for a mean or total is a variance of <span class="math inline">\(M\)</span> cluster summaries after subtracting off <span class="math inline">\(H\)</span> stratum means. While the definition is only straightforward for single-stage designs, the public-use versions of nearly all surveys are analysed as if they were single-stage designs.</p>
+<p>Suppose we fit a generalised linear model with <span class="math inline">\(p\)</span> coefficients plus the intercept<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> to the design. How many df do we have now? The standard answer is <span class="math inline">\(d-p\)</span>, but it’s more complicated than that.</p>
+<p>Let’s break the predictors <span class="math inline">\(X\)</span> into <span class="math inline">\((X_1, X_2)\)</span> and assume we want to test the coefficients <span class="math inline">\(\beta_1\)</span> of <span class="math inline">\(X_1\)</span>. Write <span class="math inline">\(q\)</span> for the number of columns of <span class="math inline">\(X_1\)</span>.</p>
+<div id="rank-of-variance-matrix" class="section level3">
+<h3>Rank of variance matrix</h3>
+<p>The estimated <span class="math inline">\((p+1)\times (p+1)\)</span> variance matrix <span class="math inline">\(\hat V=\widehat{\mathrm{cov}}[\hat\beta]\)</span> has rank at most <span class="math inline">\(d\)</span>, so it is singular if <span class="math inline">\(d\leq p\)</span>. Similarly, the covariance matrix of <span class="math inline">\(\hat\beta_1\)</span> is singular if <span class="math inline">\(d&lt;q\)</span>. In that sense we have <em>at most</em> <span class="math inline">\(d-q\)</span> residual degrees of freedom.</p>
+</div>
+<div id="cluster-level-covariates" class="section level3">
+<h3>Cluster-level covariates</h3>
+<p>If the covariates were all constant within clusters, it would be possible to aggregate everything to the cluster level and do the regression there. There would genuinely be only <span class="math inline">\(M-H-p=d-p\)</span> degrees of freedom, because the variance matrix of <span class="math inline">\(\hat\beta\)</span> would be an outer product of <span class="math inline">\(M\)</span> things projected orthogonal to a space of dimension <span class="math inline">\(p+H\)</span>.</p>
+</div>
+<div id="real-life" class="section level3">
+<h3>Real life</h3>
+<p>A test with <span class="math inline">\(q\)</span> numerator df should have at most <span class="math inline">\(d-q\)</span> residual df, because of the first point above. It should typically have more than <span class="math inline">\(d-p\)</span> residual df, depending on how many of the <span class="math inline">\(p-q\)</span> covariates in <span class="math inline">\(X_2\)</span> are at the cluster level.</p>
+<p>The middle of the sandwich variance estimator is <span class="math display">\[\widehat{\textrm{cov}}[\hat\beta]=(X^TW(Y-\mu)P)^{\otimes 2}\]</span>
+where <span class="math inline">\(P\)</span> is the projection on to the <span class="math inline">\(d\)</span>-dimensional space of centered cluster totals. If <span class="math inline">\(H^\perp=I-H\)</span> is the projection on to the residuals, that’s
+<span class="math display">\[\widehat{\textrm{cov}}[\hat\beta]=(X^TWH^\perp YP)^{\otimes 2}\]</span></p>
+<p>At a simple parameter-counting level, then, the rank of <span class="math inline">\(\widehat{\textrm{cov}}[\hat\beta]\)</span> is the rank of <span class="math inline">\(H^\perp P\)</span>, ie, <span class="math inline">\(d\)</span> minus the number of cluster-level covariates. The denominator df for testing <span class="math inline">\(\beta_1=0\)</span> should be <span class="math inline">\(d-q\)</span> minus the number of cluster-level covariates in <span class="math inline">\(X_2\)</span>.</p>
+</div>
+<div id="to-be-done" class="section level3">
+<h3>To be done</h3>
+<ul>
+<li>In principle, the various modified sandwich estimators that adjust the residuals for influence should be helpful. They won’t be very helpful, because it’s influence <em>at the cluster level</em> that matters most.</li>
+<li>Ideally you’d want something a bit smoother than the rank of <span class="math inline">\(H^\perp P\)</span>: if a covariate is ‘almost’ cluster-level, we should lose ‘almost’ a degree of freedom.</li>
+<li>Also, the variance of <span class="math inline">\(\widehat{\textrm{cov}}[\hat\beta]\)</span> depends on the distribution of both <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> – in contrast to the model-based estimator we don’t really have <span class="math inline">\(F\)</span> distributions. The variance depends on the distributions mostly through the kurtosis of the cluster-level totals of the influence functions. Unfortunately, if the number of clusters is small (and otherwise we don’t care about residual df) the kurtosis will be poorly estimated.</li>
+</ul>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>the intercept is already aliased with the strata<a href="#fnref1" class="footnote-back">↩</a></p></li>
+</ol>
+</div>
