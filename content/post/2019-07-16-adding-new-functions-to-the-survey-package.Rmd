@@ -1,0 +1,63 @@
+---
+title: Adding new functions to the survey package
+author: Thomas Lumley
+date: '2019-07-16'
+slug: adding-new-functions-to-the-survey-package
+categories: []
+tags: []
+---
+
+I had an email request about making `ivreg` work with the `survey` package.  That's `AER::ivreg`, which does two-stage least-squares estimation with instrumental variables. 
+
+The steps are
+
+1. See if it accepts weights and does the right thing for point estimation
+2. If so, work out how to get the complex-survey variances
+3. Test to make sure it's getting the right answer
+
+In this case, the first step was fairly straightforward. The function accepts weights and passes them to `lm.wfit`, so it will give the same point estimates as if they were sampling weights.  
+
+The second step is the technically generalisable one.  My full code is [here](https://gist.github.com/tslumley/95b92d6a47a513787394d9d83a7c1f82).  The key parts for estimation using survey design information are
+
+```
+.data<-model.frame(design)
+.data$.weights<-weights(design,"sampling")
+model<- ivreg(formula, data=.data, weights=.weights)
+```
+
+which just calls `AER::ivreg` to get the point estimates, and
+
+```
+U<-estfun(model)/weights(design,"sampling")
+n<-NROW(U)
+infl<- U%*%bread(model)/n
+v<-vcov(svytotal(infl,  design))
+```
+which computes the variances of the parameter estimates.  
+
+The variance code comes from the Secret Trick that makes the survey package work: any well-behaved^[Regular Asymptotically Linear] estimator can approximated as the total of its influence functions.  If we write $\Delta_i$ for the influence function of observation $i$ then
+$$\tilde\theta-\theta = \sum_{i=1}^N \Delta_i + \textrm{small}.$$
+
+In a probability sample with sampling weights $w_i$, we will have
+$$\hat\theta-\theta = \sum_{i\in\textrm{sample}} w_i\Delta_i + \textrm{small}.$$
+We want the variance of the left-hand side of the equation. The right-hand side is just the variance of an estimated population total, which is a thing we know how to do.^[technically, these should be means, but with weights it's simpler to rescale and write them as totals] 
+
+In the case of `ivreg`, since it was written by Achim Zeileis, it has convenient functions `estfun` and `bread` that are designed to work with the `sandwich` package but that also make influence functions easy to compute. 
+
+The first line of the second code chunk looks a bit strange: we're dividing by the weights.  That's because the `ivreg` code puts the weights into the estimating function; we don't want that because `svytotal` also puts them in.
+
+Alternatively, if you have a design using replicate weights (resampling), step 2 looks like
+
+```
+withReplicates(design, 
+              function(.weights, .data){
+                 .data$.pweights<-.weights
+                 m<-ivreg(formula,data= .data, weights=.pweights)
+                 coef(m)
+                })
+```
+which runs the `ivreg` function for each set of replicate weights, extracts the coefficients, and computes the variance.
+
+Step 3 is harder: ideally there would be a published analysis with downloadable data that I could check against. Also harder is working out how to adjust the various diagnostic tests. But the basic estimation is fairly straightforward. 
+
+You can't handle non-regular estimators such as the lasso this way, since they don't have influence functions that work this way.  You also can't handle mixed models, where the score function isn't just a sum over observations.  In addition to the purely technical problems (which are enough to be going on with) there's the issue that both of these classes of model have a cost:complexity or bias:variance tradeoff, and it's not obvious how to make this tradeoff scale the right way when you go from a population to a sample. 

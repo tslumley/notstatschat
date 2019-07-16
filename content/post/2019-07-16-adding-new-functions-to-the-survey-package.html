@@ -1,0 +1,53 @@
+---
+title: Adding new functions to the survey package
+author: Thomas Lumley
+date: '2019-07-16'
+slug: adding-new-functions-to-the-survey-package
+categories: []
+tags: []
+---
+
+
+
+<p>I had an email request about making <code>ivreg</code> work with the <code>survey</code> package. That’s <code>AER::ivreg</code>, which does two-stage least-squares estimation with instrumental variables.</p>
+<p>The steps are</p>
+<ol style="list-style-type: decimal">
+<li>See if it accepts weights and does the right thing for point estimation</li>
+<li>If so, work out how to get the complex-survey variances</li>
+<li>Test to make sure it’s getting the right answer</li>
+</ol>
+<p>In this case, the first step was fairly straightforward. The function accepts weights and passes them to <code>lm.wfit</code>, so it will give the same point estimates as if they were sampling weights.</p>
+<p>The second step is the technically generalisable one. My full code is <a href="https://gist.github.com/tslumley/95b92d6a47a513787394d9d83a7c1f82">here</a>. The key parts for estimation using survey design information are</p>
+<pre><code>.data&lt;-model.frame(design)
+.data$.weights&lt;-weights(design,&quot;sampling&quot;)
+model&lt;- ivreg(formula, data=.data, weights=.weights)</code></pre>
+<p>which just calls <code>AER::ivreg</code> to get the point estimates, and</p>
+<pre><code>U&lt;-estfun(model)/weights(design,&quot;sampling&quot;)
+n&lt;-NROW(U)
+infl&lt;- U%*%bread(model)/n
+v&lt;-vcov(svytotal(infl,  design))</code></pre>
+<p>which computes the variances of the parameter estimates.</p>
+<p>The variance code comes from the Secret Trick that makes the survey package work: any well-behaved<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> estimator can approximated as the total of its influence functions. If we write <span class="math inline">\(\Delta_i\)</span> for the influence function of observation <span class="math inline">\(i\)</span> then
+<span class="math display">\[\tilde\theta-\theta = \sum_{i=1}^N \Delta_i + \textrm{small}.\]</span></p>
+<p>In a probability sample with sampling weights <span class="math inline">\(w_i\)</span>, we will have
+<span class="math display">\[\hat\theta-\theta = \sum_{i\in\textrm{sample}} w_i\Delta_i + \textrm{small}.\]</span>
+We want the variance of the left-hand side of the equation. The right-hand side is just the variance of an estimated population total, which is a thing we know how to do.<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
+<p>In the case of <code>ivreg</code>, since it was written by Achim Zeileis, it has convenient functions <code>estfun</code> and <code>bread</code> that are designed to work with the <code>sandwich</code> package but that also make influence functions easy to compute.</p>
+<p>The first line of the second code chunk looks a bit strange: we’re dividing by the weights. That’s because the <code>ivreg</code> code puts the weights into the estimating function; we don’t want that because <code>svytotal</code> also puts them in.</p>
+<p>Alternatively, if you have a design using replicate weights (resampling), step 2 looks like</p>
+<pre><code>withReplicates(design, 
+              function(.weights, .data){
+                 .data$.pweights&lt;-.weights
+                 m&lt;-ivreg(formula,data= .data, weights=.pweights)
+                 coef(m)
+                })</code></pre>
+<p>which runs the <code>ivreg</code> function for each set of replicate weights, extracts the coefficients, and computes the variance.</p>
+<p>Step 3 is harder: ideally there would be a published analysis with downloadable data that I could check against. Also harder is working out how to adjust the various diagnostic tests. But the basic estimation is fairly straightforward.</p>
+<p>You can’t handle non-regular estimators such as the lasso this way, since they don’t have influence functions that work this way. You also can’t handle mixed models, where the score function isn’t just a sum over observations. In addition to the purely technical problems (which are enough to be going on with) there’s the issue that both of these classes of model have a cost:complexity or bias:variance tradeoff, and it’s not obvious how to make this tradeoff scale the right way when you go from a population to a sample.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Regular Asymptotically Linear<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>technically, these should be means, but with weights it’s simpler to rescale and write them as totals<a href="#fnref2" class="footnote-back">↩</a></p></li>
+</ol>
+</div>
