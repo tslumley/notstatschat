@@ -14,7 +14,7 @@ Multiple-response data is like factor data, except that you can be in more than 
 - what countries have you been to?
 - what birds did you see this week?
 
-I have the first version of a package to manipulate this sort of data, called [`rimu`](https://github.com/tslumley/rimu).  The name stands for **r**esponses **i**n **mu**ltiplex, but rimu is also the name of a New Zealand tree, [*Dacrydium , cupressinum*](https://en.wikipedia.org/wiki/Dacrydium_cupressinum), an attractive conifer with reddish wood. 
+I have the first version of a package to manipulate this sort of data, called [`rimu`](https://github.com/tslumley/rimu).  The name stands for **r**esponses **i**n **mu**ltiplex, but rimu is also the name of a New Zealand tree, [*Dacrydium cupressinum*](https://en.wikipedia.org/wiki/Dacrydium_cupressinum), an attractive conifer with reddish wood. 
 
 Comments on the package and whether there are useful things it doesn't do would be welcome. So far I have not considered modelling multiple-response data, nor the use of survey weights.  If people are interested, I might do those in the future. 
 
