@@ -1,0 +1,360 @@
+---
+title: A package for multiple-response data
+author: Thomas Lumley
+date: '2019-09-05'
+slug: a-package-for-multiple-response-data
+categories: []
+tags: []
+---
+
+
+
+<p>Multiple-response data is like factor data, except that you can be in more than one category. Examples include</p>
+<ul>
+<li>what is your ethnicity? (or, in the US, race/ethnicity, <em>sigh</em>)</li>
+<li>what social media do you use?</li>
+<li>what countries have you been to?</li>
+<li>what birds did you see this week?</li>
+</ul>
+<p>I have the first version of a package to manipulate this sort of data, called <a href="https://github.com/tslumley/rimu"><code>rimu</code></a>. The name stands for <strong>r</strong>esponses <strong>i</strong>n <strong>mu</strong>ltiplex, but rimu is also the name of a New Zealand tree, <a href="https://en.wikipedia.org/wiki/Dacrydium_cupressinum"><em>Dacrydium , cupressinum</em></a>, an attractive conifer with reddish wood.</p>
+<p>Comments on the package and whether there are useful things it doesn’t do would be welcome. So far I have not considered modelling multiple-response data, nor the use of survey weights. If people are interested, I might do those in the future.</p>
+<p>Here are selections from the two package vignettes.</p>
+<div id="ethnicity" class="section level2">
+<h2>Ethnicity</h2>
+<p>The <code>usethnicity</code> data set contains variables on race and ethnic identification from the 2017 Youth Risk Behaviour Survey, together with two variables on smoking behaviour. The YRBS is a multistage cluster-sampled survey, so valid inference about associations requires using survey design information. This subset of variables without weights is useful only for demonstration purposes.</p>
+<pre class="r"><code>library(rimu)</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>data(usethnicity)
+head(usethnicity)</code></pre>
+<pre><code>##   Q4 Q5 QN30 QN31
+## 1  2  E    2    2
+## 2  1       2    2
+## 3  1  A    1    2
+## 4  1       2    2
+## 5  2  E    2    2
+## 6  2  E    1    1</code></pre>
+<p>Question 4 asks <em>Are you Hispanic or Latino?</em>, and Question 5 asks for any of</p>
+<ul>
+<li>A. American Indian or Alaska Native,</li>
+<li>B. Asian,</li>
+<li>C. Black or African American,</li>
+<li>D. Native Hawaiian or Other Pacific Islander,</li>
+<li>E. White</li>
+</ul>
+<p>that apply. In the data set, these five letters are pasted together into a single variable.</p>
+<p>We need to split <code>Q5</code> into its component letters. One way is to use <code>strsplit</code>, producing a list with a vector of zero to five letters for each individual, then call the <code>as.mr</code> method for lists.</p>
+<pre class="r"><code>race&lt;-as.mr(strsplit(as.character(usethnicity$Q5),&quot;&quot;))
+mtable(race)</code></pre>
+<pre><code>##     E   A    C    B       D H F G
+##  8306 863 3643 1014 847 455 7 5 1</code></pre>
+<p>There’s a spurious <code>&quot; &quot;</code> category from the string splitting, and the values <code>F</code>, <code>G</code>, and <code>H</code> are also invalid, so we need to remove them</p>
+<pre class="r"><code>race&lt;-mr_drop(race,c(&quot; &quot;,&quot;F&quot;,&quot;G&quot;,&quot;H&quot;))
+mtable(race)</code></pre>
+<pre><code>##     E   A    C    B   D
+##  8306 863 3643 1014 455</code></pre>
+<p>We might want easier-to-recognise names for the categories</p>
+<pre class="r"><code>race &lt;- mr_recode(race, AmIndian=&quot;A&quot;,Asian=&quot;B&quot;, Black=&quot;C&quot;, Pacific=&quot;D&quot;, White=&quot;E&quot;)</code></pre>
+<p>Now, Hispanic/Latino ethnicity is asked in a separate question. We convert it via the <code>as.mr</code> method for logical vectors, and then combine it with <code>race</code></p>
+<pre class="r"><code>hispanic&lt;-as.mr(usethnicity$Q4==1, &quot;Hispanic&quot;)
+ethnicity&lt;-mr_union(race, hispanic)
+ethnicity[101:120]</code></pre>
+<pre><code>##  [1] &quot;Black&quot;                &quot;Black&quot;                &quot;Black&quot;               
+##  [4] &quot;Black&quot;                &quot;AmIndian+Black&quot;       &quot;Black&quot;               
+##  [7] &quot;Black&quot;                &quot;Black&quot;                &quot;Black&quot;               
+## [10] &quot;Black&quot;                &quot;Black&quot;                &quot;Black&quot;               
+## [13] &quot;Black+?Hispanic&quot;      &quot;Black&quot;                &quot;Black&quot;               
+## [16] &quot;Black&quot;                &quot;Black&quot;                &quot;Black&quot;               
+## [19] &quot;White+AmIndian+Black&quot; &quot;Black&quot;</code></pre>
+<p>The <code>plot</code> method shows co-occurence of the various race/ethnicity terms</p>
+<pre class="r"><code>plot(ethnicity,nsets=6)</code></pre>
+<pre><code>## Warning: Removed 1 rows containing missing values (geom_bar).</code></pre>
+<p><img src="/post/2019-09-05-a-package-for-multiple-response-data_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Tabulations against other factor or multiple-response variables are possible with <code>mtable</code>. Note that <code>mtable</code> shows frequencies for each category; use <code>as.character</code> to get frequencies for combinations – do not use <code>as.factor</code>, which is not generic and so cannot have a <code>mr</code> method.</p>
+<pre class="r"><code>mtable(ethnicity, usethnicity$QN30)</code></pre>
+<pre><code>##             2    1 &lt;NA&gt;
+## White    4759 2112    0
+## AmIndian  466  242    0
+## Black    2000  612    0
+## Asian     679  154    0
+## Pacific   256  120    0
+## Hispanic 2301  889    0</code></pre>
+<pre class="r"><code>table(ethnicity %has% &quot;Black&quot;, usethnicity$QN30)</code></pre>
+<pre><code>##        
+##            1    2
+##   FALSE 2704 6596
+##   TRUE   612 2000</code></pre>
+<pre class="r"><code>table(ethnicity %hasonly% &quot;Black&quot;, usethnicity$QN30)</code></pre>
+<pre><code>##        
+##            1    2
+##   FALSE 2878 7015
+##   TRUE   438 1581</code></pre>
+<pre class="r"><code>table(as.character(ethnicity), usethnicity$QN30)</code></pre>
+<pre><code>##                                              
+##                                                  1    2
+##                                                 27  106
+##   AmIndian                                      40   65
+##   AmIndian+Asian                                 0    1
+##   AmIndian+Asian+Hispanic                        0    1
+##   AmIndian+Asian+Pacific+Hispanic                1    0
+##   AmIndian+Black                                11   48
+##   AmIndian+Black+Asian                           1    2
+##   AmIndian+Black+Asian+Pacific                   0    0
+##   AmIndian+Black+Asian+Pacific+Hispanic          0    1
+##   AmIndian+Black+Hispanic                        3    5
+##   AmIndian+Black+Pacific                         0    2
+##   AmIndian+Black+Pacific+Hispanic                0    1
+##   AmIndian+Hispanic                             84  188
+##   AmIndian+Pacific                               2    3
+##   AmIndian+Pacific+Hispanic                      0    3
+##   Asian                                         80  489
+##   Asian+Hispanic                                14   25
+##   Asian+Pacific                                  8   15
+##   Asian+Pacific+Hispanic                         3    2
+##   Black                                        438 1581
+##   Black+Asian                                    2   26
+##   Black+Asian+Hispanic                           1    0
+##   Black+Asian+Pacific                            1    2
+##   Black+Asian+Pacific+Hispanic                   0    1
+##   Black+Hispanic                                40  100
+##   Black+Pacific                                  2   14
+##   Black+Pacific+Hispanic                         6    6
+##   Hispanic                                     375 1010
+##   Pacific                                       31   72
+##   Pacific+Hispanic                              34   68
+##   White                                       1618 3510
+##   White+AmIndian                                50   71
+##   White+AmIndian+Asian                           1    5
+##   White+AmIndian+Asian+Hispanic                  0    1
+##   White+AmIndian+Asian+Pacific                   0    1
+##   White+AmIndian+Black                          13   20
+##   White+AmIndian+Black+Asian                     2    2
+##   White+AmIndian+Black+Asian+Hispanic            1    1
+##   White+AmIndian+Black+Asian+Pacific             3    3
+##   White+AmIndian+Black+Asian+Pacific+Hispanic    2    6
+##   White+AmIndian+Black+Hispanic                  5    7
+##   White+AmIndian+Black+Pacific                   1    0
+##   White+AmIndian+Black+Pacific+Hispanic          1    3
+##   White+AmIndian+Hispanic                       20   21
+##   White+AmIndian+Pacific                         1    3
+##   White+AmIndian+Pacific+Hispanic                0    2
+##   White+Asian                                   19   71
+##   White+Asian+Hispanic                           2    8
+##   White+Asian+Pacific                            5    9
+##   White+Asian+Pacific+Hispanic                   3    2
+##   White+Black                                   59  140
+##   White+Black+Asian                              3    4
+##   White+Black+Asian+Hispanic                     2    1
+##   White+Black+Asian+Pacific                      0    0
+##   White+Black+Hispanic                          11   19
+##   White+Black+Pacific                            1    4
+##   White+Black+Pacific+Hispanic                   3    1
+##   White+Hispanic                               274  812
+##   White+Pacific                                  8   26
+##   White+Pacific+Hispanic                         4    6</code></pre>
+<pre class="r"><code>table(forcats::fct_lump(as.character(ethnicity), n=10),    usethnicity$QN30)</code></pre>
+<pre><code>##                    
+##                        1    2
+##                       27  106
+##   AmIndian            40   65
+##   AmIndian+Hispanic   84  188
+##   Asian               80  489
+##   Black              438 1581
+##   Black+Hispanic      40  100
+##   Hispanic           375 1010
+##   White             1618 3510
+##   White+Black         59  140
+##   White+Hispanic     274  812
+##   Other              281  595</code></pre>
+</div>
+<div id="birds" class="section level2">
+<h2>Birds</h2>
+<p>The <code>birds</code> dataset is a small subset of data from the Great Backyard Bird Count, in the US and Canada. We have counts of 12 birds by US county and Canadian province. The twelve birds are</p>
+<pre class="r"><code>library(rimu)
+data(birds)
+names(birds)[1:12]</code></pre>
+<pre><code>##  [1] &quot;Phalaenoptilus nuttallii&quot;      &quot;Fregata magnificens&quot;          
+##  [3] &quot;Melanerpes lewis&quot;              &quot;Melospiza georgiana&quot;          
+##  [5] &quot;Rallus limicola&quot;               &quot;Myioborus pictus&quot;             
+##  [7] &quot;Poecile gambeli&quot;               &quot;Aythya collaris&quot;              
+##  [9] &quot;Xanthocephalus xanthocephalus&quot; &quot;Gracula religiosa&quot;            
+## [11] &quot;Icterus parisorum&quot;             &quot;Coccyzus erythropthalmus&quot;</code></pre>
+<p>There’s a thirteenth column giving the location name.</p>
+<p>These birds are perhaps more familiar as</p>
+<ul>
+<li>Common poorwill, <em>Phalaenoptilus nuttallii</em></li>
+<li>Frigatebird <em>Fregata magnificens</em><br />
+</li>
+<li>Lewis’s woodpecker <em>Melanerpes lewis</em><br />
+</li>
+<li>Swamp sparrow <em>Melospiza georgiana</em><br />
+</li>
+<li>Virginia rail <em>Rallus limicola</em><br />
+</li>
+<li>Painted redstart <em>Myioborus pictus</em><br />
+</li>
+<li>Mountain chickadee <em>Poecile gambeli</em><br />
+</li>
+<li>Ring-necked duck <em>Aythya collaris</em><br />
+</li>
+<li>Yellowheaded blackbird <em>Xanthocephalus xanthocephalus</em></li>
+<li>Common hill myna <em>Gracula religiosa</em><br />
+</li>
+<li>Scott’s oriole <em>Icterus parisorum</em><br />
+</li>
+<li>Black-billed cuckoo <em>Coccyzus erythropthalmus</em></li>
+</ul>
+<p>First, let’s put them into the data structures</p>
+<pre class="r"><code>bird_count &lt;- as.ms(birds[,-13],na.rm=TRUE)
+bird_presence &lt;- as.mr(bird_count)</code></pre>
+<p>The bird counts will print like a sparse matrix</p>
+<pre class="r"><code>head(bird_count)</code></pre>
+<pre><code>##      Phalaenoptilus nuttallii Fregata magnificens Melanerpes lewis
+## [1,] .                        .                   .               
+## [2,] .                        .                   .               
+## [3,] .                        .                   .               
+## [4,] .                        .                   .               
+## [5,] .                        .                   .               
+## [6,] .                        .                   .               
+##      Melospiza georgiana Rallus limicola Myioborus pictus Poecile gambeli
+## [1,] .                   .               .                .              
+## [2,] .                   .               .                .              
+## [3,] 5                   .               .                .              
+## [4,] .                   .               .                30             
+## [5,] .                   .               .                .              
+## [6,] 1                   .               .                .              
+##      Aythya collaris Xanthocephalus xanthocephalus Gracula religiosa
+## [1,] .               .                             .                
+## [2,] 1               .                             .                
+## [3,] 4               .                             .                
+## [4,] 10              .                             .                
+## [5,] .               .                             .                
+## [6,] 1               .                             .                
+##      Icterus parisorum Coccyzus erythropthalmus
+## [1,] .                 .                       
+## [2,] .                 .                       
+## [3,] .                 .                       
+## [4,] .                 .                       
+## [5,] .                 .                       
+## [6,] .                 .</code></pre>
+<p>but the bird presence/absence data has a more compact character form</p>
+<pre class="r"><code>head(bird_presence)</code></pre>
+<pre><code>## [1] &quot;&quot;                                   
+## [2] &quot;Aythya collaris&quot;                    
+## [3] &quot;Melospiza georgiana+Aythya collaris&quot;
+## [4] &quot;Poecile gambeli+Aythya collaris&quot;    
+## [5] &quot;&quot;                                   
+## [6] &quot;Melospiza georgiana+Aythya collaris&quot;</code></pre>
+<p>What birds are most often present?</p>
+<pre class="r"><code>mtable(bird_presence)</code></pre>
+<pre><code>##  Phalaenoptilus nuttallii Fregata magnificens Melanerpes lewis
+##                         9                  16               87
+##  Melospiza georgiana Rallus limicola Myioborus pictus Poecile gambeli
+##                  876             121                4             317
+##  Aythya collaris Xanthocephalus xanthocephalus Gracula religiosa
+##             1090                            80                 1
+##  Icterus parisorum Coccyzus erythropthalmus
+##                  8                        1</code></pre>
+<p>And what birds tend to go together? We can draw an upset chart</p>
+<pre class="r"><code>plot(bird_presence,nsets=12)</code></pre>
+<p><img src="/post/2019-09-05-a-package-for-multiple-response-data_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>That’s all a bit clumsy because of the long names,but you can see, for example, that the swamp sparrow and ring-necked duck tend to co-occur. Let’s recode to shorter names.</p>
+<pre class="r"><code>bird_presence&lt;-mr_recode(bird_presence, 
+  poorwill=&quot;Phalaenoptilus nuttallii&quot;,
+  frigatebird=&quot;Fregata magnificens&quot;,       
+  woodpecker =&quot;Melanerpes lewis&quot;,          
+  sparrow=&quot;Melospiza georgiana&quot;,   
+  rail=&quot;Rallus limicola&quot;,      
+  redstart=&quot;Myioborus pictus&quot;,          
+  chickadee=&quot;Poecile gambeli&quot;,            
+  duck=&quot;Aythya collaris&quot;,
+  yellowhead=&quot;Xanthocephalus xanthocephalus&quot;,
+  myna=&quot;Dracula religiosa&quot;,           
+  oriole=&quot;Icterus parisorum&quot;,      
+  cuckoo=&quot;Coccyzus erythropthalmus&quot;)</code></pre>
+<pre><code>## Error in mr_recode(bird_presence, poorwill = &quot;Phalaenoptilus nuttallii&quot;, : non-existent levels Dracula religiosa</code></pre>
+<p>Oops.</p>
+<pre class="r"><code>bird_presence&lt;-mr_recode(bird_presence, 
+  poorwill=&quot;Phalaenoptilus nuttallii&quot;,
+  frigatebird=&quot;Fregata magnificens&quot;,       
+  woodpecker =&quot;Melanerpes lewis&quot;,          
+  sparrow=&quot;Melospiza georgiana&quot;,   
+  rail=&quot;Rallus limicola&quot;,      
+  redstart=&quot;Myioborus pictus&quot;,          
+  chickadee=&quot;Poecile gambeli&quot;,            
+  duck=&quot;Aythya collaris&quot;,
+  yellowhead=&quot;Xanthocephalus xanthocephalus&quot;,
+  myna=&quot;Gracula religiosa&quot;,           
+  oriole=&quot;Icterus parisorum&quot;,      
+  cuckoo=&quot;Coccyzus erythropthalmus&quot;)</code></pre>
+<p>Now try again:</p>
+<pre class="r"><code>mtable(bird_presence)</code></pre>
+<pre><code>##  poorwill frigatebird woodpecker sparrow rail redstart chickadee duck
+##         9          16         87     876  121        4       317 1090
+##  yellowhead myna oriole cuckoo
+##          80    1      8      1</code></pre>
+<pre class="r"><code>mtable(bird_presence,bird_presence)</code></pre>
+<pre><code>##             poorwill frigatebird woodpecker sparrow rail redstart
+## poorwill           9           0          2       0    3        0
+## frigatebird        0          16          0      12    8        0
+## woodpecker         2           0         87      13   29        3
+## sparrow            0          12         13     876   72        4
+## rail               3           8         29      72  121        4
+## redstart           0           0          3       4    4        4
+## chickadee          5           0         72      34   52        3
+## duck               8          13         70     593  114        4
+## yellowhead         2           3         27      22   22        3
+## myna               0           1          0       1    1        0
+## oriole             0           0          4       5    4        3
+## cuckoo             0           0          0       1    0        0
+##             chickadee duck yellowhead myna oriole cuckoo
+## poorwill            5    8          2    0      0      0
+## frigatebird         0   13          3    1      0      0
+## woodpecker         72   70         27    0      4      0
+## sparrow            34  593         22    1      5      1
+## rail               52  114         22    1      4      0
+## redstart            3    4          3    0      3      0
+## chickadee         317  188         43    0      4      0
+## duck              188 1090         73    1      7      1
+## yellowhead         43   73         80    0      5      0
+## myna                0    1          0    1      0      0
+## oriole              4    7          5    0      8      0
+## cuckoo              0    1          0    0      0      1</code></pre>
+<pre class="r"><code>plot(bird_presence, nsets=12,nint=30)</code></pre>
+<p><img src="/post/2019-09-05-a-package-for-multiple-response-data_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>The default <code>image</code> plot is of the table of the variable by itself and shows the number of co-occurences. With <code>type=&quot;conditional&quot;</code>, the plot shows the proportion of each bird (on the y-axis) given that a particular bird (on the x-axis) is present.</p>
+<pre class="r"><code>image(bird_presence)</code></pre>
+<p><img src="/post/2019-09-05-a-package-for-multiple-response-data_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<pre class="r"><code>image(bird_presence, type=&quot;conditional&quot;)</code></pre>
+<p><img src="/post/2019-09-05-a-package-for-multiple-response-data_files/figure-html/unnamed-chunk-17-2.png" width="672" /></p>
+<p>We might want to focus on just the more commonly observed birds</p>
+<pre class="r"><code>common_birds&lt;-mr_lump(bird_presence,n=4)
+mtable(common_birds)</code></pre>
+<pre><code>##  sparrow rail chickadee duck Other
+##      876  121       317 1090   163</code></pre>
+<pre class="r"><code>mtable(common_birds,common_birds)</code></pre>
+<pre><code>##           sparrow rail chickadee duck Other
+## sparrow       876   72        34  593    44
+## rail           72  121        52  114    48
+## chickadee      34   52       317  188    97
+## duck          593  114       188 1090   135
+## Other          44   48        97  135   163</code></pre>
+<pre class="r"><code>plot(common_birds)</code></pre>
+<p><img src="/post/2019-09-05-a-package-for-multiple-response-data_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>Or consider just the rare and interesting ones</p>
+<pre class="r"><code>rare_birds&lt;-mr_lump(bird_presence,n=-5,other_level=&quot;Common&quot;)
+mtable(rare_birds)</code></pre>
+<pre><code>##  poorwill redstart myna oriole cuckoo Common
+##         9        4    1      8      1   1513</code></pre>
+<pre class="r"><code>mtable(rare_birds,rare_birds)</code></pre>
+<pre><code>##          poorwill redstart myna oriole cuckoo Common
+## poorwill        9        0    0      0      0      9
+## redstart        0        4    0      3      0      4
+## myna            0        0    1      0      0      1
+## oriole          0        3    0      8      0      7
+## cuckoo          0        0    0      0      1      1
+## Common          9        4    1      7      1   1513</code></pre>
+<pre class="r"><code>plot(rare_birds,nsets=6)</code></pre>
+<p><img src="/post/2019-09-05-a-package-for-multiple-response-data_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<pre class="r"><code>plot(mr_drop(rare_birds,&quot;Common&quot;),nsets=5)</code></pre>
+<p><img src="/post/2019-09-05-a-package-for-multiple-response-data_files/figure-html/unnamed-chunk-19-2.png" width="672" /></p>
+</div>
