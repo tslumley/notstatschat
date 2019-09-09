@@ -1,0 +1,19 @@
+---
+title: Why isn't rimu tidy?
+author: Thomas Lumley
+date: '2019-09-10'
+slug: why-isn-t-rimu-tidy
+categories: []
+tags: []
+---
+
+
+
+<p>The <a href="https://github.com/tslumley/rimu"><code>rimu</code> package</a>, which I published last week, does not use the tidyverse.</p>
+<p>The operations that I do on multiple-response data would be easy using <code>dplyr</code> or <code>purrrrrr</code> with the data in long form: all responses stacked.
+The problem is that <code>dplyr</code> and <code>rlang</code> are not automatically <em>type-safe</em> for this sort of multiple-response data.</p>
+<p>It seems to be easier to define a multicolumn S3 class, which can then be put into a single column of a data frame, eg</p>
+<pre><code>bird_frame &lt;- data.frame(location=location, birds=I(bird_presence))</code></pre>
+<p>That way, we know that all the rows and columns are kept together appropriately, and we could (though I haven’t yet) define methods so that some inappropriate operations just fail.</p>
+<p>The approach taken by <code>tsibble</code> works if you want an entire data frame to be a multiple-response object – the way you want an entire data frame to be a time-series object.</p>
+<p>It would be interesting to see someone do a tidyversatile version for comparison, though.</p>
