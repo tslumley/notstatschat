@@ -1,0 +1,85 @@
+---
+title: (What’s up with the brackets?)
+author: Thomas Lumley
+date: '2019-09-10'
+slug: what-s-up-with-the-brackets
+categories: []
+tags: []
+---
+
+In various places, from the R help pages to books to course materials, you see R code like
+
+```{r}
+(x = runif(10, 0, 10))
+```
+
+which displays the value of `x`. Without the brackets, it doesn't.   Harkanwal Singh, on Twitter, said "I would like to know more". So, in case he's not the only one, this is what's going on.
+
+First, when you evaluate an expression in R it will usually return a value, which will be printed.
+
+```{r}
+exp(pi)
+rnorm(2)
+cos
+function(x,y) {
+  lm(y~x)
+} 
+```
+
+The printing doesn't always happen, for example:
+
+```{r}
+boxplot(x)
+```
+
+Is this because `boxplot` doesn't return a value? No!
+
+```{r}
+a<-boxplot(x)
+a
+```
+
+The value returned by `boxplot` is somehow invisible, but only in a temporary way. In fact, if you look near the end of the `boxplot.default` method, you see
+
+```
+if (is.null(pars$boxfill) && is.null(args$boxfill)) 
+            pars$boxfill <- col
+do.call("bxp", c(list(z, notch = notch, width = width, 
+            varwidth = varwidth, log = log, border = border, 
+            pars = pars, outline = outline, horizontal = horizontal, 
+            add = add, at = at), args[namedargs]))
+invisible(z)
+```
+
+The value is returned, and tagged as *invisible*.  It won't print, at least not until you do something to it.^[Note: lattice and ggplot objects are different -- for them, the `print` method is what does the plotting]
+
+There are two uses of the invisibility flag that are critical to usability of R but not obvious.  The first is in assignments. If you type something like
+
+```{r}
+bigx <- matrix(rnorm(1e6),ncol=100)
+```
+
+you **really** don't want `bigx` to automatically print.  But it would, without more effort: these are perfectly good expressions that return a value.
+
+Even worse, you don't want
+
+```{r}
+print(x)
+```
+
+to print its returned value, because its returned value is typically the value of `x` and that way lies infinite loops. Methods for `print` typically return `invisible(x)`^[even the `print` method for `ggplot` objects, which draws a plot rather than printing]. You **could** also get around this by having `print` not return a value, but that breaks the magic variable `.Last.value` and, anyway, it's not what we do.
+
+And, finally, what's with the parentheses?  The parentheses are a function
+
+```{r}
+get("(")
+```
+
+It returns its argument unchanged, and, like most functions, it doesn't set the invisibility flag.  So when you type
+
+```{r}
+(x = runif(10,0,10))
+```
+the inner assignment is evaluated, the value is returned invisibly, the value is passed to the `(` function, this returns the same value, but it doesn't set the invisibility flag, and the vector prints. 
+
+My recollection is that this wasn't ever a deliberate plan, and there was a move to get rid of it at some point long ago, which was stopped partly because the trick was being used in so many base R help pages. 

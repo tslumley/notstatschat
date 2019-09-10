@@ -1,0 +1,93 @@
+---
+title: (What’s up with the brackets?)
+author: Thomas Lumley
+date: '2019-09-10'
+slug: what-s-up-with-the-brackets
+categories: []
+tags: []
+---
+
+
+
+<p>In various places, from the R help pages to books to course materials, you see R code like</p>
+<pre class="r"><code>(x = runif(10, 0, 10))</code></pre>
+<pre><code>##  [1] 1.610466 2.662462 1.517036 1.372483 4.272460 6.402148 8.347196
+##  [8] 8.775537 1.863104 8.912241</code></pre>
+<p>which displays the value of <code>x</code>. Without the brackets, it doesn’t. Harkanwal Singh, on Twitter, said “I would like to know more”. So, in case he’s not the only one, this is what’s going on.</p>
+<p>First, when you evaluate an expression in R it will usually return a value, which will be printed.</p>
+<pre class="r"><code>exp(pi)</code></pre>
+<pre><code>## [1] 23.14069</code></pre>
+<pre class="r"><code>rnorm(2)</code></pre>
+<pre><code>## [1] -0.4578773  1.2234183</code></pre>
+<pre class="r"><code>cos</code></pre>
+<pre><code>## function (x)  .Primitive(&quot;cos&quot;)</code></pre>
+<pre class="r"><code>function(x,y) {
+  lm(y~x)
+} </code></pre>
+<pre><code>## function(x,y) {
+##   lm(y~x)
+## }</code></pre>
+<p>The printing doesn’t always happen, for example:</p>
+<pre class="r"><code>boxplot(x)</code></pre>
+<p><img src="/post/2019-09-10-what-s-up-with-the-brackets_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Is this because <code>boxplot</code> doesn’t return a value? No!</p>
+<pre class="r"><code>a&lt;-boxplot(x)</code></pre>
+<p><img src="/post/2019-09-10-what-s-up-with-the-brackets_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>a</code></pre>
+<pre><code>## $stats
+##          [,1]
+## [1,] 1.372483
+## [2,] 1.610466
+## [3,] 3.467461
+## [4,] 8.347196
+## [5,] 8.912241
+## 
+## $n
+## [1] 10
+## 
+## $conf
+##           [,1]
+## [1,] 0.1015223
+## [2,] 6.8333997
+## 
+## $out
+## numeric(0)
+## 
+## $group
+## numeric(0)
+## 
+## $names
+## [1] &quot;1&quot;</code></pre>
+<p>The value returned by <code>boxplot</code> is somehow invisible, but only in a temporary way. In fact, if you look near the end of the <code>boxplot.default</code> method, you see</p>
+<pre><code>if (is.null(pars$boxfill) &amp;&amp; is.null(args$boxfill)) 
+            pars$boxfill &lt;- col
+do.call(&quot;bxp&quot;, c(list(z, notch = notch, width = width, 
+            varwidth = varwidth, log = log, border = border, 
+            pars = pars, outline = outline, horizontal = horizontal, 
+            add = add, at = at), args[namedargs]))
+invisible(z)</code></pre>
+<p>The value is returned, and tagged as <em>invisible</em>. It won’t print, at least not until you do something to it.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></p>
+<p>There are two uses of the invisibility flag that are critical to usability of R but not obvious. The first is in assignments. If you type something like</p>
+<pre class="r"><code>bigx &lt;- matrix(rnorm(1e6),ncol=100)</code></pre>
+<p>you <strong>really</strong> don’t want <code>bigx</code> to automatically print. But it would, without more effort: these are perfectly good expressions that return a value.</p>
+<p>Even worse, you don’t want</p>
+<pre class="r"><code>print(x)</code></pre>
+<pre><code>##  [1] 1.610466 2.662462 1.517036 1.372483 4.272460 6.402148 8.347196
+##  [8] 8.775537 1.863104 8.912241</code></pre>
+<p>to print its returned value, because its returned value is typically the value of <code>x</code> and that way lies infinite loops. Methods for <code>print</code> typically return <code>invisible(x)</code><a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a>. You <strong>could</strong> also get around this by having <code>print</code> not return a value, but that breaks the magic variable <code>.Last.value</code> and, anyway, it’s not what we do.</p>
+<p>And, finally, what’s with the parentheses? The parentheses are a function</p>
+<pre class="r"><code>get(&quot;(&quot;)</code></pre>
+<pre><code>## .Primitive(&quot;(&quot;)</code></pre>
+<p>It returns its argument unchanged, and, like most functions, it doesn’t set the invisibility flag. So when you type</p>
+<pre class="r"><code>(x = runif(10,0,10))</code></pre>
+<pre><code>##  [1] 6.9129134 0.1128086 6.3230912 0.6280404 7.9812971 5.5740664 4.9418995
+##  [8] 0.8299477 2.8720316 0.1819464</code></pre>
+<p>the inner assignment is evaluated, the value is returned invisibly, the value is passed to the <code>(</code> function, this returns the same value, but it doesn’t set the invisibility flag, and the vector prints.</p>
+<p>My recollection is that this wasn’t ever a deliberate plan, and there was a move to get rid of it at some point long ago, which was stopped partly because the trick was being used in so many base R help pages.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Note: lattice and ggplot objects are different – for them, the <code>print</code> method is what does the plotting<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>even the <code>print</code> method for <code>ggplot</code> objects, which draws a plot rather than printing<a href="#fnref2">↩</a></p></li>
+</ol>
+</div>
