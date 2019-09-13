@@ -1,0 +1,44 @@
+---
+title: How to review a book
+author: ''
+date: '2019-09-13'
+slug: how-to-review-a-book
+categories: []
+tags: []
+---
+
+The old-fashioned^[and good] way to review a book, such as, say, [Randall Munroe's *how to*](https://xkcd.com/how-to/), involves reading it.  
+
+On the positive side, you can learn about *The Effects of Nuclear Explosions on Commercially-Packaged Beverages*^[a US government report on the effects of nuclear explosions on commercially-packaged beverages, which turn out to be surprisingly minor.] and find out what Colonel Chris Hadfield thinks should be treated as "a big angry hang glider"^[not telling].On the negative side, there are all those words and pictures and footnotes and index entries you have to read. 
+
+You could ask an AI to do it.  The site [talktotransformer.com](talktotransformer.com) generates text from short prompts, using the GPT-2 text prediction model
+
+>A review of Randall Munroe's book "How To", by me and an AI. The book tells you how to do stuff and it's funny and there are pictures but the advice is bad advice.
+>
+>Randall Munroe should be made a hero. Let's put him in the same league as John Wayne, and George Miller. Because you can make a movie like "How To" about real people and that'd be good.
+>
+>Also:
+>
+>http://www.giantmonkey.com/forum/shopping/gadgets/lasers/Lasers_Gadgets.html
+>
+>"How To" is a fake book. How can it possibly be funny?
+
+Ok, let's try this one again.
+
+>A review of Randall Munroe's book "How To", by me and an AI. The AI hasn't read the book, and I haven't either, but we need a review. The book is called Randall Munroe's How To. He calls it "The most interesting book to appear in the last 20 years" — which is really saying a lot. You should have all the information you need if you take the time to read this book — it is full of valuable information, for anyone with an open mind and a willingness to learn. But if you have time, and a desire to know, here's a preview of how it goes.
+>
+>Forget about "I'm a robot. I don't remember any of that!" and "I didn't know about that!" — Randall Munroe is talking about artificial intelligence.
+>
+>It's no surprise that this book is so important. It's a work of philosophy and art, and one wonders why it hasn't caught on better. The point with AI is not to simply "get smarter", but to explore how we may be "warping ourselves" and becoming an "
+
+Another approach would be to look at [Google Trends](https://trends.google.com/trends/) to work out what topics in the book were generating searches.  Here's the trend picture for "pantai remis landslide" for the United States
+![](/post/2019-09-13-how-to-review-a-book_files/us-landslide.png){width=90%}
+
+and for the whole world
+
+![](/post/2019-09-13-how-to-review-a-book_files/world-landslide.png){width=90%}
+
+You can see how the peak is slightly later outside the US.  The earlier peaks probably represent review copies or drafts^[this is totally a guess].  If you find other terms with the same patterns, they're probably also topics that turn up in the book.  That sounds like work, and you might think you could automate it, but Google's terms of service would get in the way. 
+
+Or, you could write lots of reviews based on the sort of book Randall usually writes, mentioning the likelihood of dying in a fire or making the Earth uninhabitable if the advice was followed. Post them in various places on the internet, and then use the one that gets the most positive feedback^[the person who said all publicity is good publicity hadn't met the internet] from people who have actually read the book. 
+
