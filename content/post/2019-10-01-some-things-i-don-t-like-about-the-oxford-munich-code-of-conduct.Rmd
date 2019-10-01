@@ -1,0 +1,91 @@
+---
+title: Some things I don’t like about the Oxford-Munich Code of Conduct
+author: Thomas Lumley
+date: '2019-10-01'
+slug: some-things-i-don-t-like-about-the-oxford-munich-code-of-conduct
+categories: []
+tags: []
+---
+
+The Oxford-Munich Code of Conduct for Professional Data Scientists (http://www.code-of-ethics.org/code-of-conduct/) is worth reading. It's fairly detailed and has some good features. There are also things I don't like about it, which are why I  didn't include it in my *Data Science Practice* course. It's a bit inconsistent in style at the moment, but (a) it's a draft under development and (b) I may not have the moral high ground on this point, so that's not what I'm complaining about.
+
+I've got three sorts of disagreements with it.  First, it includes organisational things that I don't think are at all normative, although they might be good practice and would be reasonable contractual terms.  Second, it doesn't distinguish between what you might call 'SHOULD' and 'MUST' principles.  Third, it mandates particular technical choices that may be far from ideal. 
+
+### Technical issues
+
+The third category was what initially provoked me to consider the whole document more carefully. Specifically, clause 4b begins 
+
+> **A Data Scientist shall sample the data in a way the sample is as representative as possible of the population under analysis.**
+
+That is **terrible** advice in many settings, as we have known for nearly a century. It was back in 1934 that Neyman showed that unequal-probability stratified sampling could be superior to equal-probability sampling (and that it could be bad to force additional representativeness beyond that coming from random sampling). 
+
+Even if we bring clause 4b into the mid-twentieth century to allow for good-quality probability sampling, it's still wrong.  Prognostic risk models such as the Framingham ones seem to do quite well, even though they don't come from anything like a representative population sample. You'd be better off developing a predictive model for heart attacks from the Framingham or ARIC or Jackson cohorts rather than even a probability sample such as NHANES, because there are tradeoffs between richness of data and representativeness of samples. Andrew Gelman (and others) [have argued](https://slate.com/technology/2017/09/what-is-the-future-of-polling.html) that election polling, the paradigmatic example of the importance of random sampling, would be better served by collecting more and richer data. Even if you aren't convinced by his arguments, it would be difficult to argue that they are unethical. 
+
+Data scientists must worry about sampling bias, and try to use techniques that minimise its impact, but the code of conduct is not the place to specify which techniques are permissible.
+
+
+Clause 3c says
+
+>**The Data Scientist shall retain copies of the original data unaltered while keeping a record describing the set of transformations made across all of the data value chain (including ingestion, cleansing, feature extraction, scaling / normalization, feature selection, etc).**
+
+That's usually a good practice, and it's one I teach, but it's not universal.  There are situations where ethics requires that easily-identifying information is discarded after it has been used to link data sets, or where sensitive information is discarded after it has been transformed or coded.  There are also situations (such as short-read DNA sequencing) where the raw data (image bitmaps) are discarded because it's not worth the storage cost.
+
+The ethical principle is reproducibility or auditability; preserving the raw data is an approach to achieving it.
+
+
+### Organisation and management
+
+Some of the clauses (explicitly: 3a, 3b, but implicitly 5a and perhaps others) are phrased in terms of an employer. 3a says
+
+> **The Data Scientist will always keep a personal auditable, time based, record of his/her work in the form of a “lab book” equivalent, incorporating all data addressed/analyzed and all of their analytical activities. This should include statements of the source and provenance of all data accessed and analyzed, the methods actually employed, all discoveries and other knowhow generated, any limitations of scope and findings, and suggested potential further investigations or applications. Such a lab-book is the property of the Data Scientist’s employer.**
+
+Quite a few data scientists work on a consulting basis and are either self-employed or are employed by someone other than the people asking for the work.  It's not obvious that the employer is the person who should own such a lab book, nor that 'property' is a good model for thinking about rights and duties here -- copyright or trade secrets might be more relevant models.  
+
+Some data scientists aren't even doing the data analysis for someone else: they're doing it because they want to know the answer.  Unless I'm doing consulting projects where it was needed, I wouldn't keep a 'personal auditable, time based, record' of my work. And if I did, how it was kept and who had what sort of rights over it would be a contractual matter rather than an ethical one. 
+
+### SHOULD and MUST
+
+> *‘You have heard that it was said to those of ancient times, “You shall not murder”; and “whoever murders shall be liable to judgement.” But I say to you that if you are angry with a brother or sister, you will be liable to judgement*
+> Matthew 5:21-22
+
+Codes of conduct differ from statements of ethical principles and ethical goals or aims, in that codes of conduct are expected to be followed. Requirements in a code of conduct should be achievable and should not conflict. Goals may not always be achievable (but should always be desirable). Ethical principles often do come into conflict; following one more closely may require violating another. 
+
+As I've said above, I think the code sometimes conflates principles and advice about their implementation.  It also doesn't distinguish mandatory conduct requirements from ethical principles that may be unachievable. Clause 4e says
+
+> **The Data Scientist is responsible for clearly separating causality from correlation and explaining the consequences of wrongly establishing a causal relationship between two variables that are just correlated**
+
+The second half of this is a genuine code-of-conduct requirement: it's something you can do, and you can tell if you've done it.  The first half, well, in an office close to your friendly neighbourhood ethics expert there may well be someone who can tell you more than you ever wanted to know about the problem of induction and the epistemology of causation, and related topics.
+
+Data Scientists do need to know, as part of professional competence, when it's ok for a model to just describe correlations, and when it needs to describe causal relationships -- and when it needs to describe relationships that are likely to remain stable in the future, which is related to, but distinct from, being causal.  When causality is relevant, data scientists need to know what can usefully be said about it. 
+
+Clause 4i says
+
+> **The Data Scientist needs to make the right call, depending on the particular problem, between accuracy and explainability.**
+
+This is a goal. We'd all like to always make the right call, but it's not a reasonable code-of-conduct requirement. Sometimes the right call is straightforward enough that getting it wrong is mispractice or malpractice; sometimes it's hard.
+
+By contrast, 4d is pretty straightforward (although it's not phrased in a way that describes conduct)
+
+> **The Data Scientist is accountable for the consequences of discarding data that is not showing the desired outcome for the company he/she works for.**
+
+as is Clause 1c, about equity legislation and 2b about not faking your cv.
+
+### When the chips are down
+
+Finally, Clause 1a might seem unobjectionable at first
+
+> **The Data Scientist will always act in accordance with the law**, developing a full knowledge of, and ensuring compliance with, all relevant regulatory regimes. Employers should take steps to raise their data scientists’ awareness and knowledge of such issues.
+
+But why is this in a code of conduct, much less as the very first statement?
+
+A principle that data scientists should know the relevant laws and regulations makes sense (though no-one can know everything and this is why we have specialists).  
+
+Most of the time, though, a principle of acting in accordance with the law is redundant. There are already reasons to obey the law, both ethical and pragmatic.  When professional conduct as a data scientist breaches the law, it will typically also violate some independent principle of professional ethics: violation of privacy, discrimination, breach of confidentiality, sexual harassment, fraudulent misstatement of findings, insider trading, etc, etc. 
+
+Sometimes, though, the law is wrong and professional conduct requires that the law be broken.
+
+
+
+
+
+
