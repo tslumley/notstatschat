@@ -85,7 +85,7 @@ dhtri(tri_colours=eth_hex,
         legend_opts=list(fill=RColorBrewer::brewer.pal(5,&quot;Pastel1&quot;),
         border=NA, legend=c(&quot;NZ European&quot;,&quot;Māori&quot;,&quot;Pacific&quot;,&quot;Asian&quot;,&quot;Other&quot;)))</code></pre>
 <p><img src="/post/2019-11-07-hexmaps-for-nz-district-health-boards_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p>To show the vaccination coverage, we need to code the numeric proportion, taking account of the target being 95% (which is what you need for herd immunity to measles)</p>
+<p>To show the vaccination coverage, we need to code the numeric proportion, taking account of the target being 95% (which is what you need for herd immunity to measles)<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a></p>
 <pre class="r"><code>code_vax&lt;-function(pct,N,dhbnames){
     basecols&lt;-case_when(
         is.na(N)~&quot;lightgray&quot;,
@@ -126,5 +126,6 @@ title(main=&quot;Other Ethnicities&quot;)</code></pre>
 <hr />
 <ol>
 <li id="fn1"><p>The reason this isn’t a pie chart is that it’s discrete: the difficulty in judging angles in a pie chart doesn’t apply. It’s a type of glyph map<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>These proportions were rounded to two decimals by Excel; in fact South Canterbury DHB did not <em>quite</em> make the target, having 140/148=94.595%<a href="#fnref2">↩</a></p></li>
 </ol>
 </div>

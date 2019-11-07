@@ -54,7 +54,7 @@ dhtri(radii=sqrt(immune$Ntotal),tri_colours=eth_hex,
 		border=NA, legend=c("NZ European","Māori","Pacific","Asian","Other")))
 ```
 
-To show the vaccination coverage, we need to code the numeric proportion, taking account of the target being 95% (which is what you need for herd immunity to measles)
+To show the vaccination coverage, we need to code the numeric proportion, taking account of the target being 95% (which is what you need for herd immunity to measles)^[These proportions were rounded to two decimals by Excel; in fact South Canterbury DHB did not *quite* make the target, having 140/148=94.595%]
 
 ```{r fig.height=8}
 
