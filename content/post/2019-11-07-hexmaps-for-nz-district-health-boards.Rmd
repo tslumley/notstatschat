@@ -61,7 +61,7 @@ To show the vaccination coverage, we need to code the numeric proportion, taking
 code_vax<-function(pct,N,dhbnames){
 	basecols<-case_when(
 		is.na(N)~"lightgray",
-		N<75 ~ "lightgray",
+		N<70 ~ "lightgray",
 		pct< 0.80 ~ "goldenrod",
 		pct< 0.85 ~ "red",
 		pct <0.90 ~ "orange",

@@ -89,7 +89,7 @@ dhtri(tri_colours=eth_hex,
 <pre class="r"><code>code_vax&lt;-function(pct,N,dhbnames){
     basecols&lt;-case_when(
         is.na(N)~&quot;lightgray&quot;,
-        N&lt;75 ~ &quot;lightgray&quot;,
+        N&lt;70 ~ &quot;lightgray&quot;,
         pct&lt; 0.80 ~ &quot;goldenrod&quot;,
         pct&lt; 0.85 ~ &quot;red&quot;,
         pct &lt;0.90 ~ &quot;orange&quot;,
