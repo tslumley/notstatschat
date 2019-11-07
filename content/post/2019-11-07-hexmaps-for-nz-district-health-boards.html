@@ -106,7 +106,7 @@ legend_opts=list(fill=c(&quot;goldenrod&quot;,&quot;red&quot;,&quot;orange&quot;
 legend=c(&quot;&lt;80%&quot;,&quot;80-85%&quot;,&quot;85-90%&quot;,&quot;90-95%&quot;,&quot;95%+&quot;), title=&quot;Immunisation coverage&quot;)
 ))</code></pre>
 <p><img src="/post/2019-11-07-hexmaps-for-nz-district-health-boards_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
-<p>And now, vaccine coverage by ethnicity; the gray hexes are where the total count is less than 75.</p>
+<p>And now, vaccine coverage by ethnicity; the gray hexes are where the total count is less than 70.</p>
 <pre class="r"><code>par(mfrow=c(3,2),mar=c(1,0,1,1))
 with(immune,dhbin(hex_colours=code_vax(Pcttotal,Ntotal,DHB),short=TRUE))
 title(main=&quot;All&quot;)

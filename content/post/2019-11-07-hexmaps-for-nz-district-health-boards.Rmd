@@ -80,7 +80,7 @@ legend=c("<80%","80-85%","85-90%","90-95%","95%+"), title="Immunisation coverage
 ```
 
 
-And now, vaccine coverage by ethnicity; the gray hexes are where the total count is less than 75. 
+And now, vaccine coverage by ethnicity; the gray hexes are where the total count is less than 70. 
 
 ```{r fig.height=8}
 
