@@ -1,0 +1,130 @@
+---
+title: Hexmaps for NZ District Health Boards
+author: Thomas Lumley
+date: '2019-11-07'
+slug: hexmaps-for-nz-district-health-boards
+categories: []
+tags: []
+---
+
+
+
+<p>I’m involved a research project that, among other things, will be comparing various health variables across NZ District Health Boards (DHBs). In order to make the outputs less boring and (hopefully!) more interpretable, I want some maps.</p>
+<p>This post is about ‘DHBins’, a set of hexmaps vaguely analogous to the square ‘statebins’ for US states. The code is in the <code>DHBins</code> <a href="https://github.com/tslumley/DHBins">package</a> I’ll illustrate with some data on immunisation coverage in NZ kids.</p>
+<p>First, the data. It’s from the <a href="http://archive.stats.govt.nz/browse_for_stats/snapshots-of-nz/nz-social-indicators/Home/Health/childhood-immunisation.aspx">NZ Social Indicators</a>, giving the percentage of kids turning 5 years old who had completed their age-appropriate vaccinations. A related set of data is part of the quality targets for DHBs. We’ve got data for the whole population and broken down by the broadest ethnicity groups.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.2.1     ✔ purrr   0.2.5
+## ✔ tibble  2.0.1     ✔ dplyr   0.8.3
+## ✔ tidyr   0.8.2     ✔ stringr 1.4.0
+## ✔ readr   1.3.1     ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(DHBins)
+data(immune)
+summary(immune)</code></pre>
+<pre><code>##      DHB                Ntotal          Vaxtotal         Pcttotal    
+##  Length:20          Min.   :  99.0   Min.   :  79.0   Min.   :0.790  
+##  Class :character   1st Qu.: 355.0   1st Qu.: 302.5   1st Qu.:0.850  
+##  Mode  :character   Median : 557.0   Median : 504.0   Median :0.875  
+##                     Mean   : 798.4   Mean   : 704.1   Mean   :0.874  
+##                     3rd Qu.:1046.8   3rd Qu.: 954.8   3rd Qu.:0.910  
+##                     Max.   :2206.0   Max.   :2015.0   Max.   :0.950  
+##                                                                      
+##       NNZE           VaxNSE          PctNZE           NMaori     
+##  Min.   : 51.0   Min.   : 46.0   Min.   :0.8400   Min.   : 18.0  
+##  1st Qu.:141.5   1st Qu.:122.0   1st Qu.:0.8850   1st Qu.:113.8  
+##  Median :236.0   Median :209.5   Median :0.9100   Median :148.0  
+##  Mean   :314.2   Mean   :285.4   Mean   :0.9030   Mean   :195.2  
+##  3rd Qu.:369.0   3rd Qu.:339.2   3rd Qu.:0.9225   3rd Qu.:269.2  
+##  Max.   :947.0   Max.   :904.0   Max.   :0.9500   Max.   :492.0  
+##                                                                  
+##     VaxMaori         PctMaori        NPacific        VaxPacific   
+##  Min.   : 15.00   Min.   :0.770   Min.   : 15.00   Min.   : 13.0  
+##  1st Qu.: 94.75   1st Qu.:0.820   1st Qu.: 22.75   1st Qu.: 21.0  
+##  Median :133.50   Median :0.850   Median : 40.50   Median : 39.0  
+##  Mean   :166.05   Mean   :0.858   Mean   :108.29   Mean   :103.5  
+##  3rd Qu.:242.25   3rd Qu.:0.910   3rd Qu.: 80.25   3rd Qu.: 71.0  
+##  Max.   :428.00   Max.   :0.940   Max.   :649.00   Max.   :595.0  
+##                                   NA&#39;s   :6        NA&#39;s   :7      
+##    PctPacific         NAsian         VaxAsian        PctAsian    
+##  Min.   :0.6000   Min.   : 24.0   Min.   : 18.0   Min.   :0.750  
+##  1st Qu.:0.8500   1st Qu.: 35.0   1st Qu.: 31.0   1st Qu.:0.890  
+##  Median :0.9100   Median : 76.0   Median : 69.0   Median :0.910  
+##  Mean   :0.8958   Mean   :189.1   Mean   :173.7   Mean   :0.919  
+##  3rd Qu.:0.9750   3rd Qu.:212.0   3rd Qu.:196.5   3rd Qu.:0.970  
+##  Max.   :1.0000   Max.   :679.0   Max.   :620.0   Max.   :1.000  
+##  NA&#39;s   :1        NA&#39;s   :5       NA&#39;s   :5                      
+##      NOther          VaxOther         PctOther     
+##  Min.   : 10.00   Min.   : 10.00   Min.   :0.2700  
+##  1st Qu.: 27.25   1st Qu.: 23.00   1st Qu.:0.6525  
+##  Median : 50.50   Median : 44.50   Median :0.7400  
+##  Mean   : 75.44   Mean   : 63.88   Mean   :0.7185  
+##  3rd Qu.:112.25   3rd Qu.: 98.00   3rd Qu.:0.8400  
+##  Max.   :260.00   Max.   :181.00   Max.   :0.9300  
+##  NA&#39;s   :2        NA&#39;s   :4</code></pre>
+<p>The <code>NA</code> values are when the true values are too small for confidentiality and are suppressed. First, let’s get a picture of the sizes of the DHBs</p>
+<pre class="r"><code>par(mar=c(1,1,1,1))
+with(immune,dhbin(radii=sqrt(Ntotal),DHB_names=DHB))</code></pre>
+<p><img src="/post/2019-11-07-hexmaps-for-nz-district-health-boards_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>Now, the ethnic composition of each one. This is not a pie chart<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>.</p>
+<pre class="r"><code>eth_matrix&lt;-immune %&gt;% 
+    select(NNZE,NMaori,NPacific,NAsian,NOther) %&gt;% as.matrix
+rownames(eth_matrix)&lt;-immune$DHB
+eth_matrix[is.na(eth_matrix)]&lt;-0    
+eth_hex&lt;-tri_alloc(eth_matrix, colours=RColorBrewer::brewer.pal(5,&quot;Pastel1&quot;))
+
+dhtri(tri_colours=eth_hex, 
+        legend_opts=list(fill=RColorBrewer::brewer.pal(5,&quot;Pastel1&quot;),
+        border=NA, legend=c(&quot;NZ European&quot;,&quot;Māori&quot;,&quot;Pacific&quot;,&quot;Asian&quot;,&quot;Other&quot;)))</code></pre>
+<p><img src="/post/2019-11-07-hexmaps-for-nz-district-health-boards_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>The “NZ European” group is much less dominant in 5-year-olds that in middle-aged people; emphasised by this being <em>prioritised ethnicity</em>, where multiple ethnicities are reduced to the first in a priority list that goes Māori, Pacific, Asian, Other, NZ European. The number of triangles a group gets is its proportion of the total rounded to the nearest sixth, with the Sainte-Laguë algorithm used to make this add up to exactly six sixths.</p>
+<p>It might be helpful to scale these by population size</p>
+<pre class="r"><code>dhtri(radii=sqrt(immune$Ntotal),tri_colours=eth_hex, 
+        legend_opts=list(fill=RColorBrewer::brewer.pal(5,&quot;Pastel1&quot;),
+        border=NA, legend=c(&quot;NZ European&quot;,&quot;Māori&quot;,&quot;Pacific&quot;,&quot;Asian&quot;,&quot;Other&quot;)))</code></pre>
+<p><img src="/post/2019-11-07-hexmaps-for-nz-district-health-boards_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>To show the vaccination coverage, we need to code the numeric proportion, taking account of the target being 95% (which is what you need for herd immunity to measles)</p>
+<pre class="r"><code>code_vax&lt;-function(pct,N,dhbnames){
+    basecols&lt;-case_when(
+        is.na(N)~&quot;lightgray&quot;,
+        N&lt;75 ~ &quot;lightgray&quot;,
+        pct&lt; 0.80 ~ &quot;goldenrod&quot;,
+        pct&lt; 0.85 ~ &quot;red&quot;,
+        pct &lt;0.90 ~ &quot;orange&quot;,
+        pct &lt;0.95 ~ &quot;gold&quot;,
+        pct&gt;=0.95 ~ &quot;springgreen&quot;
+        )
+    cols&lt;-adjustcolor(basecols,alpha.f=0.5) 
+    names(cols)&lt;-dhbnames
+    cols
+}
+
+with(immune,dhbin(hex_colours=code_vax(Pcttotal,Ntotal, DHB),
+legend_opts=list(fill=c(&quot;goldenrod&quot;,&quot;red&quot;,&quot;orange&quot;,&quot;gold&quot;,&quot;springgreen&quot;),
+legend=c(&quot;&lt;80%&quot;,&quot;80-85%&quot;,&quot;85-90%&quot;,&quot;90-95%&quot;,&quot;95%+&quot;), title=&quot;Immunisation coverage&quot;)
+))</code></pre>
+<p><img src="/post/2019-11-07-hexmaps-for-nz-district-health-boards_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>And now, vaccine coverage by ethnicity; the gray hexes are where the total count is less than 75.</p>
+<pre class="r"><code>par(mfrow=c(3,2),mar=c(1,0,1,1))
+with(immune,dhbin(hex_colours=code_vax(Pcttotal,Ntotal,DHB),short=TRUE))
+title(main=&quot;All&quot;)
+with(immune,dhbin(hex_colours=code_vax(PctNZE,NNZE,DHB),short=TRUE))
+title(main=&quot;NZ European&quot;)
+with(immune,dhbin(hex_colours=code_vax(PctMaori,NMaori,DHB),short=TRUE))
+title(main=&quot;Māori&quot;)
+with(immune,dhbin(hex_colours=code_vax(PctPacific,NPacific,DHB),short=TRUE))
+title(main=&quot;Pacific&quot;)
+with(immune,dhbin(hex_colours=code_vax(PctAsian,NAsian,DHB),short=TRUE))
+title(main=&quot;Asian&quot;)
+with(immune,dhbin(hex_colours=code_vax(PctOther,NOther, DHB),short=TRUE))
+title(main=&quot;Other Ethnicities&quot;)</code></pre>
+<p><img src="/post/2019-11-07-hexmaps-for-nz-district-health-boards_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>The short names aren’t unique (two Ts, three Ws) but they don’t need to be, since no-one who is likely to be looking at the maps will have any chance of confusing Tairawhiti and Taranaki or Waitemata and Waikato.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The reason this isn’t a pie chart is that it’s discrete: the difficulty in judging angles in a pie chart doesn’t apply. It’s a type of glyph map<a href="#fnref1">↩</a></p></li>
+</ol>
+</div>

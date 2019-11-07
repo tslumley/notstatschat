@@ -1,0 +1,103 @@
+---
+title: Hexmaps for NZ District Health Boards
+author: Thomas Lumley
+date: '2019-11-07'
+slug: hexmaps-for-nz-district-health-boards
+categories: []
+tags: []
+---
+
+I'm involved a research project that, among other things, will be comparing various health variables across NZ District Health Boards (DHBs).  In order to make the outputs less boring and (hopefully!) more interpretable, I want some maps.  
+
+This post is about 'DHBins', a set of hexmaps vaguely analogous to the square 'statebins' for US states. The code is in the `DHBins` [package](https://github.com/tslumley/DHBins)  I'll illustrate with some data on immunisation coverage in NZ kids.
+
+First, the data.  It's from the [NZ Social Indicators](http://archive.stats.govt.nz/browse_for_stats/snapshots-of-nz/nz-social-indicators/Home/Health/childhood-immunisation.aspx), giving the percentage of kids turning 5 years old who had completed their age-appropriate vaccinations.  A related set of data is part of the quality targets for DHBs.  We've got data for the whole population and broken down by the broadest ethnicity groups. 
+
+
+```{r}
+library(tidyverse)
+library(DHBins)
+data(immune)
+summary(immune)
+```
+
+The `NA` values are when the true values are too small for confidentiality and are suppressed.  First, let's get a picture of the sizes of the DHBs
+
+```{r fig.height=6}
+par(mar=c(1,1,1,1))
+with(immune,dhbin(radii=sqrt(Ntotal),DHB_names=DHB))
+```
+
+Now, the ethnic composition of each one. This is not a pie chart^[The reason this isn't a pie chart is that it's discrete: the difficulty in judging angles in a pie chart doesn't apply. It's a type of glyph map].
+
+```{r fig.height=8}
+eth_matrix<-immune %>% 
+	select(NNZE,NMaori,NPacific,NAsian,NOther) %>% as.matrix
+rownames(eth_matrix)<-immune$DHB
+eth_matrix[is.na(eth_matrix)]<-0	
+eth_hex<-tri_alloc(eth_matrix, colours=RColorBrewer::brewer.pal(5,"Pastel1"))
+
+dhtri(tri_colours=eth_hex, 
+		legend_opts=list(fill=RColorBrewer::brewer.pal(5,"Pastel1"),
+		border=NA, legend=c("NZ European","Māori","Pacific","Asian","Other")))
+```
+
+The "NZ European" group is much less dominant in 5-year-olds that in middle-aged people; emphasised by this being *prioritised ethnicity*, where multiple ethnicities are reduced to the first in a priority list that goes Māori, Pacific, Asian, Other, NZ European.  The number of triangles a group gets is its proportion of the total rounded to the nearest sixth, with the Sainte-Laguë algorithm used to make this add up to exactly six sixths. 
+
+ 
+
+It might be helpful to scale these by population size
+
+```{r fig.height=8}
+dhtri(radii=sqrt(immune$Ntotal),tri_colours=eth_hex, 
+		legend_opts=list(fill=RColorBrewer::brewer.pal(5,"Pastel1"),
+		border=NA, legend=c("NZ European","Māori","Pacific","Asian","Other")))
+```
+
+To show the vaccination coverage, we need to code the numeric proportion, taking account of the target being 95% (which is what you need for herd immunity to measles)
+
+```{r fig.height=8}
+
+code_vax<-function(pct,N,dhbnames){
+	basecols<-case_when(
+		is.na(N)~"lightgray",
+		N<75 ~ "lightgray",
+		pct< 0.80 ~ "goldenrod",
+		pct< 0.85 ~ "red",
+		pct <0.90 ~ "orange",
+		pct <0.95 ~ "gold",
+    	pct>=0.95 ~ "springgreen"
+		)
+	cols<-adjustcolor(basecols,alpha.f=0.5)	
+	names(cols)<-dhbnames
+	cols
+}
+
+with(immune,dhbin(hex_colours=code_vax(Pcttotal,Ntotal, DHB),
+legend_opts=list(fill=c("goldenrod","red","orange","gold","springgreen"),
+legend=c("<80%","80-85%","85-90%","90-95%","95%+"), title="Immunisation coverage")
+))
+```
+
+
+And now, vaccine coverage by ethnicity; the gray hexes are where the total count is less than 75. 
+
+```{r fig.height=8}
+
+par(mfrow=c(3,2),mar=c(1,0,1,1))
+with(immune,dhbin(hex_colours=code_vax(Pcttotal,Ntotal,DHB),short=TRUE))
+title(main="All")
+with(immune,dhbin(hex_colours=code_vax(PctNZE,NNZE,DHB),short=TRUE))
+title(main="NZ European")
+with(immune,dhbin(hex_colours=code_vax(PctMaori,NMaori,DHB),short=TRUE))
+title(main="Māori")
+with(immune,dhbin(hex_colours=code_vax(PctPacific,NPacific,DHB),short=TRUE))
+title(main="Pacific")
+with(immune,dhbin(hex_colours=code_vax(PctAsian,NAsian,DHB),short=TRUE))
+title(main="Asian")
+with(immune,dhbin(hex_colours=code_vax(PctOther,NOther, DHB),short=TRUE))
+title(main="Other Ethnicities")
+```
+
+The short names aren't unique (two Ts, three Ws) but they don't need to be, since no-one who is likely to be looking at the maps will have any chance of confusing Tairawhiti and Taranaki or Waitemata and Waikato.
+
