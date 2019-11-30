@@ -1,0 +1,21 @@
+---
+title: How many giraffes?
+author: Thomas Lumley
+date: '2019-12-01'
+slug: how-many-giraffes
+categories: []
+tags: []
+---
+
+Since it's, if not Christmas, at least Advent, here's a book review.  I've been following Janelle Shane's [blog](https://aiweirdness.com/) for years. Her book *You Look Like a Thing and I Love You* came out a few weeks ago; I bought it as my post-exam-grading reward. 
+
+The blog is a series of examples of surrealist comedy from neural networks either getting things wrong (hallucinating giraffes in every photo) or generating text (the book title was one of the best neural-net pick-up lines).  The book is a bit different: it uses these mistakes, but it's primarily a book about what current neural networks can and can't do well. No mathematical or statistical knowledge is needed, but you do need an appreciation for the style of humour facilitated by recurrent neural networks. Check the blog for free samples.
+
+*You Look Like A Thing* is a good present for your friends who are interested in or worried about AI. Or your friends who are Members of Parliament or CEOs or otherwise need to understand the limitations of current neural networks. 
+
+There's one technical issue I want to discuss, because it comes up in statistics vs computer science discussions of machine learning: *class imbalance*.  If you're training a neural network^[or a straightforward regression model] to pick out a rare subset of the observations thrown at it, it will tend to just give up and predict everyone to be in the common subset. For example, if you're trying to distinguish gay from straight Facebook users by their pattern of likes^[Frances Woolley, a Canadian economist blogged about this example: https://worthwhile.typepad.com/worthwhile_canadian_initi/2013/03/a-truly-unimpressive-accomplishment.html], you'll get the lowest error rate just by saying everyone is straight.  In the example in the book, if you're trying to rate the edibility of completely random^[not just random food ingredients] sandwich recipes, you'll get the lowest error rate by just saying they're all awful.  As Shane says, it's possible to get around this either by having training data where the edible and inedible sandwiches are about equally common, or by telling the algorithm you care much more about missing a good sandwich than eating a terrible one. 
+
+Where I think this explanation is incomplete is that it presents class imbalance as a bug, when it's often a feature.  The random-sandwich system **really does** produce inedible sandwiches nearly all the time, and a large majority of Facebook users **really are** straight. If you prefilter the data to get class balance, you're training an algorithm that will have a higher error rate in real life^[ imaginary-random-sandwich life] than one trained on the unfiltered data. This issue crops up a lot in early-phase studies of potential medical screening tests. If you have a biochemical test for, say, pancreatic cancer or Alzheimer's Disease, you will first evaluate the test on a 50:50 split of samples with and without the disease.  It's going to do pretty well here, because of the artificial class balance, so you can write a paper and put out a press release and get media coverage.  The next step is to try the test in a representative cohort of people, where it will fail dismally because class imbalance is real.
+
+Telling the algorithm that false negatives are much more important than false positives is a better way to look at the problem.  If false positives for pancreatic cancer result in a biopsy and false negatives result in death, you can give more weight to the false negatives and push the test towards detection. However, you can't give unlimited weight to the false negatives: telling a few of people they may have cancer and need biopsies is one thing; telling that to 10% of the population is another.  The relative costs need to be tuned to the real costs, not to the goal of getting the algorithm to look successful.  Or, in other words, if you think your algorithm to determine sexual orientation from Facebook likes is working well, you have a disturbingly weird need to find gay people. 
+
