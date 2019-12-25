@@ -1,0 +1,32 @@
+---
+title: What is 'Data Science Practice'?
+author: Thomas Lumley
+date: '2019-12-25'
+slug: what-is-data-science-practice
+categories: []
+tags: []
+---
+
+Two years ago I started a 3rd-year (final-year) undergraduate course called 'Data Science Practice'^[This post would be a lot harder to write credibly  without the quotation marks in the title].  It's the main new course in our undergraduate Data Science major -- we already had a couple of courses in statistical computing, and already used R Markdown starting in second-year, and the Computer Science department teaches algorithms and data structures, and database theory and so on.  This year, the course will be taught without me -- I'm teaching a postgraduate translation of it. 
+
+The basic concept of the course is that it's about fitting predictive models to real data. There are two main components: getting your data ready for fitting a model, and knowing what sort of predictive model you might want. In real life, as everyone will tell you, the first component takes most of the time. In the course, it takes a bit less than 50% of the time.
+
+The course is in R, because that's how we split things up with Computer Science: we do R, they do [Python](https://xkcd.com/353/). We use the [tidyverse](https://www.tidyverse.org/) for the first component:  [dplyr](https://dplyr.tidyverse.org/) and [dbplyr](https://dbplyr.tidyverse.org/) for data management, and [ggplot2](https://ggplot2.tidyverse.org/) for graphics. In the first year we used SQLite and MonetDB as database backends; this year, the R MonetDB interface is gone, but I'm hoping to replace it by [DuckDB](https://www.duckdb.org/) soon.
+
+The predictive modelling half of the course starts with linear regression, which people have seen before, and cross-validation to tune the cost:complexity tradeoff, which they typically haven't. For next year I should write a wrapper for cross-validation around [leaps](https://CRAN.R-project.org/package=leaps), as that ended up causing some stress.
+
+We move on to trees, with [rpart](https://github.com/bethatkinson/rpart), and notice their limitations.  We then extend to random forests ([ranger](https://github.com/imbs-hl/ranger)), and boosting (describing Adaboost and GBM, but only actually using [xgboost](https://cran.r-project.org/package=xgboost)).  We look at LARS and lasso to help understand boosting (with [glmnet](https://glmnet.stanford.edu/)) and penalisation, and also because lasso is useful in itself when you have many more predictors than observations. 
+
+Finally, we look at neural nets: basic multilayer perceptrons, and simple convolutional nets. These are implemented with [keras](https://keras.rstudio.com/), and are the only place where IT issues get to be a problem.  In the first year, I worked with the Science IT people to make sure keras was working on the lab computers.  This year, Science IT has been reduced in numbers. I hoped that we'd be ok and they could just follow whatever they did the previous year. No such luck: keras didn't work on the lab computers, and not everyone could get it to work on their own machines^[Notice me not saying [Python](https://xkcd.com/1987/) here]. 
+
+Another important component of predictive modelling is how you get from predictions (eg $\hat p =0.4$) to decisions (lock him up).  We covered the basic decision theory, with losses for each pair of (decision, reality), and also the ethical questions of whose losses get counted.  Beyond the ethics of individual outcomes I also talked about group issues such as stigmatisation and insurance failure. I need to get better at doing this and getting students to do it, but I think they at least  got the message that I think it's important and that it's likely to be on the exam.
+
+The choice of data is also important.  As large examples, I've used selections of several million records from the [New York taxi database](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page),  data from Auckland's real-time bus location data,  a [job-interview example](https://github.com/wikimedia-research/Discovery-Hiring-Analyst-2016) from Mikhail Popov at Wikimedia, an example from the [Youth Risk Behavior Survey](https://www.cdc.gov/healthyyouth/data/yrbs/index.htm), and data collected by Alexei Drummond on marathon times in New Zealand.  
+
+Smaller examples include data from [this paper](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005385) on biochemical prediction of autism spectrum disorder, the Auckland Transport bicycle counters, and a few examples from th e UCI machine-learning archive. I especially like the [mushroom-edibility](https://notstatschat.rbind.io/2019/02/01/recognising-when-you-don-t-know/) example.
+
+One important thing the examples illustrate is that fancy hi-tech methods aren't necessarily better -- the autism example does better with linear discrimination than random forests or xgboost. 
+
+In general, I think the course content is good.  The students think it's useful (and I've been told it corresponds well to what they get asked in job interviews). They also think it's a lot of work -- especially this year, where we got behind on marking, w hich stressed them. 
+
+I'm not sure about how much to make them implement cross-validation at the beginning -- they do need to know cross-validation is about choosing the cost:complexity tuning parameter, not directly about choosing a model.  I'm also looking for more examples where neural networks do well and it doesn't take forever to train them. I might try to get someone who teaches ethics for a living to help with that part of the course. 
