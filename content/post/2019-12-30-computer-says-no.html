@@ -1,0 +1,86 @@
+---
+title: Computer says no
+author: Thomas Lumley
+date: '2019-12-30'
+slug: computer-says-no
+categories: []
+tags: []
+---
+
+
+
+<p>This was my reply to the call for comments on the proposed <a href="https://data.govt.nz/use-data/analyse-data/government-algorithm-transparency-and-accountability/draft-algorithm-charter/">Algorithms Charter</a></p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>I am a statistician with an interest in the technical details of predictive models and in their social impact. I am interested from the points of view of a researcher, a university teacher, a science communicator, and an immigrant.</p>
+</div>
+<div id="the-proposal" class="section level1">
+<h1>The proposal</h1>
+<p>The key points in the proposal are laid out as a set of bullets</p>
+<ul>
+<li>clearly explain how significant decisions are informed by algorithms and be clear where this isn’t done for reasons of greater public good (for example, national security)</li>
+<li>embed a Te Ao Māori perspective in algorithm development or procurement</li>
+<li>take into account the perspectives of communities, such as LGBTQI+, Pasifika and people with disabilities as appropriate</li>
+<li>identify and consult with groups or stakeholders with an interest in algorithm development</li>
+<li>publish information about how data are collected and stored</li>
+<li>upon request, offer technical information about algorithms and the data they use</li>
+<li>use tools and processes to ensure that privacy, ethics, and human rights considerations are integrated as a part of algorithm development and procurement</li>
+<li>regularly collect and review data relating to the implementation and operation of algorithms, and periodically assess this for unintended consequences, for example bias</li>
+<li>have a robust approach for peer-reviewing these findings</li>
+<li>clearly explain who is responsible for automated decisions and what methods exist for challenge or appeal via a human.</li>
+</ul>
+</div>
+<div id="the-questions" class="section level1">
+<h1>The questions</h1>
+<p>I will start with answers to the specific questions, and then expand on them.</p>
+<ul>
+<li>Does the proposed text provide you with increased confidence in how the government uses algorithms? <strong>Yes, to some extent</strong></li>
+<li>Should the charter apply only to operational algorithms? <strong>No</strong></li>
+<li>Have we got the right balance to enable innovation, while retaining transparency? <strong>That’s the wrong question</strong></li>
+<li>Have we captured your specific concerns and expectations, and those of your whānau, community or organisation? <strong>Some, but not all</strong></li>
+</ul>
+<div id="increased-confidence" class="section level2">
+<h2>Increased confidence?</h2>
+<p>The points in the proposal are all good ones. A robust and reliable implementation of these principles would greatly improve New Zealand’s use of algorithms in the public sector and would provide a valuable resource for those working to improve the private sector.</p>
+<p>My primary concern for this question is implementation and enforcement.</p>
+<p>Consider, for comparison, the Official Information Act. There is explicit law and a procedure for review by the Ombudsman. The Act specifies that decisions are made <em>“as soon as reasonably practicable, and in any case not later than 20 working days after the day on which the request is received.”</em> Since it’s hard to show that any specific delay violated the Act, the only easily enforceable part of this is the <em>20 working days</em>. While some departments do a great job, there appears to be considerable non-compliance with the <em>as soon as reasonably practicable</em> part. Some requesters routinely receiving information (or worse, refusals) late on the twentieth day. Mark Hanna obtained data on OIA reporting delays from various departments and analyses it at <a href="https://features.honestuniverse.com/oia-delays/" class="uri">https://features.honestuniverse.com/oia-delays/</a>.</p>
+<p>It seems unrealistic to assume that the Algorithms Charter will be followed uniformly throughout government if the public have no way to push for adherence short of the courts or the ballot box.</p>
+<p>Suggestion: Make it clear that choices of algorithm are reviewable by the Ombudsman New Zealand or some similar office, and that the review is able to rule that the algorithm (and not just a specific decision taken with its help) violates the Charter.</p>
+</div>
+<div id="only-to-operational-algorithms" class="section level2">
+<h2>Only to operational algorithms?</h2>
+<p>The need for rules is greatest for operational algorithms, but the principles will be beneficial much more broadly. There doesn’t seem to be a compelling reason to, say, ignore the input of stakeholder groups, hide technical details, avoid peer review, or omit privacy, ethics, and human rights considerations in any government algorithm development or procurement.</p>
+</div>
+<div id="the-right-balance" class="section level2">
+<h2>The right balance?</h2>
+<p>To a large extent this is a false dichotomy.</p>
+<p>Transparency and innovation aren’t opposites. There’s a valid concern about barriers to entry: requirements to consult widely and effectively will make it harder to begin development or procurement of algorithms in new areas. On the other hand,it’s going to be hard, at best, to embed community consultation and a Te Ao Māori viewpoint after the fact.</p>
+<p>I think the current proposals are good, but this issue should be monitored.</p>
+</div>
+<div id="your-specific-concerns-and-expectations" class="section level2">
+<h2>Your specific concerns and expectations</h2>
+<div id="human-review-of-decisions" class="section level3">
+<h3>Human review of decisions</h3>
+<p>At first glance, the final principle looks as though it guarantees at least the possibility of human review of a decision. On re-reading, though, it’s compatible with <em>Sorry, There are no methods.</em></p>
+<p>There should, except perhaps for good reasons in some special cases, be an accessible route to human review of decisions.</p>
+</div>
+<div id="judicial-review." class="section level3">
+<h3>Judicial Review.</h3>
+<p>It is not obvious to the lay reader whether decisions to use particular decision-making algorithms are the sort of the decision for which judicial review is available. It may be worth clarifying this, either as the Government’s opinion or possibly in legislation. For comparison, Australia has this, in the Social Security (Administration) Act, Part 1, section 6A, which goes part of the way.</p>
+<blockquote>
+<p>6A Secretary may arrange for use of computer programs to make decisions</p>
+<p>The Secretary may arrange for the use, under the Secretary’s control, of computer programs for any purposes for which the Secretary may make decisions under the social security law.</p>
+<p>A decision made by the operation of a computer program under an arrangement made under subsection (1) is taken to be a decision made by the Secretary.</p>
+</blockquote>
+</div>
+<div id="maori-data-sovereignty." class="section level3">
+<h3>Māori Data Sovereignty.</h3>
+<p>I expected this to at least get a mention, especially after the failure of the 2018 Census to produce adequate-quality data for iwi partners and Māori stakeholders.</p>
+</div>
+<div id="costs" class="section level3">
+<h3>Costs</h3>
+<p>Because there is almost always a trade-off between false positive and false negative decisions, any analysis of decision-making accuracy requires a framework for costs of different types of errors. There should be an explicit (ideally, quantitative) consideration of whose costs are counted.</p>
+<p>After the ‘robodebt’ debacle, it’s worth noting that the ‘program protocols’ for Australia’s Centrelink data matching operations (<a href="https://www.humanservices.gov.au/organisations/about-us/publications-and-resources/centrelink-data-matching-activities" class="uri">https://www.humanservices.gov.au/organisations/about-us/publications-and-resources/centrelink-data-matching-activities</a>) have explicit cost-benefit calculations that only include monetary costs and benefits for the Commonwealth, with no consideration of even monetary costs to members of the public. With that viewpoint, off-loading the costs of verification on to the public looks like a good deal. It wasn’t.</p>
+</div>
+</div>
+</div>
