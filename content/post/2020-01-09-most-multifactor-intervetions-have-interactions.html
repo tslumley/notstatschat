@@ -92,7 +92,7 @@ tags: []
 <li><span class="math inline">\(\alpha_A=1, \alpha_B=1, \alpha_{AB}=1\)</span></li>
 <li><span class="math inline">\(\beta_A=3/4, \beta_B=3/4, \beta_{AB}=1/4\)</span></li>
 </ul>
-<p>There are two reasons for the difference; an interesting one and a boring one. The boring reason is that <span class="math inline">\(1-0=1\)</span> but <span class="math inline">\(1--1=2\)</span>, so the <span class="math inline">\(\beta\)</span>s are half as big as the <span class="math inline">\(\alpha\)</span>s. The interesting reason is that the ‘main effect’ <span class="math inline">\(\alpha_A\)</span> is the difference under ‘not B’, but the main effect <span class="math inline">\(\beta_A\)</span> is averaged over B and not B; it includes some of what <span class="math inline">\(\alpha\)</span> calls the interaction, so it’s bigger and <span class="math inline">\(\beta_{AB}\)</span> is correspondingly smaller. We can think of <span class="math inline">\(\alpha_A\)</span> as the average effect of A in settings where B is naturally absent; <span class="math inline">\(\beta_A\)</span> is the average effect of A in settings where B is naturally present half the time.</p>
+<p>There are two reasons for the difference; an interesting one and a boring one. The boring reason is that <span class="math inline">\(1-0=1\)</span> but <span class="math inline">\(1--1=2\)</span>, so the <span class="math inline">\(\beta\)</span>s are half as big as the <span class="math inline">\(\alpha\)</span>s. The interesting reason is that the ‘main effect’ <span class="math inline">\(\alpha_A\)</span> is the difference under ‘not B’, but the main effect <span class="math inline">\(\beta_A\)</span> is averaged over B and not B; it includes some of what <span class="math inline">\(\alpha\)</span> calls the interaction, so it’s bigger and <span class="math inline">\(\beta_{AB}\)</span> is correspondingly smaller. We can think of <span class="math inline">\(\alpha_A\)</span> as the average effect of intervention A in settings where intervention B is naturally absent; <span class="math inline">\(\beta_A\)</span> is the average effect of intervention A in settings where intervention B is naturally present half the time.</p>
 <p>Now, we know that the test for <span class="math inline">\(\alpha_{AB}=0\)</span> must have the same power as the test for <span class="math inline">\(\beta_{AB}=0\)</span>, because it compares the same two models. What’s a bit less obvious is what happens to the ‘main effects’. Let’s simulate</p>
 <pre class="r"><code>x_dummy&lt;-data.frame(a=c(0,0,1,1),b=c(0,1,0,1),ab=c(0,0,0,1))
 z_effects&lt;-data.frame(a=c(-1,-1,1,1),b=c(-1,1,-1,1),ab=c(1,-1,-1,1))
@@ -110,8 +110,8 @@ z_noint&lt;-lm(y~a+b,data=z_effects[i,])</code></pre>
 ## Model 1: y ~ a + b
 ## Model 2: y ~ a + b + ab
 ##   Res.Df    RSS Df Sum of Sq      F    Pr(&gt;F)    
-## 1   3997 4170.9                                  
-## 2   3996 3942.7  1    228.21 231.29 &lt; 2.2e-16 ***
+## 1   3997 4206.8                                  
+## 2   3996 3982.4  1    224.32 225.09 &lt; 2.2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <pre class="r"><code>anova(z_noint,z_model)</code></pre>
@@ -120,8 +120,8 @@ z_noint&lt;-lm(y~a+b,data=z_effects[i,])</code></pre>
 ## Model 1: y ~ a + b
 ## Model 2: y ~ a + b + ab
 ##   Res.Df    RSS Df Sum of Sq      F    Pr(&gt;F)    
-## 1   3997 4170.9                                  
-## 2   3996 3942.7  1    228.21 231.29 &lt; 2.2e-16 ***
+## 1   3997 4206.8                                  
+## 2   3996 3982.4  1    224.32 225.09 &lt; 2.2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <p>The tests are identical, as they should be.</p>
@@ -133,20 +133,20 @@ z_noint&lt;-lm(y~a+b,data=z_effects[i,])</code></pre>
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -3.0675 -0.6696 -0.0038  0.6552  3.5035 
+## -3.2363 -0.6747  0.0011  0.6796  3.9596 
 ## 
 ## Coefficients:
-##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) -0.00240    0.03141  -0.076    0.939    
-## a            1.00884    0.04442  22.710   &lt;2e-16 ***
-## b            1.01675    0.04442  22.888   &lt;2e-16 ***
-## ab           0.95542    0.06282  15.208   &lt;2e-16 ***
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -0.008286   0.031569  -0.262    0.793    
+## a            0.991837   0.044645  22.216   &lt;2e-16 ***
+## b            1.023416   0.044645  22.923   &lt;2e-16 ***
+## ab           0.947259   0.063138  15.003   &lt;2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 0.9933 on 3996 degrees of freedom
-## Multiple R-squared:  0.5423, Adjusted R-squared:  0.542 
-## F-statistic:  1578 on 3 and 3996 DF,  p-value: &lt; 2.2e-16</code></pre>
+## Residual standard error: 0.9983 on 3996 degrees of freedom
+## Multiple R-squared:  0.5367, Adjusted R-squared:  0.5363 
+## F-statistic:  1543 on 3 and 3996 DF,  p-value: &lt; 2.2e-16</code></pre>
 <pre class="r"><code>summary(z_model)</code></pre>
 <pre><code>## 
 ## Call:
@@ -154,20 +154,20 @@ z_noint&lt;-lm(y~a+b,data=z_effects[i,])</code></pre>
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -3.0675 -0.6696 -0.0038  0.6552  3.5035 
+## -3.2363 -0.6747  0.0011  0.6796  3.9596 
 ## 
 ## Coefficients:
 ##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  1.24925    0.01571   79.54   &lt;2e-16 ***
-## a            0.74328    0.01571   47.33   &lt;2e-16 ***
-## b            0.74723    0.01571   47.58   &lt;2e-16 ***
-## ab           0.23886    0.01571   15.21   &lt;2e-16 ***
+## (Intercept)  1.23615    0.01578   78.31   &lt;2e-16 ***
+## a            0.73273    0.01578   46.42   &lt;2e-16 ***
+## b            0.74852    0.01578   47.42   &lt;2e-16 ***
+## ab           0.23681    0.01578   15.00   &lt;2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 0.9933 on 3996 degrees of freedom
-## Multiple R-squared:  0.5423, Adjusted R-squared:  0.542 
-## F-statistic:  1578 on 3 and 3996 DF,  p-value: &lt; 2.2e-16</code></pre>
+## Residual standard error: 0.9983 on 3996 degrees of freedom
+## Multiple R-squared:  0.5367, Adjusted R-squared:  0.5363 
+## F-statistic:  1543 on 3 and 3996 DF,  p-value: &lt; 2.2e-16</code></pre>
 <p>The <span class="math inline">\(t\)</span>-statistics for the interaction terms, again, are the same. In each model, the <span class="math inline">\(t\)</span>-statistics for the main effects are larger than for the interaction effect. In the dummy-variable model, the coefficients are the same, but the standard error is larger for the main effects. In the effects-coding model, the standard errors are all the same, but the coefficient is smaller for the interaction.</p>
 <p>Finally, look at the coefficients and tests for the no-interaction model. This model is misspecified – the residual variance isn’t constant – but with equal group sizes that doesn’t matter much.</p>
 <pre class="r"><code>summary(x_noint)</code></pre>
@@ -177,19 +177,19 @@ z_noint&lt;-lm(y~a+b,data=z_effects[i,])</code></pre>
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -3.2305 -0.6839 -0.0027  0.6815  3.7423 
+## -3.4732 -0.6998  0.0129  0.6934  4.1964 
 ## 
 ## Coefficients:
 ##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) -0.24126    0.02798  -8.624   &lt;2e-16 ***
-## a            1.48655    0.03230  46.018   &lt;2e-16 ***
-## b            1.49446    0.03230  46.263   &lt;2e-16 ***
+## (Intercept) -0.24510    0.02810  -8.724   &lt;2e-16 ***
+## a            1.46547    0.03244  45.172   &lt;2e-16 ***
+## b            1.49705    0.03244  46.145   &lt;2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 1.022 on 3997 degrees of freedom
-## Multiple R-squared:  0.5158, Adjusted R-squared:  0.5156 
-## F-statistic:  2129 on 2 and 3997 DF,  p-value: &lt; 2.2e-16</code></pre>
+## Residual standard error: 1.026 on 3997 degrees of freedom
+## Multiple R-squared:  0.5106, Adjusted R-squared:  0.5103 
+## F-statistic:  2085 on 2 and 3997 DF,  p-value: &lt; 2.2e-16</code></pre>
 <pre class="r"><code>summary(z_noint)</code></pre>
 <pre><code>## 
 ## Call:
@@ -197,19 +197,19 @@ z_noint&lt;-lm(y~a+b,data=z_effects[i,])</code></pre>
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -3.2305 -0.6839 -0.0027  0.6815  3.7423 
+## -3.4732 -0.6998  0.0129  0.6934  4.1964 
 ## 
 ## Coefficients:
 ##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  1.24925    0.01615   77.34   &lt;2e-16 ***
-## a            0.74328    0.01615   46.02   &lt;2e-16 ***
-## b            0.74723    0.01615   46.26   &lt;2e-16 ***
+## (Intercept)  1.23615    0.01622   76.21   &lt;2e-16 ***
+## a            0.73273    0.01622   45.17   &lt;2e-16 ***
+## b            0.74852    0.01622   46.15   &lt;2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 1.022 on 3997 degrees of freedom
-## Multiple R-squared:  0.5158, Adjusted R-squared:  0.5156 
-## F-statistic:  2129 on 2 and 3997 DF,  p-value: &lt; 2.2e-16</code></pre>
+## Residual standard error: 1.026 on 3997 degrees of freedom
+## Multiple R-squared:  0.5106, Adjusted R-squared:  0.5103 
+## F-statistic:  2085 on 2 and 3997 DF,  p-value: &lt; 2.2e-16</code></pre>
 <p>Now the interesting reason for differences in coefficients has gone and the <span class="math inline">\(\alpha\)</span>s are just twice the <span class="math inline">\(\beta\)</span>s; there’s no difference in the tests.</p>
 <p>If you stick to quantities that have the same meaning under the two parametrisations, you get the same answer. So what pairs of statements about interaction and power describe the simulation setting and have the same meaning? Working in terms of coefficients isn’t very satisfactory</p>
 <ul>
