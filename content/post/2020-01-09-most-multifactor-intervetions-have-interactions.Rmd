@@ -51,7 +51,7 @@ If we write $\alpha$ for the coefficients in the first model and $\beta$ for the
 - $\alpha_A=1, \alpha_B=1, \alpha_{AB}=1$
 - $\beta_A=3/4, \beta_B=3/4, \beta_{AB}=1/4$
 
-There are two reasons for the difference; an interesting one and a boring one.  The boring reason is that $1-0=1$ but $1--1=2$, so the $\beta$s are half as big as the $\alpha$s.  The interesting reason is that the 'main effect' $\alpha_A$ is the difference under 'not B', but the main effect $\beta_A$ is averaged over B and not B; it includes some of what $\alpha$ calls the interaction, so it's bigger and $\beta_{AB}$ is correspondingly smaller. $\alpha_A$ is the effect of A in settings where B is naturally absent, $\beta_A$ is the effect of A in settings where B is naturally present half the time.
+There are two reasons for the difference; an interesting one and a boring one.  The boring reason is that $1-0=1$ but $1--1=2$, so the $\beta$s are half as big as the $\alpha$s.  The interesting reason is that the 'main effect' $\alpha_A$ is the difference under 'not B', but the main effect $\beta_A$ is averaged over B and not B; it includes some of what $\alpha$ calls the interaction, so it's bigger and $\beta_{AB}$ is correspondingly smaller. We can think of $\alpha_A$ as the average effect of A in settings where B is naturally absent; $\beta_A$ is the average effect of A in settings where B is naturally present half the time.
 
 Now, we know that the test for $\alpha_{AB}=0$ must have the same power as the test for $\beta_{AB}=0$, because it compares the same two models. What's a bit less obvious is what happens to the 'main effects'. Let's simulate
 
