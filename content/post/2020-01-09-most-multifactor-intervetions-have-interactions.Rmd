@@ -53,6 +53,8 @@ If we write $\alpha$ for the coefficients in the first model and $\beta$ for the
 
 There are two reasons for the difference; an interesting one and a boring one.  The boring reason is that $1-0=1$ but $1--1=2$, so the $\beta$s are half as big as the $\alpha$s.  The interesting reason is that the 'main effect' $\alpha_A$ is the difference under 'not B', but the main effect $\beta_A$ is averaged over B and not B; it includes some of what $\alpha$ calls the interaction, so it's bigger and $\beta_{AB}$ is correspondingly smaller. We can think of $\alpha_A$ as the average effect of intervention A in settings where intervention B is naturally absent; $\beta_A$ is the average effect of intervention A in settings where intervention B is naturally present half the time.
 
+*The regression coefficient is not the only way to express the effect size of an interaction.*
+
 Now, we know that the test for $\alpha_{AB}=0$ must have the same power as the test for $\beta_{AB}=0$, because it compares the same two models. What's a bit less obvious is what happens to the 'main effects'. Let's simulate
 
 ```{r}
@@ -85,6 +87,8 @@ summary(z_model)
 
 The $t$-statistics for the interaction terms, again, are the same. In each model, the $t$-statistics for the main effects are larger than for the interaction effect. In the dummy-variable model, the coefficients are the same, but the standard error is larger for the main effects. In the effects-coding model, the standard errors are all the same, but the coefficient is smaller for the interaction. 
 
+*The regression coefficient is not the only way to express the effect size of an interaction.*
+
 Finally, look at the coefficients and tests for the no-interaction model.  This model is misspecified -- the residual variance isn't constant -- but with equal group sizes that doesn't matter much.
 
 ```{r}
@@ -111,3 +115,14 @@ Or in sound bites
 - **dummy:** Interactions are hard to detect because the uncertainty is larger than you might expect
 - **effects:** Interactions are hard to detect because the coefficient is smaller than you might expect
 
+And, as an update, what value would we need for the top left (AB) mean of $Y$ to have $\beta_{AB}=\beta_A=\beta_B$?
+We would need
+
+|       	| A 	| not A 	|
+|-------	|---	|-------	|
+| B     	| 4 	| 1     	|
+| not B 	| 1 	| 0     	|
+
+So, that's what the table looks like when the interaction parameter is the same size as the main-effects parameter under the effects coding. 
+
+*The regression coefficient is not the only way to express the effect size of an interaction.*
