@@ -9,7 +9,7 @@ tags: []
 
 The [Multiphase Optimisation Strategy](https://www.methodology.psu.edu/ra/most/) for designing multifactor behavioural interventions should be used more.  The idea is that you have a lot of potentially good ideas for things that might work, alone or in combination.  You don't want to test them one at a time, because that takes forever.  You don't want to test all against none, because they might not all be compatible, and in any case you don't want to be stuck doing them all if you don't need to.
 
-Instead, as any sensible engineering or agricultural research would, you put together a small factorial (or fractional factorial) experiment and test them all at once.  If you have, say, six factors, you can identify main effects and two-way interactions in a $2^{6-2}$ design, which has only 16 intervention groups. Win!
+Instead, as any sensible engineering or agricultural researcher would, you put together a small factorial (or fractional factorial) experiment and test them all at once.  If you have, say, six factors, you can identify main effects and two-way interactions in a $2^{6-2}$ design, which has only 16 intervention groups. Win!
 
 People who are used to ordinary clinical trials (where a $2^3$ or even $2\times 3$ design is seen as ... adventurous) often have unfounded concerns about these designs. There's a nice [misconceptions](https://www.methodology.psu.edu/ra/most/femiscon/) page at the PennState Methodology Center.
 
@@ -70,8 +70,8 @@ z_noint<-lm(y~a+b,data=z_effects[i,])
 First, lets look at the interaction tests
 
 ```{r}
-anova(x_model, x_noint)
-anova(z_model, z_noint)
+anova(x_noint, x_model)
+anova(z_noint,z_model)
 ```
 
 The tests are identical, as they should be.  
