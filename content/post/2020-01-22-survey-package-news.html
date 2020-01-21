@@ -1,0 +1,41 @@
+---
+title: Survey package news
+author: Thomas Lumley
+date: '2020-01-22'
+slug: survey-package-news
+categories: []
+tags: []
+---
+
+
+
+<p>Version 3.37 of the survey package is <a href="https://CRAN.R-project.org/package=survey">on CRAN now</a>.</p>
+<div id="new-features" class="section level3">
+<h3>New features</h3>
+<ul>
+<li><code>svyquantile</code> now takes account of design degrees of freedom in computing confidence intervals and in turning confidence intervals into standard error estimates. This means <strong>results will change</strong> (slightly, and for the better).</li>
+<li><code>svyivreg</code> for two-stage least squares with instrumental variables. (described <a href="https://notstatschat.rbind.io/2019/07/16/adding-new-functions-to-the-survey-package/">here</a>)</li>
+<li><code>withPV</code> for ‘plausible value’ analyses now supports replicate-weight designs. ‘Plausible values’ are how education people describe multiple imputation. The difference between this and the functions based on the <code>mitools</code> package is that <code>withPV</code> works with multiple columns in the same data frame (having, obviously, different names for a given variable in each imputed set) but <code>with.svyimputationList</code> works with multiple complete data frames (having the same name for a given variable in each imputed set). The basic <code>withPV</code> ideas are described <a href="https://notstatschat.rbind.io/2019/04/21/handling-plausible-values-in-surveys/">here</a></li>
+<li><code>svrepdesign</code> has specific options <code>type=&quot;JK2</code> for JK2 replicate weights (used by the California Health Interview Survey) and <code>type=&quot;ACS&quot;</code> for the replicate weights in the American Community Survey<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a></li>
+<li><code>svrepdesign</code> is now much more likely to give warnings if you unnecessarily specify the <code>scale=</code> and <code>rscales=</code> arguments when it could have worked them out itself – because you might have got it wrong.</li>
+</ul>
+</div>
+<div id="new-non-features" class="section level3">
+<h3>New non-features</h3>
+<p>You can’t use <code>RODBC</code> database connections as data tables any more. Instead, you can use the <code>odbc</code> package, which follows the R-DBI interface.</p>
+</div>
+<div id="non-new-non-features" class="section level2">
+<h2>Non-new non-features</h2>
+<p>Things that are still on the to-do list</p>
+<ul>
+<li>Make all the functions produce influence functions so that <code>svyby</code> can compare arbitrary statistics between groups without needed replicate weights. This isn’t especially hard, but it’s a lot of changes that need to be got right.</li>
+<li>Linear mixed models: I have two students working on improvements to the <code>svylme</code> package. It might end up as part of <code>survey</code> after that. Or not.</li>
+<li>Nonlinear least squares. If I get motivated, or if the people who complained about its non-existence on Stack Overflow actually ask for it.</li>
+</ul>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>and a synonym <code>type=&quot;successive-difference&quot;</code> for the ACS approach to computing weights (because it would be confusing to call it <code>type=&quot;ACS&quot;</code> if it were actually, for example, a Central Asian survey of horse breeds)<a href="#fnref1">↩</a></p></li>
+</ol>
+</div>

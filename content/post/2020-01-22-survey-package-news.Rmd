@@ -1,0 +1,31 @@
+---
+title: Survey package news
+author: Thomas Lumley
+date: '2020-01-22'
+slug: survey-package-news
+categories: []
+tags: []
+---
+
+Version 3.37 of the survey package is [on CRAN now](https://CRAN.R-project.org/package=survey).  
+
+### New features
+
+- `svyquantile` now takes account of design degrees of freedom in computing confidence intervals and in turning confidence intervals into standard error estimates.  This means **results will change** (slightly, and for the better).
+- `svyivreg` for two-stage least squares with instrumental variables. (described [here](https://notstatschat.rbind.io/2019/07/16/adding-new-functions-to-the-survey-package/))
+- `withPV` for 'plausible value' analyses now supports replicate-weight designs. 'Plausible values' are how education people describe multiple imputation. The difference between this and the functions based on the `mitools` package is that `withPV` works with multiple columns in the same data frame (having, obviously, different names for a given variable in each imputed set) but `with.svyimputationList` works with multiple complete data frames (having the same name for a given variable in each imputed set).  The basic `withPV` ideas are described [here](https://notstatschat.rbind.io/2019/04/21/handling-plausible-values-in-surveys/)
+- `svrepdesign` has specific options `type="JK2` for JK2 replicate weights (used by the California Health Interview Survey) and `type="ACS"` for the replicate weights in the American Community Survey^[and a synonym `type="successive-difference"` for the ACS approach to computing weights (because it would be confusing to call it `type="ACS"` if it were actually, for example, a Central Asian survey of horse breeds)]
+- `svrepdesign` is now much more likely to give warnings if you unnecessarily specify the `scale=` and `rscales=` arguments when it could have worked them out itself -- because you might have got it wrong. 
+
+### New non-features
+
+You can't use `RODBC` database connections as data tables any more.  Instead, you can use the `odbc` package, which follows the R-DBI interface.
+
+
+## Non-new non-features
+
+Things that are still on the to-do list
+
+- Make all the functions produce influence functions so that `svyby` can compare arbitrary statistics between groups without needed replicate weights. This isn't especially hard, but it's a lot of changes that need to be got right.
+- Linear mixed models: I have two students working on improvements to the `svylme` package.  It might end up as part of `survey` after that. Or not.
+- Nonlinear least squares.  If I get motivated, or if the people who complained about its non-existence on Stack Overflow actually ask for it. 
