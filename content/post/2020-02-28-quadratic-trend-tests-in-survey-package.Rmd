@@ -1,0 +1,97 @@
+---
+title: Quadratic trend tests in survey package
+author: Thomas Lumley
+date: '2020-02-28'
+slug: quadratic-trend-tests-in-survey-package
+categories: []
+tags: []
+---
+
+Josh De La Rosa wanted to know how to do quadratic trend tests such as these in the R survey package
+![](/post/2020-02-28-quadratic-trend-tests-in-survey-package_files/ewok.jpeg){width=90%}
+
+If you can't read the image, the code extracts a sets of means for years from 2005 to 2014 and then tests a particular linear contrast of them, with coefficients `c(6, 2, -1, -3, -4, -4, -3, -1, 2, 6)`
+
+I thought this would be easy: just do a linear model with a quadratic in year, and test the quadratic term. Unfortunately, the code example doesn't give the output. And there isn't a 2005 to 2014 combined file available. But there is a 2002-14 combined file.  It's huge, but I read it in and saved a subset.
+
+```{r}
+load("~/nsduh_subset.rda")
+library(survey)
+des<-svydesign(id=~verep, strata=~vestr,nest=TRUE,
+               weight=~ANALWC10, data=nsduh)
+des
+cc<-c(6, 2, -1, -3, -4, -4, -3, -1, 2, 6)
+```
+
+After I get around to the necessary rewrite, it will be possible to just use `svyby` and `svymean` to get the means of `alcmon` for each year and `svycontrast` to compute the contrast. At the moment, that way only works if you have a replicate-weight design. And it's a bit slow, because there are 220 sets of replicate weights.
+
+```{r cache=TRUE}
+nsduh_jk<-as.svrepdesign(des,type="JKn")
+jkmns<-svyby(~alcmon,~year, svymean, na.rm=TRUE, 
+             design=nsduh_jk, covmat=TRUE)
+jkmns
+svycontrast(jkmns,cc)
+```
+
+We could use a single call to `svymean`, and then compute the proportions from it. I'm doing this to show it's possible, not because you should do it this way. The point estimate is identical to the previous version; the standard error is equal at least to three figures (it could be different because it's from Horvitz-Thompson estimator, not the jackknife). 
+
+```{r}
+des<-update(des, alcyr=interaction(alcmon,year))
+mns <- svymean(~alcyr,na.rm=TRUE,design=des)
+mns
+ratios<-svycontrast(mns,
+			list(alc05=quote(alcyr1.2005/(alcyr0.2005+alcyr1.2005)),
+			 	 alc06=quote(alcyr1.2006/(alcyr0.2006+alcyr1.2006)),
+			 	 alc07=quote(alcyr1.2007/(alcyr0.2007+alcyr1.2007)),
+			 	 alc08=quote(alcyr1.2008/(alcyr0.2008+alcyr1.2008)),
+			 	 alc09=quote(alcyr1.2009/(alcyr0.2009+alcyr1.2009)),
+			 	 alc10=quote(alcyr1.2010/(alcyr0.2010+alcyr1.2010)),
+			 	 alc11=quote(alcyr1.2011/(alcyr0.2011+alcyr1.2011)),
+			 	 alc12=quote(alcyr1.2012/(alcyr0.2012+alcyr1.2012)),
+			 	 alc13=quote(alcyr1.2013/(alcyr0.2013+alcyr1.2013)),
+			 	 alc14=quote(alcyr1.2014/(alcyr0.2014+alcyr1.2014))
+			))
+ratios
+svycontrast(ratios, cc)
+```
+
+Using `svymean` like this isn't necessary, because as statisticians we already have a tool for computing means and contrasts of means: regression.  The domain mean by subsetting is exactly the same as the domain computed by regression (this is how I first understood domain estimation in surveys and the standard error estimation issues). We want an indicator variable for each year, and no intercept.
+
+```{r}
+model0<-svyglm(alcmon~0+year,design=des)
+model0
+svycontrast(model0, cc)
+```
+
+But there should be an even simpler way.  Quadratic trend tests computed *post hoc* are what you do before you invent regression models.  Surely we can just fit a model with linear and quadratic terms and test the quadratic term?
+
+```{r}
+des<-update(des,numyr=as.numeric(year))
+model2<-svyglm(alcmon~poly(numyr,2), design=des)
+summary(model2)
+```
+
+The numerical value is different because of different scaling, but the ratio of coefficient to standard error should be the same
+
+```{r}
+coef(svycontrast(model0, cc))/SE(svycontrast(model0, cc))
+
+coef(model2)[3]/SE(model2)[3]
+```
+
+Only not. 
+
+The difference didn't depend (as it shouldn't) on how I parametrised the quadratic in `model2`: centering, scaling, even transforming to use exactly the `c(6, 2, -1, -3, -4, -4, -3, -1, 2, 6)` coefficients from SUDAAN.
+
+After some considerable time, I realised the corresponding linear model was much uglier
+
+```{r}
+des<-update(des,oyear=ordered(year))
+omodel<-svyglm(alcmon~pyear, design=des)
+summary(omodel)
+coef(omodel)[3]/SE(omodel[3])
+```
+
+The linear model corresponding to the trend test has a complete set of orthogonal polynomials, and you look at the quadratic term. 
+
+So, now we have multiple ways to get the same answer in R as in SUDAAN, but I think looking at the regression models gives a fairly strong argument *not* to do that and to fit a much more straightforward regression model.  
