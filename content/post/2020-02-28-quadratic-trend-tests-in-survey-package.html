@@ -49,7 +49,7 @@ jkmns</code></pre>
 <pre class="r"><code>svycontrast(jkmns,cc)</code></pre>
 <pre><code>##          contrast     SE
 ## contrast 0.045587 0.0439</code></pre>
-<p>We could use a single call to <code>svymean</code>, and then compute the proportions from it. I’m doing this to show it’s possible, not because you should do it this way. The point estimate is identical to the previous version; the standard error isn’t, but only because the standard error here comes from the Horvitz-Thompson variance estimator and the previous one came from the jackknife.</p>
+<p>We could use a single call to <code>svymean</code>, and then compute the proportions from it. I’m doing this to show it’s possible, not because you should do it this way. The point estimate is identical to the previous version; the standard error is equal at least to three figures (it could be different because it’s from Horvitz-Thompson estimator, not the jackknife).</p>
 <pre class="r"><code>des&lt;-update(des, alcyr=interaction(alcmon,year))
 mns &lt;- svymean(~alcyr,na.rm=TRUE,design=des)
 mns</code></pre>
@@ -152,3 +152,38 @@ summary(model2)</code></pre>
 <pre><code>## poly(numyr, 2)2 
 ##        1.041703</code></pre>
 <p>Only not.</p>
+<p>The difference didn’t depend (as it shouldn’t) on how I parametrised the quadratic in <code>model2</code>: centering, scaling, even transforming to use exactly the <code>c(6, 2, -1, -3, -4, -4, -3, -1, 2, 6)</code> coefficients from SUDAAN.</p>
+<p>After some considerable time, I realised the corresponding linear model was much uglier</p>
+<pre class="r"><code>des&lt;-update(des,oyear=ordered(year))
+omodel&lt;-svyglm(alcmon~oyear, design=des)
+summary(omodel)</code></pre>
+<pre><code>## 
+## Call:
+## svyglm(formula = alcmon ~ oyear, design = des)
+## 
+## Survey design:
+## update(des, oyear = ordered(year))
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.5170693  0.0014517 356.176  &lt; 2e-16 ***
+## oyear.L      0.0120422  0.0040586   2.967  0.00375 ** 
+## oyear.Q      0.0039679  0.0038218   1.038  0.30165    
+## oyear.C      0.0005879  0.0040143   0.146  0.88386    
+## oyear^4      0.0088994  0.0039333   2.263  0.02580 *  
+## oyear^5     -0.0044635  0.0050910  -0.877  0.38270    
+## oyear^6      0.0004774  0.0037700   0.127  0.89948    
+## oyear^7      0.0046641  0.0040921   1.140  0.25707    
+## oyear^8      0.0031820  0.0040965   0.777  0.43911    
+## oyear^9     -0.0002011  0.0042115  -0.048  0.96202    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for gaussian family taken to be 0.2496762)
+## 
+## Number of Fisher Scoring iterations: 2</code></pre>
+<pre class="r"><code>coef(omodel)[3]/SE(omodel)[3]</code></pre>
+<pre><code>##  oyear.Q 
+## 1.038224</code></pre>
+<p>The linear model corresponding to the trend test has a complete set of orthogonal polynomials, and you look at the quadratic term.</p>
+<p>So, now we have multiple ways to get the same answer in R as in SUDAAN, but I think looking at the regression models gives a fairly strong argument <em>not</em> to do that and to fit a much more straightforward regression model.</p>

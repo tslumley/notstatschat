@@ -87,11 +87,11 @@ After some considerable time, I realised the corresponding linear model was much
 
 ```{r}
 des<-update(des,oyear=ordered(year))
-omodel<-svyglm(alcmon~pyear, design=des)
+omodel<-svyglm(alcmon~oyear, design=des)
 summary(omodel)
-coef(omodel)[3]/SE(omodel[3])
+coef(omodel)[3]/SE(omodel)[3]
 ```
 
 The linear model corresponding to the trend test has a complete set of orthogonal polynomials, and you look at the quadratic term. 
 
-So, now we have multiple ways to get the same answer in R as in SUDAAN, but I think looking at the regression models gives a fairly strong argument *not* to do that and to fit a much more straightforward regression model.  
+So, now we have multiple ways to get the same answer in R as in SUDAAN, but I think looking at the regression models gives a fairly strong argument *not* to do that and to fit a much more straightforward regression model. 
