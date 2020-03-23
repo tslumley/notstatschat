@@ -26,7 +26,7 @@ If you want the cross, a good icing mixture is lemon or lime juice and as much i
 - a cup of warm water
 - a teaspoon of sugar
 - 1/2 cup gluten
-- About 1kg bread flour
+- About 1.5kg bread flour
 
 
 Put the fruit in a mixing bowl. Grind the mace, allspice, and coriander. Add the cardamom seeds, salt, and butter. Cover with boiling water. 
