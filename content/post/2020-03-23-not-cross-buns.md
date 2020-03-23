@@ -20,6 +20,7 @@ If you want the cross, a good icing mixture is lemon or lime juice and as much i
 - about 20 coriander seeds
 - seeds of about 10 cardamom pods
 - 80g butter
+- salt to taste
 - boiling water
 - yeast
 - a cup of warm water
@@ -28,7 +29,7 @@ If you want the cross, a good icing mixture is lemon or lime juice and as much i
 - About 1kg bread flour
 
 
-Put the fruit in a mixing bowl. Grind the mace, allspice, and coriander. Add the cardamom seeds and butter. Cover with boiling water. 
+Put the fruit in a mixing bowl. Grind the mace, allspice, and coriander. Add the cardamom seeds, salt, and butter. Cover with boiling water. 
 
 In a small bowl, mix the yeast with warm water and sugar. 
 
@@ -49,3 +50,4 @@ Cool on a rack (or in a colander)
 - Variations on  the spice: cinnamon, cloves, a very little black pepper
 - Omitting the gluten will give softer, denser rolls
 - Some people might want to cut back on the spices
+- People vary a lot in how much salt they want in bread. I use about 2 tsp.
