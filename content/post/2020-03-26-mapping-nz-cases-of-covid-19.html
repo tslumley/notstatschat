@@ -1,0 +1,105 @@
+---
+title: Mapping NZ cases of COVID-19
+author: Thomas Lumley
+date: '2020-03-26'
+slug: mapping-nz-cases-of-covid-19
+categories: []
+tags: []
+---
+
+
+
+<p>The NZ Ministry of Health has been releasing information about COVID-19 cases, and Chris Knox (of the NZ Herald) has been collating it on <a href="https://github.com/nzherald/nz-covid19-data">github</a></p>
+<p>Here, I’m going to map it by District Health Board, using the<code>DHBins</code> package. If you’re following along at home, you need the development version of the package, from <a href="https://github.com/tslumley/DHBins">github</a>.</p>
+<pre class="r"><code>library(DHBins)</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>library(readxl)
+case_r&lt;-read_xlsx(&quot;~/nz-covid19-data/data/dhb-cases.xlsx&quot;)
+
+case_r&lt;-subset(case_r,  `Case Status`==&quot;Confirmed cases&quot; &amp; DHB!=&quot;Total&quot;)</code></pre>
+<p>Next, we need population data. That’s already in the package</p>
+<pre class="r"><code>data(dhb_cars)
+
+popsize&lt;-data.frame(dhb=dhb_cars$dhb, Total=rowSums(dhb_cars[,-1]))</code></pre>
+<p>I’m going to do a split hex map where there’s a hex for each District Health Board, with half of the hex showing the population and the other half showing the number of cases. That means I need to divide each hex into six triangles, and use three for population and the other three for number of cases. Actually, I need two superimposed hexes for each District Health Board, because you can’t vary the radius of a triangulated hex. Half of each hex will be <code>NA</code>.</p>
+<pre class="r"><code>pop_tri&lt;-popsize[rep(1:nrow(popsize),each=6),]
+pop_tri$group&lt;-rep(rep(c(&quot;blank&quot;,&quot;Population&quot;),each=3),nrow(popsize))
+pop_tri$order&lt;-rep(c(1,2,6,3,4,5),nrow(popsize))
+
+
+case_tri&lt;-case_r[rep(1:nrow(case_r),each=6),]
+case_tri$group&lt;-rep(rep(c(&quot;Cases&quot;,&quot;empty&quot;),each=3),nrow(case_r))
+case_tri$order&lt;-rep(c(1,2,6,3,4,5),nrow(case_r))</code></pre>
+<p>Now, assemble the plot. First, an outline for each hex</p>
+<pre class="r"><code>ggplot(case_tri)+
+  geom_dhb(data=popsize, aes(map_id=dhb),fill=&quot;grey98&quot;)</code></pre>
+<p><img src="/post/2020-03-26-mapping-nz-cases-of-covid-19_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Now, add the population sizes</p>
+<pre class="r"><code>ggplot(case_tri)+
+  geom_dhb(data=popsize, aes(map_id=dhb),fill=&quot;grey98&quot;)+
+  geom_dhbtri(data=pop_tri,aes(map_id=dhb,fill=group,class_id=order,radius=sqrt(Total)),
+              coord=FALSE, show.legend=FALSE)</code></pre>
+<p><img src="/post/2020-03-26-mapping-nz-cases-of-covid-19_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>But we need to suppress half of that</p>
+<pre class="r"><code>ggplot(case_tri)+
+  geom_dhb(data=popsize, aes(map_id=dhb),fill=&quot;grey98&quot;)+
+  geom_dhbtri(data=pop_tri,aes(map_id=dhb,fill=group,class_id=order,radius=sqrt(Total)),
+              coord=FALSE, show.legend=FALSE)+
+  scale_fill_manual(values=c(blank=NA,Population=&quot;forestgreen&quot;,Cases=&quot;gold&quot;,empty=NA))</code></pre>
+<p><img src="/post/2020-03-26-mapping-nz-cases-of-covid-19_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Now, do the same thing with the case data</p>
+<pre class="r"><code>ggplot(case_tri)+
+  geom_dhb(data=popsize, aes(map_id=dhb),fill=&quot;grey98&quot;)+
+  geom_dhbtri(data=pop_tri,aes(map_id=dhb,fill=group,class_id=order,radius=sqrt(Total)),
+              coord=FALSE, show.legend=FALSE)+
+  scale_fill_manual(values=c(blank=NA,Population=&quot;forestgreen&quot;,Cases=&quot;gold&quot;,empty=NA))+
+  geom_dhbtri(data=case_tri, aes(map_id=DHB,fill=group,class_id=order,radius=sqrt(Count)),
+              coord=FALSE, show.legend=FALSE)</code></pre>
+<p><img src="/post/2020-03-26-mapping-nz-cases-of-covid-19_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>And add abbrevations for each District Health Board, offsetting them up so they don’t obscure the data</p>
+<pre class="r"><code>ggplot(case_tri)+
+  geom_dhb(data=popsize, aes(map_id=dhb),fill=&quot;grey98&quot;)+
+  geom_dhbtri(data=pop_tri,aes(map_id=dhb,fill=group,class_id=order,radius=sqrt(Total)),
+              coord=FALSE, show.legend=FALSE)+
+  scale_fill_manual(values=c(blank=NA,Population=&quot;forestgreen&quot;,Cases=&quot;gold&quot;,empty=NA))+
+  geom_dhbtri(data=case_tri, aes(map_id=DHB,fill=group,class_id=order,radius=sqrt(Count)),
+              coord=FALSE, show.legend=FALSE)+
+  geom_label_dhb(short=TRUE, position=position_nudge(x=0,y=0.5),col=&quot;grey50&quot;,size=2.5)</code></pre>
+<p><img src="/post/2020-03-26-mapping-nz-cases-of-covid-19_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>It looks as though rural areas are at lower risk, but so is Canterbury (about 80% of which is Christchurch). We might want to put confidence intervals on, to see if these differences are larger than you’d get from random variation. It’s easy to model the purely random part of this with a Poisson distribution, but we don’t have data on ascertainment rates so the variation will be underestimated.</p>
+<p>I used <code>poisson.test()</code> to compute exact confidence intervals for the rates, since the counts in some areas are (happily) very small.</p>
+<pre class="r"><code>case_tri$low&lt;-sapply(case_tri$Count, function(n) poisson.test(n)$conf.int[1])
+case_tri$high&lt;-sapply(case_tri$Count, function(n) poisson.test(n)$conf.int[2])
+
+case_tri$total_scaled&lt;- with(case_tri, 0.95*Count/max(high))
+case_tri$low_scaled&lt;- with(case_tri, 0.95*low/max(high))
+case_tri$high_scaled&lt;- with(case_tri, 0.95*high/max(high))</code></pre>
+<p>Also, I want the population half of the hex scaled to match the true count, not the outer confidence limit</p>
+<pre class="r"><code>pop_tri$total_scaled&lt;- 0.95*pop_tri$Total*max(case_tri$total_scaled)/max(pop_tri$Total)</code></pre>
+<p>And finally, we can assemble it. First, the population half</p>
+<pre class="r"><code>ggplot(case_tri)+
+    geom_dhb(data=popsize, aes(map_id=dhb),fill=&quot;grey98&quot;)+
+    geom_dhbtri(data=pop_tri,
+                aes(map_id=dhb,fill=group,class_id=order,radius=sqrt(total_scaled)),
+                coord=FALSE, show.legend=FALSE)+
+    scale_fill_manual(values=c(blank=NA,Population=&quot;forestgreen&quot;,Cases=&quot;magenta&quot;,empty=NA))</code></pre>
+<p><img src="/post/2020-03-26-mapping-nz-cases-of-covid-19_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>Now add the case half in three, partially transparent, sections: the upper limit, the observed value, then the lower limit</p>
+<pre class="r"><code>ggplot(case_tri)+
+    geom_dhb(data=popsize, aes(map_id=dhb),fill=&quot;grey98&quot;)+
+    geom_dhbtri(data=pop_tri,
+                aes(map_id=dhb,fill=group,class_id=order,radius=sqrt(total_scaled)),
+                coord=FALSE, show.legend=FALSE)+
+    scale_fill_manual(values=c(blank=NA,Population=&quot;forestgreen&quot;,Cases=&quot;magenta&quot;,empty=NA))+
+    geom_dhbtri(data=case_tri,
+                aes(map_id=DHB,fill=group,class_id=order,radius=sqrt(high_scaled)),
+                alpha=0.1,coord=FALSE, show.legend=FALSE)+
+    geom_label_dhb(short=TRUE,position=position_nudge(x=0,y=0.5),
+                   col=&quot;grey50&quot;,size=3)+
+    geom_dhbtri(data=case_tri, 
+                aes(map_id=DHB,fill=group, class_id=order, radius=sqrt(total_scaled)),
+                alpha=0.3,coord=FALSE, show.legend=FALSE)+
+    geom_dhbtri(data=case_tri,
+                aes(map_id=DHB,fill=group,class_id=order,radius=sqrt(low_scaled)),
+                alpha=0.3,coord=FALSE, show.legend=FALSE)</code></pre>
+<p><img src="/post/2020-03-26-mapping-nz-cases-of-covid-19_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
