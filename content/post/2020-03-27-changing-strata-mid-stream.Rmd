@@ -1,0 +1,45 @@
+---
+title: Changing strata mid-stream
+author: Thomas Lumley
+date: '2020-03-27'
+slug: changing-strata-mid-stream
+categories: []
+tags: []
+---
+
+### The problem
+
+We want to estimate the population (or cohort) total of a variable $X$ (actually, we don't, we want to fit a regression model, but this part of the maths is the same).  We've got some variables $Z$ that we know for everyone, and we want to do clever sampling.
+
+Thanks to Neyman, we know that if we divide the population into strata of size $N_k$ using $Z$, the optimal sample size $n_k$ in each stratum is proportional to $N_k\sigma_k$, where $\sigma_k$ is the variance of $X$ in the stratum. We are happy!
+
+But we don't know $\sigma_k$. We are sad.
+
+We could do a little pilot study and then estimate $\sigma_k$, and then do more sampling. We are moderately happy. 
+
+It's inefficient to just throw the pilot data away, so we'd want to treat the pilot as the first *wave* of sampling. We can then work out how many more people to sample in each stratum (in wave 2) to end up with the estimated optimal $n_k$.  McIsaac & Cook did this for some regression models, though they didn't realise (or, at least, didn't mention) the connection to Neyman allocation. 
+
+But we might find out in wave 1 that we have a bad set of strata (sad!) and want to change the stratification in later waves.  Is this allowed?
+
+### Maths and notation
+
+After waves $m$ we end up with $K_m$ strata with $n_{k_m}$ in the sample and $N_{k_m}$ in the population.  The $n_{k_m}$ are chosen before the last wave. 
+
+Technically, each observation has a sampling probability $\pi_i(\hat\alpha)$ that depends on the stratifications and sampling probabilities at each wave. Can we ignore these and just work with the realised sampling fractions $\pi^*_i= n_{{k_m}(i)}/N_{{k_m}(i)}$?
+
+
+The $\pi_i^*$ are random, so dividing by them will in general introduce bias. However, the estimator would be unbiased for any fixed set of sampling probabilities, and so the bias will be of second order in the variance of the sampling  fractions.  As long as the $n_k$ are not too small, that aspect of the problem will be ok. We still have to worry about the changing stratifications and sampling probabilities over waves.
+
+It is certainly possible to break this approach.  Suppose $Z$ contains two variables, an excellent surrogate $Z_1$ for $X$ and an irrelevant variable $Z_2$, and that everything is binary.  Further suppose that in wave 1 we stratify based on $Z_1$ and oversample $Z_1=1$, and in wave 2 we stratify based on $Z_2$ and take a balanced sample.  We will end up with equal sampling probabilities for every individual (because balanced), but the final design will have oversampled $Z_1=1$ and thus $X=1$, and so will have a biased estimate for the mean or total of $X$.  No-one would do this, but it indicates the approach isn't safe without at least some assumptions.  
+
+In the other direction, we know everything is fine if the strata change but the sampling probabilities change over the waves. Also,  if the strata start off coarse and are refined at each stage, we're ok: two observations will never end up with the same $\pi_i^*$ if they are sampled with different probabilities.
+
+What this suggests is that you can make the strata *better* at each wave, but not *worse*.
+
+Suppose that once you know what stratum someone is in at the last wave, it doesn't matter what stratum they are in at earlier waves
+$$E[X_i | i\in\textrm{stratum $k_3$}]=E[X_i | i\in\textrm{stratum $k_3$}, i\in\textrm{stratum $k_2$},i\in\textrm{stratum $k_2$}]$$
+We can correct the sampling bias in the LHS of this equation by reweighting using $1/\pi^*_{i}$, so we can correct the bias in the RHS, which describes the actual sampling bias.
+
+
+The equation holds trivially if the strata are the same at each wave, and pretty obviously if the strata get refined at each wave. It can also hold if you just get better information at each wave and make better strata.  For example, in our real problem, instead of $X$ we are interested in the influence functions for a regression model, and at each wave we get better estimates of these influence functions and use them to stratify better. 
+

@@ -1,0 +1,33 @@
+---
+title: Changing strata mid-stream
+author: Thomas Lumley
+date: '2020-03-27'
+slug: changing-strata-mid-stream
+categories: []
+tags: []
+---
+
+
+
+<div id="the-problem" class="section level3">
+<h3>The problem</h3>
+<p>We want to estimate the population (or cohort) total of a variable <span class="math inline">\(X\)</span> (actually, we don’t, we want to fit a regression model, but this part of the maths is the same). We’ve got some variables <span class="math inline">\(Z\)</span> that we know for everyone, and we want to do clever sampling.</p>
+<p>Thanks to Neyman, we know that if we divide the population into strata of size <span class="math inline">\(N_k\)</span> using <span class="math inline">\(Z\)</span>, the optimal sample size <span class="math inline">\(n_k\)</span> in each stratum is proportional to <span class="math inline">\(N_k\sigma_k\)</span>, where <span class="math inline">\(\sigma_k\)</span> is the variance of <span class="math inline">\(X\)</span> in the stratum. We are happy!</p>
+<p>But we don’t know <span class="math inline">\(\sigma_k\)</span>. We are sad.</p>
+<p>We could do a little pilot study and then estimate <span class="math inline">\(\sigma_k\)</span>, and then do more sampling. We are moderately happy.</p>
+<p>It’s inefficient to just throw the pilot data away, so we’d want to treat the pilot as the first <em>wave</em> of sampling. We can then work out how many more people to sample in each stratum (in wave 2) to end up with the estimated optimal <span class="math inline">\(n_k\)</span>. McIsaac &amp; Cook did this for some regression models, though they didn’t realise (or, at least, didn’t mention) the connection to Neyman allocation.</p>
+<p>But we might find out in wave 1 that we have a bad set of strata (sad!) and want to change the stratification in later waves. Is this allowed?</p>
+</div>
+<div id="maths-and-notation" class="section level3">
+<h3>Maths and notation</h3>
+<p>After waves <span class="math inline">\(m\)</span> we end up with <span class="math inline">\(K_m\)</span> strata with <span class="math inline">\(n_{k_m}\)</span> in the sample and <span class="math inline">\(N_{k_m}\)</span> in the population. The <span class="math inline">\(n_{k_m}\)</span> are chosen before the last wave.</p>
+<p>Technically, each observation has a sampling probability <span class="math inline">\(\pi_i(\hat\alpha)\)</span> that depends on the stratifications and sampling probabilities at each wave. Can we ignore these and just work with the realised sampling fractions <span class="math inline">\(\pi^*_i= n_{{k_m}(i)}/N_{{k_m}(i)}\)</span>?</p>
+<p>The <span class="math inline">\(\pi_i^*\)</span> are random, so dividing by them will in general introduce bias. However, the estimator would be unbiased for any fixed set of sampling probabilities, and so the bias will be of second order in the variance of the sampling fractions. As long as the <span class="math inline">\(n_k\)</span> are not too small, that aspect of the problem will be ok. We still have to worry about the changing stratifications and sampling probabilities over waves.</p>
+<p>It is certainly possible to break this approach. Suppose <span class="math inline">\(Z\)</span> contains two variables, an excellent surrogate <span class="math inline">\(Z_1\)</span> for <span class="math inline">\(X\)</span> and an irrelevant variable <span class="math inline">\(Z_2\)</span>, and that everything is binary. Further suppose that in wave 1 we stratify based on <span class="math inline">\(Z_1\)</span> and oversample <span class="math inline">\(Z_1=1\)</span>, and in wave 2 we stratify based on <span class="math inline">\(Z_2\)</span> and take a balanced sample. We will end up with equal sampling probabilities for every individual (because balanced), but the final design will have oversampled <span class="math inline">\(Z_1=1\)</span> and thus <span class="math inline">\(X=1\)</span>, and so will have a biased estimate for the mean or total of <span class="math inline">\(X\)</span>. No-one would do this, but it indicates the approach isn’t safe without at least some assumptions.</p>
+<p>In the other direction, we know everything is fine if the strata change but the sampling probabilities change over the waves. Also, if the strata start off coarse and are refined at each stage, we’re ok: two observations will never end up with the same <span class="math inline">\(\pi_i^*\)</span> if they are sampled with different probabilities.</p>
+<p>What this suggests is that you can make the strata <em>better</em> at each wave, but not <em>worse</em>.</p>
+<p>Suppose that once you know what stratum someone is in at the last wave, it doesn’t matter what stratum they are in at earlier waves
+<span class="math display">\[E[X_i | i\in\textrm{stratum $k_3$}]=E[X_i | i\in\textrm{stratum $k_3$}, i\in\textrm{stratum $k_2$},i\in\textrm{stratum $k_2$}]\]</span>
+We can correct the sampling bias in the LHS of this equation by reweighting using <span class="math inline">\(1/\pi^*_{i}\)</span>, so we can correct the bias in the RHS, which describes the actual sampling bias.</p>
+<p>The equation holds trivially if the strata are the same at each wave, and pretty obviously if the strata get refined at each wave. It can also hold if you just get better information at each wave and make better strata. For example, in our real problem, instead of <span class="math inline">\(X\)</span> we are interested in the influence functions for a regression model, and at each wave we get better estimates of these influence functions and use them to stratify better.</p>
+</div>
