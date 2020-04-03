@@ -27,7 +27,7 @@ tags: []
 <p>In the other direction, we know everything is fine if the strata change but the sampling probabilities change over the waves. Also, if the strata start off coarse and are refined at each stage, we’re ok: two observations will never end up with the same <span class="math inline">\(\pi_i^*\)</span> if they are sampled with different probabilities.</p>
 <p>What this suggests is that you can make the strata <em>better</em> at each wave, but not <em>worse</em>.</p>
 <p>Suppose that once you know what stratum someone is in at the last wave, it doesn’t matter what stratum they are in at earlier waves
-<span class="math display">\[E[X_i | i\in\textrm{stratum $k_3$}]=E[X_i | i\in\textrm{stratum $k_3$}, i\in\textrm{stratum $k_2$},i\in\textrm{stratum $k_2$}]\]</span>
+<span class="math display">\[E[X_i | i\in\textrm{stratum $k_3$}]=E[X_i | i\in\textrm{stratum $k_3$}, i\in\textrm{stratum $k_2$},i\in\textrm{stratum $k_1$}]\]</span>
 We can correct the sampling bias in the LHS of this equation by reweighting using <span class="math inline">\(1/\pi^*_{i}\)</span>, so we can correct the bias in the RHS, which describes the actual sampling bias.</p>
 <p>The equation holds trivially if the strata are the same at each wave, and pretty obviously if the strata get refined at each wave. It can also hold if you just get better information at each wave and make better strata. For example, in our real problem, instead of <span class="math inline">\(X\)</span> we are interested in the influence functions for a regression model, and at each wave we get better estimates of these influence functions and use them to stratify better.</p>
 </div>

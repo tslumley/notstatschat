@@ -1,0 +1,51 @@
+---
+title: New in the survey package
+author: Thomas Lumley
+date: '2020-04-03'
+slug: new-in-the-survey-package
+categories: []
+tags: []
+---
+
+
+
+<p>Version 4.0 of the survey package is on its way to CRAN.</p>
+<p>There are two main updates, which improve the estimation of contrasts</p>
+<p>First, a couple of improvements to the handling of replicates. When <code>svycontrast</code> is used on an object that includes replicate estimates, the estimates will now be transformed and then used to estimate a variance, rather than using the delta method. I think that’s the right thing to do, though you might also want to compute a confidence interval on the original scale and transform the interval. Also, there’s a function to estimate variances from a set of arbitrarily transformed replicates, eg correlation matrices</p>
+<pre class="r"><code>dstrat &lt;- svydesign(id=~1,strata=~stype, weights=~pw, data=apistrat, fpc=~fpc)
+bstrat&lt;- as.svrepdesign(dstrat,type=&quot;subbootstrap&quot;)
+
+v &lt;- svyvar(~api00+api99, bstrat, return.replicates=TRUE)
+vcor&lt;-cov2cor(as.matrix(v))[2,1]
+vreps&lt;-v$replicates
+correps&lt;-apply(vreps,1, function(v) v[2]/sqrt(v[1]*v[4]))
+
+vcov(bstrat,correps, centre=vcor)</code></pre>
+<pre><code>## [1] 1.486932e-05
+## attr(,&quot;means&quot;)
+## [1] 0.9751789</code></pre>
+<p>Second, some functions (so far, <code>svymean</code>, <code>svytotal</code>, <code>svyratio</code>, <code>svykappa</code>,<code>svyglm</code>, <code>svymle</code>) have the option to return influence functions as an attribute of the estimate. This allows <code>svyby</code> to estimate a covariance matrix including between-domain covariances, so that confidence intervals and standard errors are available for between-domain contrasts. Previously, they have only been available for replicate-weight designs (though for totals and means you could get them with an appropriate regression model). Returning influence functions is not the default, because they can take up a lot of space.</p>
+<p>For example</p>
+<pre class="r"><code>dclus1&lt;-svydesign(id=~dnum, weights=~pw, data=apiclus1, fpc=~fpc)
+
+totals&lt;-svyby(~enroll, ~stype, svytotal,
+                 design=dclus1, covmat=TRUE)
+
+svycontrast(totals, quote(E/H))</code></pre>
+<pre><code>##          nlcon     SE
+## contrast 3.939 1.4319</code></pre>
+<pre class="r"><code>svycontrast(totals, quote(E-H))</code></pre>
+<pre><code>##            nlcon     SE
+## contrast 1574122 543747</code></pre>
+<p>The only important function where this does not look feasible is <code>svyquantile</code>, because of the lack of smoothness (though there are tests for equality of quantiles between groups available with <code>svyranktest</code>.)</p>
+<div id="other-changes" class="section level3">
+<h3>Other changes</h3>
+<p>There is a function <code>svynls()</code> to do non-linear least-squares with probability weights. It does most of its work by calling <code>nls</code>, so if you know how to fit your model with <code>nls</code> you’ll be ok.</p>
+<p>There are also a couple of significant documentation notes</p>
+<ul>
+<li>Lots of people have asked how to get ‘robust’ standard errors for quasipoisson models fitted with <code>svyglm</code>, so there is a note saying that there isn’t any choice: the standard error estimates are generalisations of the ‘sandwich’ standard errors</li>
+<li>I had an interesting exchange about standard errors in <code>predict.svyglm</code>. I implemented these the obvious way:
+<span class="math display">\[\mathrm{var}[x\hat\beta]=x^T\mathrm{var}[\hat\beta]x.\]</span>
+For the special case where the new value of <span class="math inline">\(x\)</span> is the true population mean, most people use a different standard error estimator that’s a rescaling of the weighted residual mean square (especially in simple random samples in textbooks, but also in real life). If I’m reading Chapter 2 of Fuller’s <em>Sampling Statistics</em> correctly, my estimator is noisier, but is valid under weaker assumptions.</li>
+</ul>
+</div>

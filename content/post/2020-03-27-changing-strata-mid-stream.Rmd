@@ -37,7 +37,7 @@ In the other direction, we know everything is fine if the strata change but the 
 What this suggests is that you can make the strata *better* at each wave, but not *worse*.
 
 Suppose that once you know what stratum someone is in at the last wave, it doesn't matter what stratum they are in at earlier waves
-$$E[X_i | i\in\textrm{stratum $k_3$}]=E[X_i | i\in\textrm{stratum $k_3$}, i\in\textrm{stratum $k_2$},i\in\textrm{stratum $k_2$}]$$
+$$E[X_i | i\in\textrm{stratum $k_3$}]=E[X_i | i\in\textrm{stratum $k_3$}, i\in\textrm{stratum $k_2$},i\in\textrm{stratum $k_1$}]$$
 We can correct the sampling bias in the LHS of this equation by reweighting using $1/\pi^*_{i}$, so we can correct the bias in the RHS, which describes the actual sampling bias.
 
 
