@@ -7,10 +7,12 @@ slug: how-to-write-a-racist-ai-in-r-without-really-trying
 
 
 
-<p>Last year, Rob Speer wrote a really great post <a href="https://blog.conceptnet.io/posts/2017/how-to-make-a-racist-ai-without-really-trying/">How to make a racist AI without really trying</a>. Go read it.</p>
+<p>Last year, Robyn Speer wrote a really great post <a href="https://blog.conceptnet.io/posts/2017/how-to-make-a-racist-ai-without-really-trying/">How to make a racist AI without really trying</a>. Go read it.</p>
 <p>The idea is to do sentiment analysis with obvious, off-the-shelf tools. As the post says</p>
 <blockquote>
-<p>So that’s what we’re going to do here, following the path of least resistance at every step, obtaining a classifier that should look very familiar to anyone involved in current NLP.</p>
+<p>So that’s what we’re going to do here, following the path of
+least resistance at every step, obtaining a classifier that
+should look very familiar to anyone involved in current NLP.</p>
 </blockquote>
 <p>The original post used Python and I’m teaching an undergraduate data science course using R at the moment, so I wanted an R version. There were two issues in converting the code: my laptop doesn’t really have enough memory for the data, and the model was fitted using scikitlearn.</p>
 <p>The first problem can be fixed with <code>dbplyr</code>.</p>
@@ -33,7 +35,7 @@ train_words&lt;-tibble(word=c(pos_words,neg_words),
    positive=rep(1:0,c(length(pos_words),length(neg_words))))
 train_words &lt;- copy_to(ms, train_words, name=&quot;train_words&quot;,
    temporary=FALSE)</code></pre>
-<p>Next, we need to fit a model to these several thousand words that we can use to predict the millions of words for which we don’t have human-curated sentiments. Rob Speer used <code>scikitlearn</code> to fit a logistic regression model with <span class="math inline">\(L_2\)</span> penalty, so I used <code>glmnet</code> to do the same (but with a penalty selected by cross-validation)</p>
+<p>Next, we need to fit a model to these several thousand words that we can use to predict the millions of words for which we don’t have human-curated sentiments. Robyn used <code>scikitlearn</code> to fit a logistic regression model with <span class="math inline">\(L_2\)</span> penalty, so I used <code>glmnet</code> to do the same (but with a penalty selected by cross-validation)</p>
 <p>First, use an inner join in the database to extract the embedding dimensions for just the words in the training set</p>
 <pre><code>glove&lt;-tbl(ms,&quot;glove&quot;)
 train_words&lt;-tbl(ms,&quot;train_words&quot;)
@@ -116,4 +118,4 @@ sentiment&lt;-make.sentiment(ms,fit)</code></pre>
 &gt; sentiment(&quot;My name is ZZ and I love happy kittens&quot;)
 [1] 1.696798</code></pre>
 <p>It can take a lot of additional weighting to get over the original prejudices.</p>
-<p>Rob Speer’s post goes on to look at other embeddings (and you should totally read it) but the computational aspects are similar.</p>
+<p>Robyn Speer’s post goes on to look at other embeddings (and you should totally read it) but the computational aspects are similar.</p>

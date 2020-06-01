@@ -5,7 +5,7 @@ date: '2018-09-27'
 slug: how-to-write-a-racist-ai-in-r-without-really-trying
 ---
 
-Last year, Rob Speer wrote a really great post [How to make a racist AI without really trying](https://blog.conceptnet.io/posts/2017/how-to-make-a-racist-ai-without-really-trying/). Go read it.
+Last year, Robyn Speer wrote a really great post [How to make a racist AI without really trying](https://blog.conceptnet.io/posts/2017/how-to-make-a-racist-ai-without-really-trying/). Go read it.
 
 The idea is to do sentiment analysis with obvious, off-the-shelf tools. As the post says
 
@@ -46,7 +46,7 @@ train_words <- copy_to(ms, train_words, name="train_words",
    temporary=FALSE)
 ```
 
-Next, we need to fit a model to these several thousand words that we can use to predict the millions of words for which we don't have human-curated sentiments. Rob Speer used `scikitlearn` to fit a logistic regression model  with $L_2$ penalty, so I used `glmnet` to do the same (but with a penalty selected by cross-validation)
+Next, we need to fit a model to these several thousand words that we can use to predict the millions of words for which we don't have human-curated sentiments. Robyn used `scikitlearn` to fit a logistic regression model  with $L_2$ penalty, so I used `glmnet` to do the same (but with a penalty selected by cross-validation)
 
 First, use an inner join in the database to extract the embedding dimensions for just the words in the training set
 ```
@@ -161,4 +161,4 @@ Then I looked at the sentiment for "My name is !!name and I am a data scientist"
 
 It can take a lot of additional weighting to get over the original prejudices.
 
-Rob Speer's post goes on to look at other embeddings (and you should totally read it) but the computational aspects are similar. 
+Robyn Speer's post goes on to look at other embeddings (and you should totally read it) but the computational aspects are similar. 
