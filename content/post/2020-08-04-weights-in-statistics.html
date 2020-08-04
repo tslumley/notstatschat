@@ -1,0 +1,85 @@
+---
+title: Weights in statistics
+author: Thomas Lumley
+date: '2020-08-04'
+slug: weights-in-statistics
+categories: []
+tags: []
+---
+
+
+
+<p>There are roughly three and half distinct uses of the term <em>weights</em> in statistical methodology, and it’s a problem for software documentation and software development. Here, I want to distinguish the different uses and clarify when the differences are a problem. I also want to talk about the settings where we know how to use these sorts of weights, and the ones where we don’t. In the interests of doing one thing at a time, I’m going to assume the weights are the right weights and you do actually want to use them; we can have <a href="https://projecteuclid.org/euclid.ss/1190905511">the other discussion</a> some other time.</p>
+<p>Weights are a genuine cause of concern; people really do get this wrong, and also they spend time emailing me about it. The only software environment that currently does a competent job of systematically documenting these distinctions is Stata, and even there I don’t like all of their terminology.</p>
+<p>The three main types of weights are</p>
+<ul>
+<li>the ones that show up in the classical theory of weighted least squares. These describe the precision (1/variance) of observations. An observation with a weight of 10 was classically an average of 10 replicate observations, so it has 10 times the precision of an observation with a weight of 1. The idea was extended to handle other reasons for variance/precision to differ between observations, but the basic rule remains that ratios of weights describe ratios of precision. I call these <strong>precision weights</strong>; Stata calls them <em>analytic weights</em>.</li>
+<li>the ones that show up in categorical data analysis. These describe cell sizes in a data set, so a weight of 10 means that there are 10 identical observations in the dataset, which have been compressed to a covariate pattern plus a count. For example, <code>data(esoph)</code> in R has three covariates and a binary outcome on about 1200 people summarised as 88 covariate patterns with a count of 0 and 1 outcomes for each pattern. Stata calls these <strong>frequency weights</strong>, and so do I.</li>
+<li>the ones that show up in classical survey sampling theory. These describe how the sample can be scaled up to the population. Classically, they were the reciprocals of sampling probabilities, so an observation with a weight of 10 was sampled with probability 1/10, and represents 10 people in the population. In real life, these are typically more complicated than just sampling probabilities, but they play the same role of trying to rescale the sample distribution to match the population distribution. I call these <strong>sampling weights</strong>, Stata calls them <em>probability weights</em>, other people call them <em>design weights</em> or <em>grossing-up weights</em> (I quite like this last one, too).</li>
+</ul>
+<div id="means" class="section level2">
+<h2>Means</h2>
+<p>Now, suppose you want to estimate the mean <span class="math inline">\(\mu_Y\)</span> of a variable <span class="math inline">\(Y\)</span> from <span class="math inline">\(n\)</span> observations.</p>
+<ul>
+<li>With precision weights, the Gauss-Markov theorem says you should take
+<span class="math display">\[\hat \mu_Y =\sum_{i=1}^n w_i^*Y_i= \frac{\sum_{i=1}^n w_iY_i}{\sum_{i=1}^n w_i}\]</span>
+where <span class="math inline">\(w_i^*\)</span> are the weights rescaled to have unit sum.</li>
+<li>With frequency weights you need to uncompress the data and take the sample mean. Write <span class="math inline">\(N=\sum_i w_i\)</span> for the implied full data size, and we have
+<span class="math display">\[\hat \mu_Y  = \frac{\sum_{i=1}^n w_iY_i}{N}= \frac{\sum_{i=1}^n w_iY_i}{\sum_{i=1}^n w_i}\]</span></li>
+<li>With sampling weights you need to gross up to the population, estimate the population total, and then divide by the estimated population size. The estimated population size is the estimated population total of a variable that’s identically 1, so <span class="math inline">\(\hat N = \sum_{i=1}^N w_i\)</span> and
+<span class="math display">\[\hat \mu_Y  = \frac{\sum_{i=1}^n w_iY_i}{\hat N}= \frac{\sum_{i=1}^n w_iY_i}{\sum_{i=1}^n w_i}\]</span></li>
+</ul>
+<p>The resulting formula is the same for all three; but it is constructed differently each time, out of components that mean different things.</p>
+<p>What’s different is <strong>variance estimation</strong>.</p>
+<ul>
+<li>With precision weights, we take advantage of the fact that precisions add. We have <span class="math inline">\(\mathrm{var}^{-1}[Y_i]= w_i/\sigma^2\)</span> for some <span class="math inline">\(\sigma^2\)</span>, and
+<span class="math display">\[\mathrm{var}^{-1}[\hat\mu] = \frac{\sum_i w_i}{\sigma^2}\]</span>
+To get an estimator, we use
+<span class="math display">\[\hat\sigma^2 =\frac{\sum_{i=1}^n w_i(Y_i-\hat\mu_Y)^2}{n-1}\]</span>
+giving
+<span class="math display">\[\widehat{\mathrm{var}}[\hat\mu] = \frac{\hat\sigma^2}{\sum_i w_i}= \frac{\sum_{i=1}^n w_i(Y_i-\hat\mu_Y)^2}{\left(\sum_{i=1}^n w_i\right)(n-1)}\]</span>
+This is invariant under rescaling of the weights; only <em>ratios</em> of precision weights matter.</li>
+<li>With frequency weights, we just think of the uncompressed original sample
+<span class="math display">\[\widehat{\mathrm{var}}[\hat\mu_Y]= \frac{\sum_i w_i (Y_i-\hat\mu_Y)^2}{N-1}= \frac{\sum_i w_i (Y_i-\hat\mu_Y)^2}{(\sum_i w_i)-1}\]</span>
+This is <em>not</em> invariant under rescaling; having ten copies of each observation is <em>different</em> from having one copy of each observation.</li>
+<li>With sampling weights, the randomness is in the sampling, not in the <span class="math inline">\(Y\)</span>s. Write <span class="math inline">\(R_i\)</span> for the indicator that person <span class="math inline">\(i\)</span> is sampled. The estimated mean is really
+<span class="math display">\[\hat\mu_Y = \frac{\sum_{i=1}^NR_iw_iY_i}{\sum_{i=1}^N w_iR_i}\]</span>
+and that’s a ratio of two random quantities, so it gets messy. In the special case where the denominator <span class="math inline">\(\hat N=\sum_i w_iR_i\)</span> is non-random and equal to <span class="math inline">\(N\)</span>, and the <span class="math inline">\(R_i\)</span> are independent, the variance simplifies to
+<span class="math display">\[\mathrm{var}[\hat \mu_Y] = \frac{1}{N^2}\sum_{i=1}^N \mathrm{var}[R_i]w_i^2Y_i^2\]</span>
+and if <span class="math inline">\(w_i=1/\pi_i\)</span>, the reciprocal of the sampling probability we have <span class="math inline">\(\mathrm{var}[R_i]=\pi_i(1-\pi_i)=w_i^{-1}(1-w_i^{-1})\)</span> so
+<span class="math display">\[\mathrm{var}[\hat \mu_Y] = \frac{1}{N^2}\sum_{i=1}^N (w_i-1){Y_i^2}\]</span>
+estimated by
+<span class="math display">\[\widehat{\mathrm{var}}[\hat \mu_Y] = \frac{1}{N^2}\sum_{i=1}^N R_iw_i(w_i-1){Y_i^2}\]</span>
+In this special case, the variance is invariant under rescaling the weights (because <span class="math inline">\(N=\sum_i w_i\)</span>), but the formula is different from the precision-weights one because it involves <span class="math inline">\(w_i^2\)</span>. The mean is more precisely estimated when the weights are all similar and less precisely estimated when the weights vary a lot.</li>
+</ul>
+</div>
+<div id="everything-else-nearly" class="section level2">
+<h2>Everything else (nearly)</h2>
+<p>Most univariate frequentist analyses – quantiles, tables, linear, generalised linear, or non-linear models, survival models, etc – can handle frequency weights and sampling weights. Analyses where the response variable has a free dispersion parameter can also handle precision weights.</p>
+<p>If your estimator maximises or minimises <span class="math inline">\(\sum_i m_i(\theta)\)</span>, or solves <span class="math inline">\(\sum_i z_i(\theta)=0\)</span>, where each <span class="math inline">\(m_i\)</span> or <span class="math inline">\(z_i\)</span> depends on only one observation’s outcome <span class="math inline">\(Y_i\)</span>, it’s easy to put in frequency weights or sampling weights. You just maximise or minimise <span class="math inline">\(\sum_i w_im_i(\theta)\)</span>, or solve <span class="math inline">\(\sum_i w_iz_i(\theta)=0\)</span>. For slightly more complicated functions like the Cox partial likelihood, you need a bit more work, but it’s still possible. Precision weights don’t always make sense, but if there’s a free scale parameter on the outcome variable they can be estimated the same way.</p>
+<p>Standard error estimation is different for the three sets of weights. It’s different in the same ways as for the mean, so implementors could handle any of the types of weights, but it would take extra work each time. This is where it’s most important to <strong>document which type(s) of weight your code is expecting</strong>. If a user supplies the wrong sort of weights, they will get the wrong standard errors.</p>
+</div>
+<div id="hints-for-guessing-the-type-of-weights" class="section level2">
+<h2>Hints for guessing the type of weights</h2>
+<p>As I’ve said, the type of weight <em>should be documented</em>. If it isn’t, here are some hints</p>
+<ul>
+<li>If sampling weights are supported, the documentation will usually say so</li>
+<li>Methods that assume the Normal distribution for the outcome variable will typically be using precision weights</li>
+<li>Generalised linear models will often take precision weights (with <span class="math inline">\(Y\)</span> given as the success proportion for binomial data). There will often also be an option for frequency weights (binomial counts) in binomial data.</li>
+<li>SPSS supports frequency weights for basically everything.</li>
+<li>the standard error estimates will change under rescaling of the weights if you have frequency weights, but not if you have precision weights.</li>
+</ul>
+</div>
+<div id="importance-weights" class="section level2">
+<h2>Importance weights</h2>
+<p>Because sampling weights and frequency weights (and precision weights if they make sense) plug in to the analysis in the same way and give the same point estimators in common models, you might sometimes want a concept that means <em>just that</em> and doesn’t commit you on standard error estimation. Stata uses the term <strong>importance weights</strong>, which is not bad. I’d prefer <em>analytic weights</em>, but Stata was already using that as a term for precision weights.</p>
+</div>
+<div id="everything-else-else" class="section level2">
+<h2>Everything else else</h2>
+<p>The big exception to the principle that point estimates are the same for all types of weights is mixed models. There are two issues</p>
+<ul>
+<li>mixed models are about partitioning variance, and precision weights encode assumptions about variance, so precision weights matter for estimating residual variance vs variance components.</li>
+<li>the loglikelihood is not just a sum of terms involving one observation, so there’s nowhere to stick sampling weights</li>
+</ul>
+<p>There are also major complications for Bayesian inference with sampling weights, and we’ll just not go there for now.</p>
+</div>
