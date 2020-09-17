@@ -1,0 +1,34 @@
+---
+title: A Bayesian t-test?
+author: Thomas Lumley
+date: '2020-09-17'
+slug: a-bayesian-t-test
+categories: []
+tags: []
+---
+
+> *"How do you know the treatment has the same effect on everyone when you don't even know whether it makes the outcome go up or down?"* --Scott S. Emerson *(possibly a paraphrase)*
+
+What's the Bayesian equivalent of a basic two-sample $t$-test? This looks like an easy question: $X_i\sim N(\mu_x,\sigma^2)$, $Y_i\sim N(\mu_y,\sigma^2)$, independent flat priors on $\mu_x$ and $\mu_y$ and some sort of reference prior on $\sigma^2$. Back 100 years ago that would have been a good answer (over and above being a revolutionary question). But we don't teach the $t$-test as being about location shift in Normal distributions any more. 
+
+The $t$-test, now, is the test comparing $\bar X$ to $\bar Y$ using the Normal approximation to their distributions provided  by the Central Limit Theorem.  You might, later, explain that the small-sample behaviour is especially good in the case where $X$ and $Y$ have Normal distributions, and that the small-sample behaviour can be improved further if you know in advance that the variance is the same in both groups, but that's not the primary use case.  In particular, the location-shift (equal variance) assumption is unnecessary and rarely well-motivated, and leads to poorly-calibrated inference if violated (even in large samples).
+
+Now, it's probably true that the operating characteristics of the Bayesian analysis are pretty robust to the model specification given a reasonable sample size, just as they are for the $t$-test. But one of the common selling points of Bayesian statistics in introductory courses is that you don't need to do that sort of asymptotic approximation; that the posterior distribution is right **because it's right**.  If you're arguing "no ad-hockery" you are estopped from also arguing "convenience priors and asymptotics".  And even if you're not doing that, have you actually checked the robustness of the Bayesian inference in the appropriate ways, or found a reference that has? No, I thought not. 
+
+Can we come up with a straightforward Bayesian comparison of means that doesn't assume a Normal distribution and a location shift? The latter (counter-intuitively) may be the stronger assumption, at least in large samples, since assuming the two distributions differ only by location lets you construct an adaptive rank test that is as powerful as if you also  knew the what the common distribution was. 
+
+We can start with discrete distributions. Suppose $X$ and $Y$ each take only a finite set of values. We can model these as multinomial distributions on $1,\dots,M_x$ and $1,\dots,M_y$, with weights $w_{x1},\dots w_{xM_x}$ and $w_{y1},\dots w_{yM_y}$. Note that we don't assume that the values, or even the number of values, is the same. $X$ could be ticket prices for a Test at Eden Park, and $Y$ ticket prices for a concert at Spark Arena. We can reasonably put Dirichlet$(\alpha)$ priors on the vectors of probabilities $p_{xm}$ and $p_{ym}$ and I will assume the $w$s are known constants. 
+
+Given the posterior probabilities, we can compute posterior means $\mu_x=\sum_m p_{xm}w_{xm}$ and $\mu_y=\sum_m p_{ym}w_{ym}$. These will have an exact distribution that we can sample from, and they will also be approximately Normal for large sample sizes^[note that we don't need the number of observations in each category to be large, just the total number of observations, together with some bounds on the extremes of the $w_m$] in a well-understood way because they are sums of the $w_m$. 
+
+Even better, the posterior distribution is given by a bootstrap that's slightly smoothed by the prior and the Normal approximation is a smoothed version of what you'd as estimates and confidence intervals for the unequal-variance $t$-test -- in both cases you simply replace the empirical frequencies with the posterior probabilities. Write $n_{xm}$ for the observed counts and $\hat p_{xm}=n_{xm}/\sum_m n_{xm}$ for the empirical proportions. The bootstrap resamples $X_m$ with probability $\hat p_{xm}$; the posterior distribution uses 
+$$p_{x_m}=\frac{n_{xm}+\alpha_{xm}}{\sum_m n_{xm} +\alpha_{xm}}.$$
+The empirical difference in means is 
+$\sum_m \hat p_{xm}w_{xm} - \sum_m  \hat p_{ym}w_{ym}$
+and the posterior mean difference is
+$\sum_m p_{xm}w_{xm} - \sum_m   p_{ym}w_{ym}.$
+Similarly, the formulas for the standard error of the mean and the posterior standard deviation differ only by the smoothing using $\alpha$ (and perhaps a degrees-of-freedom correction), as do the formulas for the standard error of the difference in means and the posterior standard deviation of the difference in means.  That is, they fit the case for Bayesian estimators as sensibly regularised versions of classical estimators. 
+
+A hypothesis test is a bit trickier, but (a) you probably don't care, and (b) if you do, you could constrain $X$ and $Y$ to have the same prior mean, or to have $\mu_x-\mu_y$ be any specified value. That would let you compute a Bayes factor comparing $\mu_x-\mu_y=0$ to some other prior distribution over $\mu_x-\mu_y$. You could even work out the posterior distributions for $X$ and $Y$ constraining their posterior means to be the same, using [these ideas](https://projecteuclid.org/euclid.ba/1362406653) from Charlie Geyer and Glen Meeden, though we're getting less elementary there. 
+
+How do you get beyond discrete data? Well, you can pretend it's discrete, as Rubin does in the "Bayesian Bootstrap" paper, and have a multinomial/Dirichlet distribution over the values that are actually observed. Or, in a more modern  approach,  you could use a Dirichlet process prior for each variable, which still gives the resampling-like exact Bayesian inference and $t$-test-like approximate (Bayesian or classical) inference. 
