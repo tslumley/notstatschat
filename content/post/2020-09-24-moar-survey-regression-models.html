@@ -1,0 +1,292 @@
+---
+title: MOAR survey regression models
+author: Thomas Lumley
+date: '2020-09-24'
+slug: moar-survey-regression-models
+categories: []
+tags: []
+---
+
+
+
+<p>The <a href="https://www.stat.auckland.ac.nz/~yee/VGAM/"><strong>VGAM</strong></a> package’s <code>vglm()</code> function, like the <strong>survey</strong> package’s <code>svymle()</code> function, allows for maximum likelihood fitting where linear predictors are added to one or more parameters of a distribution — but <code>vglm()</code> is a lot faster and has many distributions already built in. So, I stuck a complex-sampling interface on the the front of it, and made <a href="https://github.com/tslumley/svyvgam"><strong>svyVGAM</strong></a>. It’s on github at the moment; I’m hoping to get it on CRAN soon.</p>
+<p>The idea of <code>vglm()</code> is that we have a parametric family <span class="math inline">\(f_\theta(y)\)</span> for the outcome in a regression, and we want to attach linear predictors to one or more components of <span class="math inline">\(\theta\)</span>. For example, if <span class="math inline">\(f_\theta(y)\)</span> is the density for <span class="math inline">\(N(\mu,\sigma^2)\)</span>, we would have parameters <span class="math inline">\(\theta=(\mu,\sigma^2)\)</span> and would model <span class="math inline">\(\mu=x\beta\)</span> to get the parametric view of standard linear model, and just model <span class="math inline">\(\sigma^2\)</span> as a single parameter. Or if <span class="math inline">\(f_\theta(y)\)</span> is a zero-inflated Poisson model with Poisson mean <span class="math inline">\(\mu\)</span> and proportion <span class="math inline">\(\pi\)</span> of structural zeros, we might have <span class="math inline">\(\theta=(\mathrm{logit}\,\pi, \log \mu)\)</span>, and have two models <span class="math inline">\(\lambda=x\beta\)</span> and <span class="math inline">\(\mathrm{logit}\,\pi=z\gamma\)</span>. In those two models the parameters <span class="math inline">\(\theta\)</span> of the response distribution were directly modelled with the linear predictors, but we can also allow a link function. The zero-inflated Poisson could have been parametrised by <span class="math inline">\(\theta=(\pi,\mu)\)</span> and we would want an intermediate parameter <span class="math inline">\(\eta=(\mathrm{logit}\,\pi, \log \mu)\)</span> for the linear predictor.</p>
+<p>I will write <span class="math inline">\(\beta\)</span> for the regression parameters, <span class="math inline">\(\theta\)</span> for the base parameters of the response distribution, and <span class="math inline">\(\eta\)</span> for the linear predictors. So, for example, in a classical linear model there would be two parameters <span class="math inline">\(\theta\)</span>: the mean (<span class="math inline">\(\theta_1\)</span>) and variance (<span class="math inline">\(\theta_2\)</span>). The mean would have a set of regression parameters and the variance would have a single parameter. Collectively, these would be <span class="math inline">\(\beta\)</span> (maybe <span class="math inline">\(\beta_{11}\dots\beta_{1p}\)</span> and <span class="math inline">\(\beta_{21}\)</span>), and the two combinations that are plugged in as <span class="math inline">\(\theta\)</span> would be called <span class="math inline">\(\eta_1\)</span> and <span class="math inline">\(\eta_2\)</span>. The big advantage of <strong>VGAM</strong> is that it does a lot of the work for the user: while the user can add new families, there are many pre-prepared ones, and there are built-in ways to constrain parameters to be equal or related in some other way. For example, a proportional odds model comes from constraining the slopes in a set of logistic regression models to be equal.</p>
+<p>To provide survey versions of <code>vglm()</code>, we need to (a) get design-consistent point estimates out of <code>vglm()</code>, and (b) construct design-based standard errors for the fit. The first is easy: <code>vglm()</code> accepts frequency weights, which are <a href="https://notstatschat.rbind.io/2020/08/04/weights-in-statistics/">equivalent to sampling weights for point estimation</a> with independent observations.</p>
+<p>The second can be done in two ways: resampling (which is straightforward, if potentially slow), and linearisation. Linearisation requires computing the influence functions of the parameters
+<span class="math display">\[h_i(\beta) = -\widehat{\cal I}^{-1}_w U_i(\beta)\]</span>
+where <span class="math inline">\(\widehat{\cal I}_w\)</span> is the weighted estimate of the population Fisher information, <span class="math inline">\(U_i=\partial_\beta \ell_i(\beta)\)</span> is the loglikelihood contribution of the <span class="math inline">\(i\)</span>th observation, and <span class="math inline">\(w_i\)</span> is its weight. The influence functions have the property
+<span class="math display">\[\hat\beta-\beta_0 = \sum_i w_i h_i(\beta_0)+o_p(\|\hat\beta-\beta_0\|)\]</span>
+so that the variance of <span class="math inline">\(\hat\beta\)</span> is asymptotically the variance of the population total of the influence functions.
+The survey package provides a function <code>svyrecvar()</code> to estimate standard errors given the influence functions, or (a bit less efficiently) you can just call <code>svytotal()</code>.</p>
+<div id="resampling" class="section level3">
+<h3>Resampling</h3>
+<p>A design object of class <code>svyrep.design</code> contains sets of replicate weights analogous to jackknife or bootstrap replicates. We need to call <code>vglm()</code> with each set of weights. It should be helpful to specify the full-sample estimates as starting values.</p>
+<p>One complication is that sets of replicate weights will typically include some zeroes, which <code>vglm()</code> does not allow (eg, a bootstrap or jackknife resample will omit some observations). We set these to <span class="math inline">\(10^{-9}\)</span> times the maximum weight, which has the desired effect that the observations are present in the fit but with (effectively) zero weight.</p>
+</div>
+<div id="linearisation" class="section level3">
+<h3>Linearisation</h3>
+<p>The <code>cov.unscaled</code> slot of a <code>summary.vglm</code> object contains the inverse of the estimated population Fisher information, <span class="math inline">\(\widehat{\cal I}^{-1}_w\)</span>.</p>
+<p>The <code>vglm</code> object provides <span class="math inline">\(\partial_\eta\ell_i(\eta)\)</span> for the base parameters <span class="math inline">\(\theta\)</span>, and also the model matrices that specify <span class="math inline">\(\partial_\beta\eta\)</span>, so we can construct <span class="math inline">\(U_i\)</span>. We need to take care with the constraints, which can cause a coefficient <span class="math inline">\(\beta\)</span> to appear in more than one linear predictor.</p>
+<p>Suppose <span class="math inline">\(\beta_x\)</span> appears in both <span class="math inline">\(\eta_1\)</span> and <span class="math inline">\(\eta_2\)</span>, with <span class="math inline">\(x\)</span> values <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span>. The chain rule tells us
+<span class="math display">\[\partial_{\beta_x}\ell_i =\partial_{\eta_1}\ell_i\partial_{\beta_x}\eta_1 + \partial_{\eta_2}\ell_i\partial_{\beta_x}\eta_2 = (\partial_{\eta_1}\ell_i) x_{1i}+ (\partial_{\eta_2}\ell_i) x_{2i} \]</span>
+We might have <span class="math inline">\(x_1\equiv x_2\,(=x)\)</span>, but that just means
+<span class="math display">\[\partial_{\beta_x}\ell_i = (\partial_{\eta_1}\ell_i) x_{i}+ (\partial_{\eta_2}\ell_i) x_{i} \]</span></p>
+<p>The constraint matrix <span class="math inline">\(C\)</span> consists of 1s and 0s. If there are <span class="math inline">\(p\)</span> parameters in <span class="math inline">\(M\)</span> equations the matrix is <span class="math inline">\(M\times p\)</span>, with <span class="math inline">\(C_{jk}=1\)</span> if parameter <span class="math inline">\(k\)</span> is in linear predictor <span class="math inline">\(j\)</span>. In the default, unconstrained setup, the constraint matrix consists of an <span class="math inline">\(M\times M\)</span> identity matrix for each parameter, pasted columnwise to give a <span class="math inline">\(M\times pM\)</span> matrix. In the proportional odds model, as another example, there are separate intercepts for each linear predictor but the other parameters all appear in every linear predictor. The first <span class="math inline">\(M\times M\)</span> block is the identity, and the rest of the matrix is a column of 1s for each predictor variable. Another way to say this is that <span class="math inline">\(C_{jk}=\partial_{ (\beta_kx_k)}\eta_j\)</span></p>
+<p>So, if we want <span class="math inline">\(\partial_\beta\ell_i\)</span>, the chain rule says
+<span class="math display">\[\begin{eqnarray*}
+\frac{\partial \ell_i}{\partial \beta_j} &amp;=&amp; \sum_k\frac{\partial \ell_i}{\partial\eta_k} \frac{\partial \eta_k}{\partial \beta_j}\\
+&amp;=&amp; \sum_k\frac{\partial \ell_i}{\partial \eta_k} \frac{\partial \eta_k}{\partial (x\beta)_j}\frac{\partial (x\beta)_j}{\partial \beta_j}\\
+&amp;=&amp;\sum_k \frac{\partial \ell_i}{\partial \eta_k}  C_{kj}x_{ij}
+\end{eqnarray*}\]</span></p>
+<p>There is one further complication. The <code>model.matrix</code> method for <code>vglm</code> objects returns a model matrix of dimension <span class="math inline">\(Mn\times p\)</span> rather than <span class="math inline">\(n\times p\)</span>, so we need to sum over the rows for each observation, which can be identified from the row names, and then rescale. The right standardisation appears to come from defining
+<span class="math display">\[\tilde C_{kj}=\frac{C_{kj}}{\sum_k C_{kj}}\]</span>
+and then
+<span class="math display">\[\frac{\partial \ell_i}{\partial \beta_j}=\sum_k \frac{\partial \ell_i}{\partial \eta_k}  \tilde C_{kj}x_{ikj}.\]</span></p>
+</div>
+<div id="example-zero-inflated-poisson" class="section level2">
+<h2>Example: zero-inflated Poisson</h2>
+<p>The Zero-Inflated Poisson model is a model for count data with excess zeros. The response distribution is a mixture of a point mass at zero and a Poisson distribution: if <span class="math inline">\(Z\)</span> is Bernoulli with probability <span class="math inline">\(1-p_0\)</span> and <span class="math inline">\(P\)</span> is Poisson with mean <span class="math inline">\(\mu\)</span>, then <span class="math inline">\(Y=Z+(1-Z)P\)</span> is zero-inflated Poisson. The ZIP is a latent-class model; we can have <span class="math inline">\(Y=0\)</span> either because <span class="math inline">\(Z=0\)</span> (‘structural’ zeroes) or because <span class="math inline">\(P=0\)</span>. That’s natural in some ecological examples: if you didn’t see any salmon it could be because the area is salmon-free (it’s Eden Park) or because you just randomly didn’t see any. To turn this into a regression model we typically put a logistic regression structure on <span class="math inline">\(Z\)</span> and a Poisson regression structure on <span class="math inline">\(P\)</span>.</p>
+<p>There isn’t (as far as I know) existing software in R for design-based inference in zero-inflated Poisson models, so it’s a good example for the benefits of <code>svyVGAM</code>. The <code>pscl</code> package (Zeileis et al) fits zero-inflated models, and so does <code>VGAM</code>, so we can compare the model fitted with <code>svyVGAM</code> to both of those and to other work-arounds.</p>
+<p>I’ll do an example with data on number of sexual partners, from NHANES 2003-2004. We will look at questions <code>SXQ200</code> and <code>SXQ100</code>: number of male sexual partners. Combining these gives a ‘real’ zero-inflated variable: based on sexual orientation the zeroes would divide into ‘never’ and ‘not yet’.</p>
+<p>Here’s how I created the dataset, from two NHANES files. It’s <code>data(nhanes_sxq)</code> in the package</p>
+<pre><code>library(foreign)
+setwd(&quot;~/nhanes&quot;)
+demo = read.xport(&quot;demo_c.xpt&quot;)
+sxq = read.xport(&quot;sxq_c.xpt&quot;)
+merged = merge(demo, sxq, by=&#39;SEQN&#39;)
+merged$total = with(merged, ifelse(RIAGENDR==2, SXQ100+SXQ130, SXQ170+SXQ200))
+merged$total[merged$SXQ020==2] = 0
+merged$total[merged$total&gt;2000] = NA
+merged$age = merged$RIDAGEYR/25
+merged$malepartners=with(merged, ifelse(RIAGENDR==2,SXQ100,SXQ200))
+merged$malepartners[merged$malepartners&gt;200]=NA
+nhanes_sxq&lt;-merged[, c(&quot;SDMVPSU&quot;,&quot;SDMVSTRA&quot;,&quot;WTINT2YR&quot;,&quot;RIDAGEYR&quot;,&quot;RIDRETH1&quot;,&quot;DMDEDUC&quot;,&quot;malepartners&quot;)]</code></pre>
+<p>Start off by loading the packages and setting up a survey design</p>
+<pre class="r"><code>library(svyVGAM)
+library(pscl)
+data(nhanes_sxq)
+des = svydesign(id=~SDMVPSU,strat=~SDMVSTRA,weights=~WTINT2YR, nest=TRUE, data=nhanes_sxq)</code></pre>
+<p>First, we’ll fit the model just ignoring the survey design, using both <code>pscl::zeroinfl</code> and <code>VGAM::vglm</code>. These models use the same variables in a logistic regression for <span class="math inline">\(Z\)</span> and a Poisson regression for <span class="math inline">\(P\)</span>. In <code>VGAM</code> you would make the models different by constraining coefficients to be zero in one of the models; in <code>pscl</code> you would specify different models before and after the <code>|</code>.</p>
+<pre class="r"><code>unwt = zeroinfl(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC|RIDAGEYR+factor(RIDRETH1)+DMDEDUC, data=nhanes_sxq)
+summary(unwt)</code></pre>
+<pre><code>## 
+## Call:
+## zeroinfl(formula = malepartners ~ RIDAGEYR + factor(RIDRETH1) + DMDEDUC | 
+##     RIDAGEYR + factor(RIDRETH1) + DMDEDUC, data = nhanes_sxq)
+## 
+## Pearson residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.0204 -0.9433 -0.7871  0.1503 29.2567 
+## 
+## Count model coefficients (poisson with log link):
+##                     Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)        1.6666228  0.0506660  32.894  &lt; 2e-16 ***
+## RIDAGEYR          -0.0055102  0.0008969  -6.143 8.08e-10 ***
+## factor(RIDRETH1)2 -0.0394019  0.0779480  -0.505    0.613    
+## factor(RIDRETH1)3  0.6508821  0.0345734  18.826  &lt; 2e-16 ***
+## factor(RIDRETH1)4  0.6675311  0.0365963  18.240  &lt; 2e-16 ***
+## factor(RIDRETH1)5  0.5642954  0.0594928   9.485  &lt; 2e-16 ***
+## DMDEDUC            0.0094256  0.0135180   0.697    0.486    
+## 
+## Zero-inflation model coefficients (binomial with logit link):
+##                    Estimate Std. Error z value Pr(&gt;|z|)   
+## (Intercept)        0.188125   0.187079   1.006  0.31461   
+## RIDAGEYR          -0.002938   0.003629  -0.810  0.41823   
+## factor(RIDRETH1)2 -0.079636   0.242311  -0.329  0.74242   
+## factor(RIDRETH1)3  0.118369   0.116120   1.019  0.30803   
+## factor(RIDRETH1)4  0.143300   0.127764   1.122  0.26203   
+## factor(RIDRETH1)5  0.259515   0.223032   1.164  0.24460   
+## DMDEDUC           -0.148881   0.053337  -2.791  0.00525 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1 
+## 
+## Number of iterations in BFGS optimization: 18 
+## Log-likelihood: -9518 on 14 Df</code></pre>
+<pre class="r"><code>vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), data = nhanes_sxq, crit = &quot;coef&quot;)</code></pre>
+<pre><code>## 
+## Call:
+## vglm(formula = malepartners ~ RIDAGEYR + factor(RIDRETH1) + DMDEDUC, 
+##     family = zipoisson(), data = nhanes_sxq, crit = &quot;coef&quot;)
+## 
+## 
+## Coefficients:
+##       (Intercept):1       (Intercept):2          RIDAGEYR:1          RIDAGEYR:2 
+##         0.188125349         1.666622759        -0.002937819        -0.005510160 
+## factor(RIDRETH1)2:1 factor(RIDRETH1)2:2 factor(RIDRETH1)3:1 factor(RIDRETH1)3:2 
+##        -0.079635992        -0.039401949         0.118369301         0.650882145 
+## factor(RIDRETH1)4:1 factor(RIDRETH1)4:2 factor(RIDRETH1)5:1 factor(RIDRETH1)5:2 
+##         0.143300364         0.667531080         0.259515415         0.564295398 
+##           DMDEDUC:1           DMDEDUC:2 
+##        -0.148881313         0.009425589 
+## 
+## Degrees of Freedom: 5050 Total; 5036 Residual
+## Log-likelihood: -9517.556</code></pre>
+<p>A traditional work-around for regression models is to rescale the weights to sum to the sample size and then pretend they are precision weights or frequency weights.</p>
+<pre class="r"><code>nhanes_sxq$scaledwt&lt;-nhanes_sxq$WTINT2YR/mean(nhanes_sxq$WTINT2YR)
+
+wt= zeroinfl(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC|RIDAGEYR+factor(RIDRETH1)+DMDEDUC, data=nhanes_sxq, weights=scaledwt)</code></pre>
+<pre><code>## Warning in eval(family$initialize): non-integer #successes in a binomial glm!</code></pre>
+<pre class="r"><code>summary(wt)</code></pre>
+<pre><code>## 
+## Call:
+## zeroinfl(formula = malepartners ~ RIDAGEYR + factor(RIDRETH1) + DMDEDUC | 
+##     RIDAGEYR + factor(RIDRETH1) + DMDEDUC, data = nhanes_sxq, weights = scaledwt)
+## 
+## Pearson residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.5864 -0.8418 -0.5430  0.1324 31.9106 
+## 
+## Count model coefficients (poisson with log link):
+##                     Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)        1.8340681  0.0614994  29.823  &lt; 2e-16 ***
+## RIDAGEYR          -0.0073881  0.0009059  -8.155 3.49e-16 ***
+## factor(RIDRETH1)2 -0.1073312  0.0853535  -1.257   0.2086    
+## factor(RIDRETH1)3  0.6551367  0.0481679  13.601  &lt; 2e-16 ***
+## factor(RIDRETH1)4  0.6358148  0.0529173  12.015  &lt; 2e-16 ***
+## factor(RIDRETH1)5  0.4774124  0.0666607   7.162 7.96e-13 ***
+## DMDEDUC           -0.0237389  0.0143070  -1.659   0.0971 .  
+## 
+## Zero-inflation model coefficients (binomial with logit link):
+##                    Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)        0.660504   0.214458   3.080 0.002071 ** 
+## RIDAGEYR          -0.007833   0.003673  -2.133 0.032959 *  
+## factor(RIDRETH1)2 -0.116789   0.252451  -0.463 0.643636    
+## factor(RIDRETH1)3  0.101971   0.151531   0.673 0.500987    
+## factor(RIDRETH1)4 -0.160804   0.181429  -0.886 0.375444    
+## factor(RIDRETH1)5  0.106779   0.230339   0.464 0.642954    
+## DMDEDUC           -0.202397   0.057624  -3.512 0.000444 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1 
+## 
+## Number of iterations in BFGS optimization: 18 
+## Log-likelihood: -9766 on 14 Df</code></pre>
+<pre class="r"><code>wtv= vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), data = nhanes_sxq, crit = &quot;coef&quot;,weights=scaledwt)
+summary(wtv)</code></pre>
+<pre><code>## 
+## Call:
+## vglm(formula = malepartners ~ RIDAGEYR + factor(RIDRETH1) + DMDEDUC, 
+##     family = zipoisson(), data = nhanes_sxq, weights = scaledwt, 
+##     crit = &quot;coef&quot;)
+## 
+## Pearson residuals:
+##                     Min      1Q    Median         3Q    Max
+## logitlink(pstr0) -1.828 -0.9335 -0.365675  0.8834927  1.852
+## loglink(lambda)  -5.851 -1.2771 -0.002727 -0.0003665 65.774
+## 
+## Coefficients: 
+##                       Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept):1        0.6605042  0.2144354   3.080 0.002069 ** 
+## (Intercept):2        1.8340681  0.0614568  29.843  &lt; 2e-16 ***
+## RIDAGEYR:1          -0.0078333  0.0036726  -2.133 0.032934 *  
+## RIDAGEYR:2          -0.0073881  0.0008995  -8.214  &lt; 2e-16 ***
+## factor(RIDRETH1)2:1 -0.1167894  0.2527278  -0.462 0.643999    
+## factor(RIDRETH1)2:2 -0.1073312  0.0847641  -1.266 0.205430    
+## factor(RIDRETH1)3:1  0.1019712  0.1515002   0.673 0.500899    
+## factor(RIDRETH1)3:2  0.6551367  0.0481359  13.610  &lt; 2e-16 ***
+## factor(RIDRETH1)4:1 -0.1608040  0.1814098  -0.886 0.375395    
+## factor(RIDRETH1)4:2  0.6358147  0.0529738  12.002  &lt; 2e-16 ***
+## factor(RIDRETH1)5:1  0.1067789  0.2303235   0.464 0.642931    
+## factor(RIDRETH1)5:2  0.4774124  0.0663590   7.194 6.27e-13 ***
+## DMDEDUC:1           -0.2023967  0.0576221  -3.512 0.000444 ***
+## DMDEDUC:2           -0.0237389  0.0146964  -1.615 0.106249    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Names of linear predictors: logitlink(pstr0), loglink(lambda)
+## 
+## Log-likelihood: -9765.52 on 5036 degrees of freedom
+## 
+## Number of Fisher scoring iterations: 8 
+## 
+## No Hauck-Donner effect found in any of the estimates</code></pre>
+<pre class="r"><code>## repwts
+repdes = as.svrepdesign(des,type=&quot;Fay&quot;,fay.rho=0.2)
+rep1 = withReplicates(repdes, quote( 
+    coef(zeroinfl(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC|RIDAGEYR+factor(RIDRETH1)+DMDEDUC, weights=.weights))
+    ))
+rep1</code></pre>
+<pre><code>##                              theta     SE
+## count_(Intercept)        1.8335175 0.1350
+## count_RIDAGEYR          -0.0073709 0.0028
+## count_factor(RIDRETH1)2 -0.1071380 0.2471
+## count_factor(RIDRETH1)3  0.6552029 0.1858
+## count_factor(RIDRETH1)4  0.6361156 0.1438
+## count_factor(RIDRETH1)5  0.4769791 0.2501
+## count_DMDEDUC           -0.0238310 0.0797
+## zero_(Intercept)         0.6606269 0.2582
+## zero_RIDAGEYR           -0.0078221 0.0039
+## zero_factor(RIDRETH1)2  -0.1156275 0.2854
+## zero_factor(RIDRETH1)3   0.1015741 0.0984
+## zero_factor(RIDRETH1)4  -0.1620363 0.0859
+## zero_factor(RIDRETH1)5   0.1065392 0.2120
+## zero_DMDEDUC            -0.2025776 0.0586</code></pre>
+<pre class="r"><code>repv = withReplicates(repdes, quote( 
+    coef(vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), data = nhanes_sxq, crit = &quot;coef&quot;,weights=.weights))
+    ))
+repv</code></pre>
+<pre><code>##                          theta     SE
+## (Intercept):1        0.6605042 0.2582
+## (Intercept):2        1.8340681 0.1350
+## RIDAGEYR:1          -0.0078333 0.0039
+## RIDAGEYR:2          -0.0073881 0.0028
+## factor(RIDRETH1)2:1 -0.1167894 0.2854
+## factor(RIDRETH1)2:2 -0.1073312 0.2471
+## factor(RIDRETH1)3:1  0.1019712 0.0983
+## factor(RIDRETH1)3:2  0.6551367 0.1857
+## factor(RIDRETH1)4:1 -0.1608040 0.0859
+## factor(RIDRETH1)4:2  0.6358147 0.1438
+## factor(RIDRETH1)5:1  0.1067789 0.2120
+## factor(RIDRETH1)5:2  0.4774124 0.2501
+## DMDEDUC:1           -0.2023967 0.0586
+## DMDEDUC:2           -0.0237389 0.0797</code></pre>
+<p>And now with <code>svyVGAM::svy_vglm</code> by linearisation</p>
+<pre class="r"><code>## svy_vgam
+library(svyVGAM)
+
+svy_vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), design=des, crit = &quot;coef&quot;)</code></pre>
+<pre><code>## Stratified 1 - level Cluster Sampling design (with replacement)
+## With (30) clusters.
+## svydesign(id = ~SDMVPSU, strat = ~SDMVSTRA, weights = ~WTINT2YR, 
+##     nest = TRUE, data = nhanes_sxq)
+## 
+## Call:
+## vglm(formula = formula, family = family, data = surveydata, weights = .survey.prob.weights, 
+##     crit = &quot;coef&quot;)
+## 
+## 
+## Coefficients:
+##       (Intercept):1       (Intercept):2          RIDAGEYR:1          RIDAGEYR:2 
+##         0.660504243         1.834068104        -0.007833317        -0.007388071 
+## factor(RIDRETH1)2:1 factor(RIDRETH1)2:2 factor(RIDRETH1)3:1 factor(RIDRETH1)3:2 
+##        -0.116789371        -0.107331190         0.101971159         0.655136725 
+## factor(RIDRETH1)4:1 factor(RIDRETH1)4:2 factor(RIDRETH1)5:1 factor(RIDRETH1)5:2 
+##        -0.160804047         0.635814748         0.106778915         0.477412443 
+##           DMDEDUC:1           DMDEDUC:2 
+##        -0.202396659        -0.023738881 
+## 
+## Degrees of Freedom: 5050 Total; 5036 Residual
+## Log-likelihood: -493703966</code></pre>
+<p>and with replicate weights:</p>
+<pre class="r"><code>svy_vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), design=repdes, crit = &quot;coef&quot;)</code></pre>
+<pre><code>## Call: as.svrepdesign.default(des, type = &quot;Fay&quot;, fay.rho = 0.2)
+## Fay&#39;s variance method (rho= 0.2 ) with 16 replicates.
+## 
+## Call:
+## vglm(formula = formula, family = family, data = surveydata, weights = .survey.prob.weights, 
+##     crit = &quot;coef&quot;)
+## 
+## 
+## Coefficients:
+##       (Intercept):1       (Intercept):2          RIDAGEYR:1          RIDAGEYR:2 
+##         0.660504243         1.834068104        -0.007833317        -0.007388071 
+## factor(RIDRETH1)2:1 factor(RIDRETH1)2:2 factor(RIDRETH1)3:1 factor(RIDRETH1)3:2 
+##        -0.116789371        -0.107331190         0.101971159         0.655136725 
+## factor(RIDRETH1)4:1 factor(RIDRETH1)4:2 factor(RIDRETH1)5:1 factor(RIDRETH1)5:2 
+##        -0.160804047         0.635814748         0.106778915         0.477412443 
+##           DMDEDUC:1           DMDEDUC:2 
+##        -0.202396659        -0.023738881 
+## 
+## Degrees of Freedom: 5050 Total; 5036 Residual
+## Log-likelihood: -9765.52</code></pre>
+</div>

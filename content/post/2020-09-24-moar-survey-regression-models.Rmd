@@ -1,0 +1,146 @@
+---
+title: MOAR survey regression models
+author: Thomas Lumley
+date: '2020-09-24'
+slug: moar-survey-regression-models
+categories: []
+tags: []
+---
+
+The [**VGAM**](https://www.stat.auckland.ac.nz/~yee/VGAM/) package's `vglm()` function, like the **survey** package's `svymle()` function, allows for maximum likelihood fitting where linear predictors are added to one or more parameters of a distribution --- but  `vglm()` is a lot faster and has many distributions already built in. So, I stuck a complex-sampling interface on the the front of it, and made  [**svyVGAM**](https://github.com/tslumley/svyvgam). It's on github at the moment; I'm hoping to get it on CRAN soon.
+
+The idea of `vglm()` is that we have a parametric family $f_\theta(y)$ for the outcome in a regression, and we want to attach linear predictors to one or more components of $\theta$.  For example, if $f_\theta(y)$ is the density for $N(\mu,\sigma^2)$, we would have parameters $\theta=(\mu,\sigma^2)$ and would model $\mu=x\beta$ to get the parametric view of standard linear model, and just model $\sigma^2$ as a single parameter.    Or if $f_\theta(y)$ is a zero-inflated Poisson  model with Poisson mean $\mu$ and proportion $\pi$ of structural zeros, we might  have $\theta=(\mathrm{logit}\,\pi, \log \mu)$, and have two models $\lambda=x\beta$ and $\mathrm{logit}\,\pi=z\gamma$. In those two models the parameters $\theta$ of the response distribution were directly modelled with the linear predictors, but we can also allow a link function. The zero-inflated Poisson could have been parametrised by $\theta=(\pi,\mu)$ and we would want an intermediate parameter $\eta=(\mathrm{logit}\,\pi, \log \mu)$ for the linear predictor. 
+
+
+I will write $\beta$ for the regression parameters, $\theta$ for the base parameters of the response distribution, and $\eta$ for the linear predictors. So, for example, in a classical linear model there would be two parameters $\theta$: the mean ($\theta_1$) and variance ($\theta_2$). The mean would have a set of regression parameters and the variance would have a single parameter. Collectively, these would be $\beta$ (maybe $\beta_{11}\dots\beta_{1p}$ and $\beta_{21}$), and the two combinations that are plugged in as $\theta$ would be called $\eta_1$ and $\eta_2$.  The big advantage of **VGAM** is that it does a lot of the work for the user: while the user can add new families, there are many pre-prepared ones, and there are built-in ways to constrain parameters to be equal or related in some other way. For example, a proportional odds model comes from constraining the slopes in a set of logistic regression models to be equal. 
+
+To provide survey versions of `vglm()`, we need to (a) get design-consistent point estimates out of `vglm()`, and (b) construct design-based standard errors for the fit.  The first is easy: `vglm()` accepts frequency weights, which are [equivalent to sampling weights for point estimation](https://notstatschat.rbind.io/2020/08/04/weights-in-statistics/) with independent observations. 
+
+The second can be done in two ways: resampling (which is straightforward, if potentially slow), and linearisation.  Linearisation requires computing the influence functions of the parameters
+$$h_i(\beta) = -\widehat{\cal I}^{-1}_w U_i(\beta)$$
+where $\widehat{\cal I}_w$ is the weighted estimate of the population Fisher information,  $U_i=\partial_\beta \ell_i(\beta)$ is the loglikelihood contribution of the $i$th observation, and $w_i$ is its weight.  The influence functions have the property
+$$\hat\beta-\beta_0 = \sum_i w_i h_i(\beta_0)+o_p(\|\hat\beta-\beta_0\|)$$
+so that the variance of $\hat\beta$ is asymptotically the variance of the population total of the influence functions. 
+ The survey package provides a function `svyrecvar()` to estimate standard errors given the influence functions, or (a bit less efficiently) you can just call `svytotal()`.
+
+### Resampling
+
+A design object of class `svyrep.design` contains sets of replicate weights analogous to jackknife or bootstrap replicates.  We need to call `vglm()` with each set of weights.  It should be helpful to specify the full-sample estimates as starting values. 
+
+One complication is that sets of replicate weights will typically include some zeroes, which `vglm()` does not allow (eg, a bootstrap or jackknife resample will  omit some observations). We set these to $10^{-9}$ times the maximum weight, which has the desired effect that the observations are present in the fit but with (effectively) zero weight. 
+
+### Linearisation
+
+The `cov.unscaled` slot of a `summary.vglm` object contains the inverse of the estimated population Fisher information, $\widehat{\cal I}^{-1}_w$. 
+
+The `vglm` object  provides $\partial_\eta\ell_i(\eta)$ for the base parameters $\theta$, and also the model matrices that specify $\partial_\beta\eta$, so we can construct $U_i$. We need to take care with the constraints, which can cause a coefficient $\beta$ to appear in more than one linear predictor.
+
+Suppose $\beta_x$ appears in both $\eta_1$ and $\eta_2$, with $x$ values $x_1$ and $x_2$.  The chain rule tells us
+$$\partial_{\beta_x}\ell_i =\partial_{\eta_1}\ell_i\partial_{\beta_x}\eta_1 + \partial_{\eta_2}\ell_i\partial_{\beta_x}\eta_2 = (\partial_{\eta_1}\ell_i) x_{1i}+ (\partial_{\eta_2}\ell_i) x_{2i} $$
+We might have $x_1\equiv x_2\,(=x)$, but that just means
+$$\partial_{\beta_x}\ell_i = (\partial_{\eta_1}\ell_i) x_{i}+ (\partial_{\eta_2}\ell_i) x_{i} $$
+
+The constraint matrix $C$ consists of 1s and 0s.  If there are $p$ parameters in $M$ equations the matrix is $M\times p$, with $C_{jk}=1$ if parameter $k$ is in linear predictor $j$. In the default, unconstrained setup, the constraint matrix consists of an $M\times M$ identity matrix for each parameter, pasted columnwise to give a $M\times pM$ matrix.  In the proportional odds model, as another example, there are separate intercepts for each linear predictor but the other parameters all appear in every linear predictor. The first $M\times M$ block is the identity, and the rest of the matrix is a column of 1s for each predictor variable. Another way to say this is that $C_{jk}=\partial_{ (\beta_kx_k)}\eta_j$
+
+
+So, if we want $\partial_\beta\ell_i$, the chain rule says
+\begin{eqnarray*}
+\frac{\partial \ell_i}{\partial \beta_j} &=& \sum_k\frac{\partial \ell_i}{\partial\eta_k} \frac{\partial \eta_k}{\partial \beta_j}\\
+&=& \sum_k\frac{\partial \ell_i}{\partial \eta_k} \frac{\partial \eta_k}{\partial (x\beta)_j}\frac{\partial (x\beta)_j}{\partial \beta_j}\\
+&=&\sum_k \frac{\partial \ell_i}{\partial \eta_k}  C_{kj}x_{ij}
+\end{eqnarray*}
+
+There is one further complication. The `model.matrix` method for `vglm` objects returns a model matrix of dimension $Mn\times p$ rather than $n\times p$, so we need to sum over the rows for each observation, which can be identified from the row names, and then rescale.  The right standardisation appears to come from defining
+$$\tilde C_{kj}=\frac{C_{kj}}{\sum_k C_{kj}}$$
+and then 
+$$\frac{\partial \ell_i}{\partial \beta_j}=\sum_k \frac{\partial \ell_i}{\partial \eta_k}  \tilde C_{kj}x_{ikj}.$$
+
+
+## Example: zero-inflated Poisson
+
+
+The Zero-Inflated Poisson model is a model for count data with excess zeros. The response distribution is a mixture of a point mass at zero and a Poisson distribution: if $Z$ is Bernoulli with probability $1-p_0$ and $P$ is Poisson with mean $\mu$, then $Y=Z+(1-Z)P$ is zero-inflated Poisson. The ZIP is a latent-class model; we can have $Y=0$ either because $Z=0$ ('structural' zeroes) or because $P=0$. That’s natural in some ecological examples: if you didn’t see any salmon it could be because the area is salmon-free (it’s Eden Park) or because you just randomly didn’t see any.  To turn this into a regression model we typically put a logistic regression structure on $Z$ and a Poisson regression structure on $P$. 
+
+There isn’t (as far as I know) existing software in R for design-based inference in zero-inflated Poisson models, so it’s a good example for the benefits of `svyVGAM`.  The `pscl` package (Zeileis et al) fits zero-inflated models, and so does `VGAM`, so we can compare the model fitted with `svyVGAM` to both of those and to other work-arounds.
+
+I’ll do an example with data on number of sexual partners, from NHANES 2003-2004. We will look at questions `SXQ200` and `SXQ100`: number of male sexual partners.  Combining these gives a ‘real’ zero-inflated variable: based on sexual orientation the zeroes would divide into 'never' and 'not yet'.
+
+Here's how I created the dataset, from two NHANES files.  It's `data(nhanes_sxq)` in the package
+```
+library(foreign)
+setwd("~/nhanes")
+demo = read.xport("demo_c.xpt")
+sxq = read.xport("sxq_c.xpt")
+merged = merge(demo, sxq, by='SEQN')
+merged$total = with(merged, ifelse(RIAGENDR==2, SXQ100+SXQ130, SXQ170+SXQ200))
+merged$total[merged$SXQ020==2] = 0
+merged$total[merged$total>2000] = NA
+merged$age = merged$RIDAGEYR/25
+merged$malepartners=with(merged, ifelse(RIAGENDR==2,SXQ100,SXQ200))
+merged$malepartners[merged$malepartners>200]=NA
+nhanes_sxq<-merged[, c("SDMVPSU","SDMVSTRA","WTINT2YR","RIDAGEYR","RIDRETH1","DMDEDUC","malepartners")]
+```
+
+Start off by loading the packages and setting up a survey design
+
+```{r message=FALSE}
+library(svyVGAM)
+library(pscl)
+data(nhanes_sxq)
+des = svydesign(id=~SDMVPSU,strat=~SDMVSTRA,weights=~WTINT2YR, nest=TRUE, data=nhanes_sxq)
+```
+
+First, we'll fit the model just ignoring the survey design, using both `pscl::zeroinfl` and `VGAM::vglm`.  These models use the same variables in a logistic regression for $Z$ and a Poisson regression for $P$.  In `VGAM` you would make the models different by constraining coefficients to be zero in one of the models; in `pscl` you would specify different models before and after the `|`.
+
+```{r}
+unwt = zeroinfl(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC|RIDAGEYR+factor(RIDRETH1)+DMDEDUC, data=nhanes_sxq)
+summary(unwt)
+
+vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), data = nhanes_sxq, crit = "coef")
+```
+
+
+A traditional work-around for regression models is to rescale the weights to sum to the sample size and then pretend they are precision weights or frequency weights. 
+
+
+
+```{r}
+nhanes_sxq$scaledwt<-nhanes_sxq$WTINT2YR/mean(nhanes_sxq$WTINT2YR)
+
+wt= zeroinfl(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC|RIDAGEYR+factor(RIDRETH1)+DMDEDUC, data=nhanes_sxq, weights=scaledwt)
+summary(wt)
+
+wtv= vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), data = nhanes_sxq, crit = "coef",weights=scaledwt)
+summary(wtv)
+```
+
+
+```{r warning=FALSE}
+## repwts
+repdes = as.svrepdesign(des,type="Fay",fay.rho=0.2)
+rep1 = withReplicates(repdes, quote( 
+    coef(zeroinfl(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC|RIDAGEYR+factor(RIDRETH1)+DMDEDUC, weights=.weights))
+    ))
+rep1
+
+repv = withReplicates(repdes, quote( 
+    coef(vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), data = nhanes_sxq, crit = "coef",weights=.weights))
+    ))
+repv
+```
+
+And now with `svyVGAM::svy_vglm` by linearisation
+
+
+```{r}
+## svy_vgam
+library(svyVGAM)
+
+svy_vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), design=des, crit = "coef")
+```
+
+and with replicate weights:
+
+```{r}
+svy_vglm(malepartners~RIDAGEYR+factor(RIDRETH1)+DMDEDUC, zipoisson(), design=repdes, crit = "coef")
+```
