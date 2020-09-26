@@ -22,6 +22,6 @@ I'm not writing from personal experience here -- as a relatively asocial and cau
 
 One reason I'm more confident about this than many controversial political topics is the experience with cannabis legalisation in the US. I lived in Seattle for 15 years, and I still visit the US frequently.   The State of Washington legalised cannabis shortly after I left, and other states have also legalised it.  The states  have had different approaches: Colorado had a relatively unplanned free-for-all; Washington thought about the issues for even longer than was perhaps necessary and implemented a restrictive but sensible plan; California  had few restrictions but lots of paperwork, perversely encouraging large players. 
 
-The common experience of all these states is that nothing terrible has happened as a result. The NZ draft bill does actually look to be well-designed, but even if it wasn't, we'd be better off voting 'Yes'. Cannabis legalisation is a policy change that even the US hasn't managed to fuck up. 
+The common experience of all these states is that **nothing terrible has happened as a result**. The NZ draft bill does actually look to be well-designed, but even if it wasn't, we'd be better off voting 'Yes'. Cannabis legalisation is a policy change that even the US hasn't managed to fuck up. 
 
 
