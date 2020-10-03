@@ -14,7 +14,7 @@ So: **Vote Yes.**  The *status quo* is terrible.
 I'm not writing from personal experience here -- as a relatively asocial and cautious nerd, I didn't even get the opportunity to turn it down until I was 21, in the US as an exchange student. But the problems with the current situation are pretty clear:
 
 - It's racist. Poor and brown people are much more likely to be prosecuted for cannabis use. For example, Māori are about twice as likely as NZ Europeans to report using cannabis (in the NZ Health Survey) but about four times as likely to be convicted of cannabis offences. 
-- Medical cannabis use is theoretically allowed, but not accessible. The Medsafe-approved products are very expensive and hard to get prescribed, and while medical use of other cannabis is not illegal, the people who grow and supply it are still breaking the law.
+- Medical cannabis use is theoretically allowed, but not accessible. The Medsafe-approved products are very expensive and hard to get prescribed, and while medical use of other cannabis is not illegal^[It's worse than I realised: this only applies to palliative use in terminal illness, not to chronic pain or to nausea from potentially curative chemotherapy or to anything else], the people who grow and supply it are still breaking the law.
 - The current law ensures that profits from cannabis sale go to criminal gangs, a use of money with very low benefit:cost ratio compared even to taxing it and spending it on roads.
 - The fact that cannabis is illegal and easy to test for has increased demand for synthetic cannabimimetics, which are much more dangerous.
 - Cannabis appears to subsitute for alcohol (at least to some extent), but causes fewer health problems either for the user or for innocent bystanders
