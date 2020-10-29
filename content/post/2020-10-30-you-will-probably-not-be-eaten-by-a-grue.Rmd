@@ -1,0 +1,137 @@
+---
+title: You will probably not be eaten by a grue
+author: Thomas Lumley
+date: '2020-10-30'
+slug: you-will-probably-not-be-eaten-by-a-grue
+categories: []
+tags: []
+---
+Michael Droste tweeted 
+
+>*Should I use Stata, R, Matlab, Julia, etc etc for my research? What #econtwitter WON'T tell you is that all of these share a fatal flaw: you can't play Oregon Trail on them...
+>... At least, until now! Now you can play Oregon Trail (1978) in [Stata](https://github.com/mdroste/stata-oregontrail).*
+
+![](/post/2020-10-30-you-will-probably-not-be-eaten-by-a-grue_files/Screen Shot 2020-10-30 at 9.02.16 AM.png){width=90%}
+
+That's clearly a challenge that any sensible R programmer would ignore.  However, it does fit into an idea I've been thinking about for a while.  If you have a script in SAS or SPSS that reads in and formats a complicated data set, how can you use that in R?  One answer is to translate the script to R, but that's a lot of work -- every time.  A better answer would be to write either a translator or an interpreter that runs the script.
+
+So, in the Oregon Trail case, rather than following the [Python](https://github.com/philjonas/oregon-trail-1978-python) version and [Stata](https://github.com/mdroste/stata-oregontrail) version in reimplementing the code, I decided to write an interpreter for a small subset of BASIC and use it to run the original code. 
+
+```
+library(OregonTrail)
+play()
+```
+
+I have not tested all the BASIC code paths, but I think I have tested all the R code paths, so it's *possible* that it works.
+
+### Interpreting BASIC
+
+The necessary interpreter is fairly small -- it's *almost* a finite-state machine; you could think of it as a finite-state machine with an oracle for arithmetic expressions. It's [here](https://github.com/tslumley/OregonTrail).  A particular advantage of this approach is that the 1970s use of `GOTO` in BASIC is trivial to interpret, but a bit of a pain to either translate to R code or understand and re-implement. 
+
+The main tricky part was that BASIC uses parentheses both for array access and for function calls, and uses `=` to test for equality. In order to use R's `eval` as the oracle for arithmetic, I had to rewrite BASIC arithmetic expressions into R syntax.  This is the same sort of task as rewriting R arithmetic syntax into SQL for my `sqlsurvey` package and RStudio's `dbplyr`. 
+
+The basic evaluation loop is this function
+
+```
+step<-function(state){
+  thisline<-basic[state$counter]
+  thiscmd<-command[state$counter]
+  state<-switch(thiscmd,
+    GOTO=GOTO(thisline, state),
+    GOSUB=GOSUB(thisline, state),
+    RETURN=RETURN(thisline, state),
+    READ=READ(thisline, state),
+    DATA=basic_DATA(thisline, state),
+    RESTORE=RESTORE(thisline, state),
+    PRINT=basic_PRINT(thisline, state),
+    INPUT=INPUT(thisline,state),
+    LET=LET(thisline,state),
+    IF =basic_IF(thisline, state),
+    ON = ON(thisline,state),
+    QUIT={state$finished<-TRUE; state},
+    END={state$finished<-TRUE; state},
+    REM = advance(state),
+    DIM = basic_DIM(thisline,state),
+    assignment(thisline,state)
+  )
+        
+  state
+}
+```
+
+where `advance` is the function that goes to the next line.
+
+### Now you have two problems
+
+There are a lot of regular expressions. Here, working out the target of `GOTO`
+
+```
+GOTO<-function(thisline, state){
+  tolineno<-as.numeric(gsub("^.*GOTO[[:blank:]]([0-9]+)","\\1",thisline)[1])
+  codeline<-which(lineno==tolineno)
+  if(length(codeline)!=1) 
+      stop(paste("GOTO considered harmful:",thisline))
+  state$counter<-codeline
+  state
+}
+```
+
+
+and much more messily, to work out the target and value of an assignment
+
+```
+assignment<-function(thisline, state){
+  expr<-gsub("^[0-9]* ","",thisline)
+        
+  target<-trimws(gsub("(.+)=.+","\\1",expr))
+  target<-gsub("$","_",target,fixed=TRUE)
+        
+  value_expr<-trimws(gsub(".+=(.+)","\\1",expr))
+  value_expr<-    gsub("$","_",value_expr,fixed=TRUE)
+
+  value_expr<-rewrite(parse(text=value_expr)[[1]])
+  target_expr<-rewrite(parse(text=target)[[1]])
+
+  state$variables<-eval(bquote(within(state$variables, 
+      .(target_expr)<-.(value_expr))))
+        
+  if(state$debug) print(state$variables)
+  advance(state)  
+}
+```
+
+### Parsing arithmetic
+
+The only part of this that isn't a finite-state machine is the evaluation of logical and arithmetic expressions, which needs a stack, both for the rewriting and for R's `eval` to evaluate the code (as seen in the code for `assignment` above)
+
+```
+rewrite<-function(expr){
+  if (length(expr)==2){
+    if (expr[[1]] == as.name("TAB") ||
+      expr[[1]] == as.name("RND") ||
+      expr[[1]] == as.name("CLK")||
+      expr[[1]] == as.name("INT") ||
+      expr[[1]] == as.name("(") ||
+      expr[[1]] == as.name("-"))
+    {
+      expr[[2]]<-rewrite(expr[[2]])
+      return(expr)
+    } else{
+      expr[[2]]<-rewrite(expr[[2]])
+      expr<-bquote(.(expr[[1]])[.(expr[[2]])])
+      return(expr)
+    }
+  }
+
+  if (length(expr)==1){
+    if (expr==as.name("=")) expr<-as.name("==")
+    return(expr)
+  }
+    
+    ## length=3
+  expr[[1]]<-rewrite(expr[[1]])
+  expr[[2]]<-rewrite(expr[[2]])
+  expr[[3]]<-rewrite(expr[[3]])
+  return(expr)
+}
+```

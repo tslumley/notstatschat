@@ -1,0 +1,117 @@
+---
+title: You will probably not be eaten by a grue
+author: Thomas Lumley
+date: '2020-10-30'
+slug: you-will-probably-not-be-eaten-by-a-grue
+categories: []
+tags: []
+---
+
+
+
+<p>Michael Droste tweeted</p>
+<blockquote>
+<p><em>Should I use Stata, R, Matlab, Julia, etc etc for my research? What #econtwitter WON’T tell you is that all of these share a fatal flaw: you can’t play Oregon Trail on them…
+… At least, until now! Now you can play Oregon Trail (1978) in <a href="https://github.com/mdroste/stata-oregontrail">Stata</a>.</em></p>
+</blockquote>
+<p><img src="/post/2020-10-30-you-will-probably-not-be-eaten-by-a-grue_files/Screen%20Shot%202020-10-30%20at%209.02.16%20AM.png" style="width:90.0%" /></p>
+<p>That’s clearly a challenge that any sensible R programmer would ignore. However, it does fit into an idea I’ve been thinking about for a while. If you have a script in SAS or SPSS that reads in and formats a complicated data set, how can you use that in R? One answer is to translate the script to R, but that’s a lot of work – every time. A better answer would be to write either a translator or an interpreter that runs the script.</p>
+<p>So, in the Oregon Trail case, rather than following the <a href="https://github.com/philjonas/oregon-trail-1978-python">Python</a> version and <a href="https://github.com/mdroste/stata-oregontrail">Stata</a> version in reimplementing the code, I decided to write an interpreter for a small subset of BASIC and use it to run the original code.</p>
+<pre><code>library(OregonTrail)
+play()</code></pre>
+<p>I have not tested all the BASIC code paths, but I think I have tested all the R code paths, so it’s <em>possible</em> that it works.</p>
+<div id="interpreting-basic" class="section level3">
+<h3>Interpreting BASIC</h3>
+<p>The necessary interpreter is fairly small – it’s <em>almost</em> a finite-state machine; you could think of it as a finite-state machine with an oracle for arithmetic expressions. It’s <a href="https://github.com/tslumley/OregonTrail">here</a>. A particular advantage of this approach is that the 1970s use of <code>GOTO</code> in BASIC is trivial to interpret, but a bit of a pain to either translate to R code or understand and re-implement.</p>
+<p>The main tricky part was that BASIC uses parentheses both for array access and for function calls, and uses <code>=</code> to test for equality. In order to use R’s <code>eval</code> as the oracle for arithmetic, I had to rewrite BASIC arithmetic expressions into R syntax. This is the same sort of task as rewriting R arithmetic syntax into SQL for my <code>sqlsurvey</code> package and RStudio’s <code>dbplyr</code>.</p>
+<p>The basic evaluation loop is this function</p>
+<pre><code>step&lt;-function(state){
+  thisline&lt;-basic[state$counter]
+  thiscmd&lt;-command[state$counter]
+  state&lt;-switch(thiscmd,
+    GOTO=GOTO(thisline, state),
+    GOSUB=GOSUB(thisline, state),
+    RETURN=RETURN(thisline, state),
+    READ=READ(thisline, state),
+    DATA=basic_DATA(thisline, state),
+    RESTORE=RESTORE(thisline, state),
+    PRINT=basic_PRINT(thisline, state),
+    INPUT=INPUT(thisline,state),
+    LET=LET(thisline,state),
+    IF =basic_IF(thisline, state),
+    ON = ON(thisline,state),
+    QUIT={state$finished&lt;-TRUE; state},
+    END={state$finished&lt;-TRUE; state},
+    REM = advance(state),
+    DIM = basic_DIM(thisline,state),
+    assignment(thisline,state)
+  )
+        
+  state
+}</code></pre>
+<p>where <code>advance</code> is the function that goes to the next line.</p>
+</div>
+<div id="now-you-have-two-problems" class="section level3">
+<h3>Now you have two problems</h3>
+<p>There are a lot of regular expressions. Here, working out the target of <code>GOTO</code></p>
+<pre><code>GOTO&lt;-function(thisline, state){
+  tolineno&lt;-as.numeric(gsub(&quot;^.*GOTO[[:blank:]]([0-9]+)&quot;,&quot;\\1&quot;,thisline)[1])
+  codeline&lt;-which(lineno==tolineno)
+  if(length(codeline)!=1) 
+      stop(paste(&quot;GOTO considered harmful:&quot;,thisline))
+  state$counter&lt;-codeline
+  state
+}</code></pre>
+<p>and much more messily, to work out the target and value of an assignment</p>
+<pre><code>assignment&lt;-function(thisline, state){
+  expr&lt;-gsub(&quot;^[0-9]* &quot;,&quot;&quot;,thisline)
+        
+  target&lt;-trimws(gsub(&quot;(.+)=.+&quot;,&quot;\\1&quot;,expr))
+  target&lt;-gsub(&quot;$&quot;,&quot;_&quot;,target,fixed=TRUE)
+        
+  value_expr&lt;-trimws(gsub(&quot;.+=(.+)&quot;,&quot;\\1&quot;,expr))
+  value_expr&lt;-    gsub(&quot;$&quot;,&quot;_&quot;,value_expr,fixed=TRUE)
+
+  value_expr&lt;-rewrite(parse(text=value_expr)[[1]])
+  target_expr&lt;-rewrite(parse(text=target)[[1]])
+
+  state$variables&lt;-eval(bquote(within(state$variables, 
+      .(target_expr)&lt;-.(value_expr))))
+        
+  if(state$debug) print(state$variables)
+  advance(state)  
+}</code></pre>
+</div>
+<div id="parsing-arithmetic" class="section level3">
+<h3>Parsing arithmetic</h3>
+<p>The only part of this that isn’t a finite-state machine is the evaluation of logical and arithmetic expressions, which needs a stack, both for the rewriting and for R’s <code>eval</code> to evaluate the code (as seen in the code for <code>assignment</code> above)</p>
+<pre><code>rewrite&lt;-function(expr){
+  if (length(expr)==2){
+    if (expr[[1]] == as.name(&quot;TAB&quot;) ||
+      expr[[1]] == as.name(&quot;RND&quot;) ||
+      expr[[1]] == as.name(&quot;CLK&quot;)||
+      expr[[1]] == as.name(&quot;INT&quot;) ||
+      expr[[1]] == as.name(&quot;(&quot;) ||
+      expr[[1]] == as.name(&quot;-&quot;))
+    {
+      expr[[2]]&lt;-rewrite(expr[[2]])
+      return(expr)
+    } else{
+      expr[[2]]&lt;-rewrite(expr[[2]])
+      expr&lt;-bquote(.(expr[[1]])[.(expr[[2]])])
+      return(expr)
+    }
+  }
+
+  if (length(expr)==1){
+    if (expr==as.name(&quot;=&quot;)) expr&lt;-as.name(&quot;==&quot;)
+    return(expr)
+  }
+    
+    ## length=3
+  expr[[1]]&lt;-rewrite(expr[[1]])
+  expr[[2]]&lt;-rewrite(expr[[2]])
+  expr[[3]]&lt;-rewrite(expr[[3]])
+  return(expr)
+}</code></pre>
+</div>
