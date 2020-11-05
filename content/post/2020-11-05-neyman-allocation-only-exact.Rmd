@@ -1,0 +1,27 @@
+---
+title: Neyman Allocation, only exact
+author: Thomas Lumley
+date: '2020-11-05'
+slug: neyman-allocation-only-exact
+categories: []
+tags: []
+---
+
+If you have a fixed number of observations to allocate over a set of sampling strata and want to estimate the population total or mean of a variable $Y$,  Neyman proved in 1934 that the optimal allocation is proportional to the population size in the stratum, proportional to the standard deviation of $Y$ in the stratum, and inversely proportional to the cost of sampling from the stratum.  In math, the Neyman allocation rule is
+$$n_k\propto N_k\sigma_k/c_k$$
+
+From time to time this gets rediscovered in different settings: for example, [McIsaac and Cook](https://onlinelibrary.wiley.com/doi/abs/10.1002/cjs.11207) looked at optimal two-phase sampling for fitting a regression model and derived a solution that turns out to be Neyman allocation applied to the influence functions. 
+
+Neyman allocation doesn't give integer solutions for $n_k$, so you round them to the nearest integer and maybe add or subtract one so that the $n_k$ add up exactly to the $n$ you plan to sample. Rounding doesn't necessarily give you the optimal integer solution, and it's not at all obvious how you'd solve the integer programming problem that gives the optimal integer solution. It probably would almost never be a big deal, but the *ad hoc*ness looks a bit unprofessional.
+
+This week, I am reminded for some reason^[once every 20 years the election happens just as the Census is being finalised] that the exact integer solution to the problem is known. It was worked out by [Tommy Wright](https://www.census.gov/research/researchers/profile.php?cv_sub=alpha&cv_profile=3743), the former head of the Center for Statistical Research and Methodology at the US Census Bureau and one of the depressingly small number of African-American mathematical statisticians.
+
+Wright [showed](https://www.jstor.org/stable/23339498), that the variance-minimisation problem targeted by Neyman allocation was equivalent to the constrained optimisation problem that allocates Electoral College votes to US states after each Census^[Follow NPR's @hansilowang on Twitter to keep up with how the 2020 US Census is (or isn't) working]  . The "Method of Equal Proportions" decreed for that calculation is the exact integer version of the Neyman allocation formula.  
+
+In the Electoral College version, the total number of members of the House of Representatives is $n$, the states are strata, and the goal is to minimise the relative discrepancy in votes per capita. For state population sizes $P_k$ and state representative  numbers $H_k$ the objective function is 
+$$\sum_{k=1}^{50} H_k\left(\frac{P}{H}-\frac{P_k}{H_k}  \right)^2$$
+where $P$ and $H$ are the US population and total number of Congressional Representatives.  Some algebra reduces this to minimising
+$$\sum_{k=1}^{50}\frac{P_k^2}{H_k}$$
+subject to the constraint that $H_k\geq 1$. In the context of Neyman allocation $P_k$ plays the part of $\sigma_k$ and $H_k$ the part of $n_k$. 
+
+We're using the exact allocation algorithm (in theory and in actual two-phase designs), because why wouldn't you? It doesn't actually make a real difference, but I think we get a few coolness points for it. 
