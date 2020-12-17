@@ -1,0 +1,146 @@
+---
+title: Planning a new data management course
+author: Thomas Lumley
+date: '2020-12-18'
+slug: planning-a-new-data-management-course
+categories: []
+tags: []
+---
+
+We have an existing course at third-year undergraduate level that reprises the second-year regression course using SAS and also does a bit more SAS for data management. We're going to get rid of it, and this is an early draft of my plan for its replacement (probably in 2022).
+
+The original working title for the replacement was "Ecumenical Data Wrangling": that is, data management taught in a form that isn't specific to SAS or specific to R (or, Lorde help us, Excel).  I want to keep SAS: employers are still interested in it here, but also because I want one of the basic ideas to be *data models* and how they differ between packages.
+
+Other important ideas are reproducible workflow (and its higher-level cousins such as data governance) and the experience that you can't trust the data just because the computer says so. 
+
+The prerequisites will likely be our second-year course in linear regression (with a little glm at the end), and our basic stat computing course, which was based around [Paul's book](https://www.routledge.com/Introduction-to-Data-Technologies/Murrell/p/book/9781138118027) but is now being revised by Earo Wang. It would be nice not to have a computing prerequisite, but I don't think that's feasible at undergraduate level. 
+
+## STATS 361: Principles of Data Management
+
+This course provides a structured introduction to the science and craft of data management. We will start byconsidering data representations and their advantages and disadvantages, then cover combining and splitting data sets, data cleaning, the creation of non-trivial summary variables and the handling of missing data. These principles will be illustrated by data sets of varying size and complexity, and students will implement dataprocessing steps in at least two of R, SAS, and (hopefully) Python
+
+
+### Data Models
+
+>Behind every wildly successful tool there’s probably a very powerful abstraction. — @JennyBryan tweet
+
+Rather than thinking about file formats and extensions, we should think about the data models that are usedby particular tools. The most familiar one in science and commerce is the spreadsheet; in previous statistics courses you will have seen the database table or data frame. Using a tool that doesn’t match your data model will make your life less pleasant – and data model is a separate choice from file format, since `.csv` files are used for spreadsheets, data tables, and matrices.
+
+- Spreadsheet
+- Data table (data frame, panda, database table)
+- tidy data table
+- Matrix
+- List (R lists, JSON, XML)
+
+Data tables add structure to spreadsheets and reduce flexibility: one type per column, all columns the same length, invariant to row reordering.  The basic SAS dataset structure has the same constraints on columns, but is strongly row-oriented and row-ordered (at least in the `DATA STEP`) 
+
+Matrices add different structure (not invariant to reordering, all numeric).
+
+Lists have only the recursive structure but may implicitly be or contain data tables. Auckland Transport's bus location feed is a good example.
+
+Special cases: time series, spatial data, sparse matrices
+
+Reading:
+
+- Broman & Woo: ‘Data Organization in Spreadsheets’, TAS, doi:10.1080/00031305.2017.1375989
+- Wickham: ‘Tidy Data’ JSS, doi:10.18637/jss.v059.i10
+
+### Workflow principles
+
+> Your closest collaborator is you six months ago, but you don’t reply to emails. — @gonuke, after @kcranstn tweet quoting @mtholder
+
+Data management provides an opportunity to irreversibly mangle valuable data, or to introduce subtle inconsistencies, or just to set future-you up for days of unnecessary work
+
+- changes to raw data should be trackable, reversible, documented as to who and why
+- never touch the raw data in analysis
+- save code to reproduce all analyses
+- save intermediate results if they are slow to recreate, otherwise just recreate them
+- construct tables and graphs computationally, not by hand
+
+Ethics and regulation: confidentiality, data security, data governance, [data sovereignty](https://www.temanararaunga.maori.nz/)
+
+Some end-to-end examples of high-level workflow: StatsNZ? a clinical trial? industry?
+
+### Bulk data transformations
+
+> and I’m still pretty sure some of the data is missing, but it could still be here, in this ONE HUNDRED SHEET excel file— @RallidaeRule tweet
+
+Data table:
+
+- join: combining data from multiple tables (inner, outer, left, anti)
+- filter: subset of rows
+- select: subset of columns
+- pivot: longer vs wider (and relationship with normalisation/denormalisation)
+
+Conversions between data models, eg
+
+- JSON to data table (Auckland transport bus API)
+- directory full of spreadsheets to data table.
+
+
+
+### Data cleaning: what *else* is wrong with your data?
+
+> Classroom data are like teddy bears; real data are like a grizzly with salmon blood dripping out its mouth.— @JennyBryan, via @sgrifter tweet
+
+- Univariate summaries
+- Bivariate summaries
+- Plausible mistakes (eg wrong units, typos, OCR errors)
+- Wrong variable or value labels
+- Reasons for wrong data: 
+    * data entry 
+    * automatic conversions (eg Excel dates)
+    * wrong units
+    * errors in the measurement process
+    * lack of construct validity (ie, your measurement is what you asked for, but it doesn’tmean what you think it does)
+- Real measurements incorrectly coded as invalid: eg the ozone hole
+
+Reading: Deborah Stone [The Ethics of Counting]( https://www.cambridge.org/core/services/aop-cambridge-core/content/view/6EB60C0EAB17A50F89038721F3379A9A/S1049096517001767a.pdf/2017_james_madison_award_lecture_the_ethics_of_counting.pdf) James Madison Award Lecture
+
+
+### Constructing new variables
+
+>Of course someone has to write loops. It doesn’t have to be you. —@JennyBryan
+slides
+
+- Row and column sums, means, medians
+- Longitudinal data: operations on contiguous ordered rows, eg, indicator variable for last visit missed, averageconsumption over past three weeks
+- Other subset operations defined by sets of rows (the split-analyse-recombine idiom in R and `DATA STEP` equivalents in SAS)
+
+*Part of the goal here is to get some evidence-based idea of what things, if any, really are easier in SAS than in R*
+
+### Text
+
+- Splitting (tokenising), tabulating, summarising
+- Very basic regular expressions
+- ASCII, code pages, and Unicode (how to use te reo Māori and NZ placenames)
+- Names of people and places
+
+Possible example: 
+
+- [Hamlet](http://freerangestats.info/blog/2020/10/11/hamlet)
+- merging different NZ official data sets by name
+
+Readings:
+
+- Spolsky [The Absolute Minimum Every Software Developer Absolutely, Positively Must Know AboutUnicode and Character Sets (No Excuses!)](https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/)
+- W3 Consortium [Personal names around the world](https://www.w3.org/International/questions/qa-personal-names)
+
+
+### Missing data
+
+- Deliberate vs haphazard missingness
+- Item vs unit missing data
+- Monotone vs non-monotone missing data
+
+**Obvious things to worry about:**
+
+- missing data codes (9, -9, -99) [Stata and SPSS can code reason for missing, R doesn't have low-level support for this]
+- censoring/limit of detection vs measurement
+- NULL vs NA vs NaN: how do missing values sort? How do they propagate?
+- how is item missingness related to non-missing data? (exploratory graphs when data are missing: R `naniar` package)
+- Ethics of measurement: can’t just give up on people who are harder to measure.
+- Special things to worry about:
+    * Country codes: `NA` is Nambia
+    * Unknown locations coded to centroid: Null Island; [Wayne Dobson does not have your cell phone](https://www.reviewjournal.com/local/local-las-vegas/if-you-lose-your-cellphone-dont-blame-wayne-dobson/); [Mapping kidnappings in Nigeria]( https://fivethirtyeight.com/features/mapping-kidnappings-in-nigeria/)
+    * file truncation, especially [at a power of two](https://www.theguardian.com/politics/2020/oct/05/how-excel-may-have-caused-loss-of-16000-covid-tests-in-england)

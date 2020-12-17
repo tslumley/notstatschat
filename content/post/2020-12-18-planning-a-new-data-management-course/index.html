@@ -1,0 +1,152 @@
+---
+title: Planning a new data management course
+author: Thomas Lumley
+date: '2020-12-18'
+slug: planning-a-new-data-management-course
+categories: []
+tags: []
+---
+
+
+
+<p>We have an existing course at third-year undergraduate level that reprises the second-year regression course using SAS and also does a bit more SAS for data management. We’re going to get rid of it, and this is an early draft of my plan for its replacement (probably in 2022).</p>
+<p>The original working title for the replacement was “Ecumenical Data Wrangling”: that is, data management taught in a form that isn’t specific to SAS or specific to R (or, Lorde help us, Excel). I want to keep SAS: employers are still interested in it here, but also because I want one of the basic ideas to be <em>data models</em> and how they differ between packages.</p>
+<p>Other important ideas are reproducible workflow (and its higher-level cousins such as data governance) and the experience that you can’t trust the data just because the computer says so.</p>
+<p>The prerequisites will likely be our second-year course in linear regression (with a little glm at the end), and our basic stat computing course, which was based around <a href="https://www.routledge.com/Introduction-to-Data-Technologies/Murrell/p/book/9781138118027">Paul’s book</a> but is now being revised by Earo Wang. It would be nice not to have a computing prerequisite, but I don’t think that’s feasible at undergraduate level.</p>
+<div id="stats-361-principles-of-data-management" class="section level2">
+<h2>STATS 361: Principles of Data Management</h2>
+<p>This course provides a structured introduction to the science and craft of data management. We will start byconsidering data representations and their advantages and disadvantages, then cover combining and splitting data sets, data cleaning, the creation of non-trivial summary variables and the handling of missing data. These principles will be illustrated by data sets of varying size and complexity, and students will implement dataprocessing steps in at least two of R, SAS, and (hopefully) Python</p>
+<div id="data-models" class="section level3">
+<h3>Data Models</h3>
+<blockquote>
+<p>Behind every wildly successful tool there’s probably a very powerful abstraction. — <span class="citation">@JennyBryan</span> tweet</p>
+</blockquote>
+<p>Rather than thinking about file formats and extensions, we should think about the data models that are usedby particular tools. The most familiar one in science and commerce is the spreadsheet; in previous statistics courses you will have seen the database table or data frame. Using a tool that doesn’t match your data model will make your life less pleasant – and data model is a separate choice from file format, since <code>.csv</code> files are used for spreadsheets, data tables, and matrices.</p>
+<ul>
+<li>Spreadsheet</li>
+<li>Data table (data frame, panda, database table)</li>
+<li>tidy data table</li>
+<li>Matrix</li>
+<li>List (R lists, JSON, XML)</li>
+</ul>
+<p>Data tables add structure to spreadsheets and reduce flexibility: one type per column, all columns the same length, invariant to row reordering. The basic SAS dataset structure has the same constraints on columns, but is strongly row-oriented and row-ordered (at least in the <code>DATA STEP</code>)</p>
+<p>Matrices add different structure (not invariant to reordering, all numeric).</p>
+<p>Lists have only the recursive structure but may implicitly be or contain data tables. Auckland Transport’s bus location feed is a good example.</p>
+<p>Special cases: time series, spatial data, sparse matrices</p>
+<p>Reading:</p>
+<ul>
+<li>Broman &amp; Woo: ‘Data Organization in Spreadsheets’, TAS, <a href="doi:10.1080/00031305.2017.1375989" class="uri">doi:10.1080/00031305.2017.1375989</a></li>
+<li>Wickham: ‘Tidy Data’ JSS, <a href="doi:10.18637/jss.v059.i10" class="uri">doi:10.18637/jss.v059.i10</a></li>
+</ul>
+</div>
+<div id="workflow-principles" class="section level3">
+<h3>Workflow principles</h3>
+<blockquote>
+<p>Your closest collaborator is you six months ago, but you don’t reply to emails. — <span class="citation">@gonuke</span>, after <span class="citation">@kcranstn</span> tweet quoting <span class="citation">@mtholder</span></p>
+</blockquote>
+<p>Data management provides an opportunity to irreversibly mangle valuable data, or to introduce subtle inconsistencies, or just to set future-you up for days of unnecessary work</p>
+<ul>
+<li>changes to raw data should be trackable, reversible, documented as to who and why</li>
+<li>never touch the raw data in analysis</li>
+<li>save code to reproduce all analyses</li>
+<li>save intermediate results if they are slow to recreate, otherwise just recreate them</li>
+<li>construct tables and graphs computationally, not by hand</li>
+</ul>
+<p>Ethics and regulation: confidentiality, data security, data governance, <a href="https://www.temanararaunga.maori.nz/">data sovereignty</a></p>
+<p>Some end-to-end examples of high-level workflow: StatsNZ? a clinical trial? industry?</p>
+</div>
+<div id="bulk-data-transformations" class="section level3">
+<h3>Bulk data transformations</h3>
+<blockquote>
+<p>and I’m still pretty sure some of the data is missing, but it could still be here, in this ONE HUNDRED SHEET excel file— <span class="citation">@RallidaeRule</span> tweet</p>
+</blockquote>
+<p>Data table:</p>
+<ul>
+<li>join: combining data from multiple tables (inner, outer, left, anti)</li>
+<li>filter: subset of rows</li>
+<li>select: subset of columns</li>
+<li>pivot: longer vs wider (and relationship with normalisation/denormalisation)</li>
+</ul>
+<p>Conversions between data models, eg</p>
+<ul>
+<li>JSON to data table (Auckland transport bus API)</li>
+<li>directory full of spreadsheets to data table.</li>
+</ul>
+</div>
+<div id="data-cleaning-what-else-is-wrong-with-your-data" class="section level3">
+<h3>Data cleaning: what <em>else</em> is wrong with your data?</h3>
+<blockquote>
+<p>Classroom data are like teddy bears; real data are like a grizzly with salmon blood dripping out its mouth.— <span class="citation">@JennyBryan</span>, via <span class="citation">@sgrifter</span> tweet</p>
+</blockquote>
+<ul>
+<li>Univariate summaries</li>
+<li>Bivariate summaries</li>
+<li>Plausible mistakes (eg wrong units, typos, OCR errors)</li>
+<li>Wrong variable or value labels</li>
+<li>Reasons for wrong data:
+<ul>
+<li>data entry</li>
+<li>automatic conversions (eg Excel dates)</li>
+<li>wrong units</li>
+<li>errors in the measurement process</li>
+<li>lack of construct validity (ie, your measurement is what you asked for, but it doesn’tmean what you think it does)</li>
+</ul></li>
+<li>Real measurements incorrectly coded as invalid: eg the ozone hole</li>
+</ul>
+<p>Reading: Deborah Stone <a href="https://www.cambridge.org/core/services/aop-cambridge-core/content/view/6EB60C0EAB17A50F89038721F3379A9A/S1049096517001767a.pdf/2017_james_madison_award_lecture_the_ethics_of_counting.pdf">The Ethics of Counting</a> James Madison Award Lecture</p>
+</div>
+<div id="constructing-new-variables" class="section level3">
+<h3>Constructing new variables</h3>
+<blockquote>
+<p>Of course someone has to write loops. It doesn’t have to be you. —<span class="citation">@JennyBryan</span>
+slides</p>
+</blockquote>
+<ul>
+<li>Row and column sums, means, medians</li>
+<li>Longitudinal data: operations on contiguous ordered rows, eg, indicator variable for last visit missed, averageconsumption over past three weeks</li>
+<li>Other subset operations defined by sets of rows (the split-analyse-recombine idiom in R and <code>DATA STEP</code> equivalents in SAS)</li>
+</ul>
+<p><em>Part of the goal here is to get some evidence-based idea of what things, if any, really are easier in SAS than in R</em></p>
+</div>
+<div id="text" class="section level3">
+<h3>Text</h3>
+<ul>
+<li>Splitting (tokenising), tabulating, summarising</li>
+<li>Very basic regular expressions</li>
+<li>ASCII, code pages, and Unicode (how to use te reo Māori and NZ placenames)</li>
+<li>Names of people and places</li>
+</ul>
+<p>Possible example:</p>
+<ul>
+<li><a href="http://freerangestats.info/blog/2020/10/11/hamlet">Hamlet</a></li>
+<li>merging different NZ official data sets by name</li>
+</ul>
+<p>Readings:</p>
+<ul>
+<li>Spolsky <a href="https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/">The Absolute Minimum Every Software Developer Absolutely, Positively Must Know AboutUnicode and Character Sets (No Excuses!)</a></li>
+<li>W3 Consortium <a href="https://www.w3.org/International/questions/qa-personal-names">Personal names around the world</a></li>
+</ul>
+</div>
+<div id="missing-data" class="section level3">
+<h3>Missing data</h3>
+<ul>
+<li>Deliberate vs haphazard missingness</li>
+<li>Item vs unit missing data</li>
+<li>Monotone vs non-monotone missing data</li>
+</ul>
+<p><strong>Obvious things to worry about:</strong></p>
+<ul>
+<li>missing data codes (9, -9, -99) [Stata and SPSS can code reason for missing, R doesn’t have low-level support for this]</li>
+<li>censoring/limit of detection vs measurement</li>
+<li>NULL vs NA vs NaN: how do missing values sort? How do they propagate?</li>
+<li>how is item missingness related to non-missing data? (exploratory graphs when data are missing: R <code>naniar</code> package)</li>
+<li>Ethics of measurement: can’t just give up on people who are harder to measure.</li>
+<li>Special things to worry about:
+<ul>
+<li>Country codes: <code>NA</code> is Nambia</li>
+<li>Unknown locations coded to centroid: Null Island; <a href="https://www.reviewjournal.com/local/local-las-vegas/if-you-lose-your-cellphone-dont-blame-wayne-dobson/">Wayne Dobson does not have your cell phone</a>; <a href="https://fivethirtyeight.com/features/mapping-kidnappings-in-nigeria/">Mapping kidnappings in Nigeria</a></li>
+<li>file truncation, especially <a href="https://www.theguardian.com/politics/2020/oct/05/how-excel-may-have-caused-loss-of-16000-covid-tests-in-england">at a power of two</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
