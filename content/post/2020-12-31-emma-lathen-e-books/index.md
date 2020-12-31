@@ -18,3 +18,5 @@ Lathen's books have been out of print for a long time, but most of them (and at 
 The transfer to e-books is of uneven quality. In addition to the usual typos and font changes, *Murder Makes the Wheels Go 'Round* (Detroit anti-trust and price-fixing) has the main character referred to as 'John' rather than 'Thatcher' on a bunch of occasions.  *By Hook or by Crook* (Persian rugs) becomes almost unreadable by renaming the victim, an elderly Armenian woman, from 'Veron' to 'Vernon'. *Death Shall Overcome* (racism in stockbroking) actually makes an improvement by changing the (appropriate at the time) 'Negro' to 'Black'.
 
 Where to start? I'd recommend *A Stitch in Time* (medical fraud) or *Murder To Go* (franchise fast-food) or *Something in the Air* (post-deregulation airlines)
+
+Where to get them: I used Google Books. They also seem to be on Kobo, Amazon Kindle, and [some](https://www.overdrive.com/creators/825610/emma-lathen) other [sites](https://www.smashwords.com/profile/view/EmmaLathen)
