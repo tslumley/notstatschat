@@ -9,7 +9,7 @@ tags: []
 
 *Attention conservation notice: genre fiction from decades ago*
 
-Emma Lathen wrote a long series of light mystery novels starring John Putnam Thatcher the senior vice president of a large investment bank.  This was back in the days when investment bankers didn't have the same Gilded-Age-Vampire-Squid associations, and the contrast with modern views of bankers is probably the way they've dated most. 
+Emma Lathen wrote a long series of light mystery novels starring John Putnam Thatcher, the senior vice president of a large investment bank.  This was back in the days when investment bankers didn't have the same Gilded-Age-Vampire-Squid associations, and the contrast with modern views of bankers is probably the way they've dated most. 
 
 As the books were written by [two women with professional careers](https://en.wikipedia.org/wiki/Emma_Lathen), they have been visited by [the Suck Fairy](https://www.tor.com/2010/09/28/the-suck-fairy/) less than one might fear^[the homophobia in *Come To Dust* is an exception]. The books are notable for the cast of recurring minor characters and for the authors' and characters' respect for recondite technical expertise. The same authors wrote another series as R. B. Dominic, with a congressman as the primary character; these were less successful and the only one I'd look out for is *The Attending Physician*, about Medicare and Medicaid fraud.
 
