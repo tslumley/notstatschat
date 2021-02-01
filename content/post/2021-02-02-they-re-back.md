@@ -7,7 +7,7 @@ categories: []
 tags: []
 ---
 
-The Ihaka Lectures for 2021!  The speakers are all local, because quarantine and borders and so on.
+The Ihaka Lectures for 2021!  The speakers are all local, because quarantine and borders and so on, and wonderful because just because.
 
 
 - Dr Simon Urbanek is a member of R Core and has been on the academic staff in the Statistics department since *just before* the borders were closed last year. He's talking about infrastructure for distributed statistical computing.
