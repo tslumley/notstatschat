@@ -27,7 +27,7 @@ The other possibility is that you're not interested in the coefficients, just in
 
 >*Annual income twenty pounds, annual expenditure nineteen nineteen and six, result happiness. Annual income twenty pounds, annual expenditure twenty pounds ought and six, result misery.* -- Mr Micawber, in *David Copperfield*
 
-Even though income nor expenditure are highly correlated, neither one separately will do anywhere near as well as the pair in predicting who ends up happy and who ends up in debtor's prison.  
+Even though income and expenditure are highly correlated, neither one separately will do anywhere near as well as the pair in predicting who ends up happy and who ends up in debtor's prison.  
 
 If the same correlation structure *will not* be present when the model is used, we're back in the causal inference setting: it sucks to be you. It will likely matter whether you use just $X$ or just $Z$ or both for prediction, and the data can't be relied on to advise you.
 
