@@ -1,0 +1,34 @@
+---
+title: Co-linearity
+author: Thomas Lumley
+date: '2021-02-11'
+slug: co-linearity
+categories: []
+tags: []
+---
+
+Co-linearity of regression predictors (often 'multicollinearity') is one of those topics where a lot of regression textbooks are Unhelpful, in part because they don't think about the *reasons* for fitting a model.  Their idea is, often, that you should examine diagnostics that tell you whether there is multicollinearity, and use these diagnostics to remove variables from your model. 
+
+Let us suppose we have two predictor variables $X$ and $Z$ and an outcome $Y$, and that the models
+$$E[Y|X=x]=\beta_0+\beta_Xx$$
+and 
+$$E[Y|X=x,Z=z]=\gamma_0+\gamma_Xx+\gamma_Zz$$
+are (approximately) correctly specified. We can write down relationships between the $\beta$s and $\gamma$s.  For example, if $\delta_{ZX}$ is the regression coefficient of $Z$ on $X$, then $\beta_X=\gamma_X+\gamma_Z\delta_{ZX}$. Since we will typically not have $\beta_X=\gamma_X$, if we're interested in the coefficient of $X$ we'd better hope that domain knowledge tells us whether we're interested in $\gamma_X$ or $\beta_X$. Let us assume it does. 
+
+The Fisher information about $\beta_X$ is the variance of $X$ divided by the residual variance of $Y$; you learn more about $\beta_X$ when $X$ varies a lot and when there isn't much residual noise.  The Fisher information about $\gamma_X$, however, is the *conditional* variance of $X$ given $Z$, divided by the residual variance of $Y$: in order to learn about $\gamma_X$ you need $X$ to vary separately from $Z$. 
+
+If the correlation between $X$ and $Z$ is approximately zero, then $\beta_X\approx\gamma_X$ and the information about $\gamma_X$ is about the same as, or greater than, the information about $\beta_X$. That's the designed-experiment setting.  
+
+If the correlation is high, the information about $\gamma_X$ may be much smaller than about $\beta_X$, and the two coefficients may be quite different. In that setting, it matters a lot which model you decide to use.  Collinearity diagnostics aren't much help, because they don't tell you whether you're interested in $\beta_X$ or $\gamma_X$.  What they tell you is that *if* you're interested in $\gamma_X$, it sucks to be you, because the data don't provide much information about $\gamma_X$. You don't need colinearity diagnostics to tell you that; you can just look at an uncertainty interval.  However tempting it might be, you can't just react to a poor estimate of $\gamma_X$ by pretending you always wanted to estimate $\beta_X$ instead. 
+
+### Prediction
+
+The other possibility is that you're not interested in the coefficients, just in prediction.  When you want to do prediction, the strategy is to fit a whole bunch of models, probably with some sort of complexity penalty, and estimate the prediction error of each one. If the same correlation structure will be present when the models are used, you don't have a problem. You might be tempted to use the correlation to reduce the set of predictors, but as Charles Dickens shows us, this requires domain knowledge
+
+>*Annual income twenty pounds, annual expenditure nineteen nineteen and six, result happiness. Annual income twenty pounds, annual expenditure twenty pounds ought and six, result misery.* -- Mr Micawber, in *David Copperfield*
+
+Even though income nor expenditure are highly correlated, neither one separately will do anywhere near as well as the pair in predicting who ends up happy and who ends up in debtor's prison.  
+
+If the same correlation structure *will not* be present when the model is used, we're back in the causal inference setting: it sucks to be you. It will likely matter whether you use just $X$ or just $Z$ or both for prediction, and the data can't be relied on to advise you.
+
+

@@ -1,0 +1,29 @@
+---
+title: Co-linearity
+author: Thomas Lumley
+date: '2021-02-11'
+slug: co-linearity
+categories: []
+tags: []
+---
+
+
+
+<p>Co-linearity of regression predictors (often ‘multicollinearity’) is one of those topics where a lot of regression textbooks are Unhelpful, in part because they don’t think about the <em>reasons</em> for fitting a model. Their idea is, often, that you should examine diagnostics that tell you whether there is multicollinearity, and use these diagnostics to remove variables from your model.</p>
+<p>Let us suppose we have two predictor variables <span class="math inline">\(X\)</span> and <span class="math inline">\(Z\)</span> and an outcome <span class="math inline">\(Y\)</span>, and that the models
+<span class="math display">\[E[Y|X=x]=\beta_0+\beta_Xx\]</span>
+and
+<span class="math display">\[E[Y|X=x,Z=z]=\gamma_0+\gamma_Xx+\gamma_Zz\]</span>
+are (approximately) correctly specified. We can write down relationships between the <span class="math inline">\(\beta\)</span>s and <span class="math inline">\(\gamma\)</span>s. For example, if <span class="math inline">\(\delta_{ZX}\)</span> is the regression coefficient of <span class="math inline">\(Z\)</span> on <span class="math inline">\(X\)</span>, then <span class="math inline">\(\beta_X=\gamma_X+\gamma_Z\delta_{ZX}\)</span>. Since we will typically not have <span class="math inline">\(\beta_X=\gamma_X\)</span>, if we’re interested in the coefficient of <span class="math inline">\(X\)</span> we’d better hope that domain knowledge tells us whether we’re interested in <span class="math inline">\(\gamma_X\)</span> or <span class="math inline">\(\beta_X\)</span>. Let us assume it does.</p>
+<p>The Fisher information about <span class="math inline">\(\beta_X\)</span> is the variance of <span class="math inline">\(X\)</span> divided by the residual variance of <span class="math inline">\(Y\)</span>; you learn more about <span class="math inline">\(\beta_X\)</span> when <span class="math inline">\(X\)</span> varies a lot and when there isn’t much residual noise. The Fisher information about <span class="math inline">\(\gamma_X\)</span>, however, is the <em>conditional</em> variance of <span class="math inline">\(X\)</span> given <span class="math inline">\(Z\)</span>, divided by the residual variance of <span class="math inline">\(Y\)</span>: in order to learn about <span class="math inline">\(\gamma_X\)</span> you need <span class="math inline">\(X\)</span> to vary separately from <span class="math inline">\(Z\)</span>.</p>
+<p>If the correlation between <span class="math inline">\(X\)</span> and <span class="math inline">\(Z\)</span> is approximately zero, then <span class="math inline">\(\beta_X\approx\gamma_X\)</span> and the information about <span class="math inline">\(\gamma_X\)</span> is about the same as, or greater than, the information about <span class="math inline">\(\beta_X\)</span>. That’s the designed-experiment setting.</p>
+<p>If the correlation is high, the information about <span class="math inline">\(\gamma_X\)</span> may be much smaller than about <span class="math inline">\(\beta_X\)</span>, and the two coefficients may be quite different. In that setting, it matters a lot which model you decide to use. Collinearity diagnostics aren’t much help, because they don’t tell you whether you’re interested in <span class="math inline">\(\beta_X\)</span> or <span class="math inline">\(\gamma_X\)</span>. What they tell you is that <em>if</em> you’re interested in <span class="math inline">\(\gamma_X\)</span>, it sucks to be you, because the data don’t provide much information about <span class="math inline">\(\gamma_X\)</span>. You don’t need colinearity diagnostics to tell you that; you can just look at an uncertainty interval. However tempting it might be, you can’t just react to a poor estimate of <span class="math inline">\(\gamma_X\)</span> by pretending you always wanted to estimate <span class="math inline">\(\beta_X\)</span> instead.</p>
+<div id="prediction" class="section level3">
+<h3>Prediction</h3>
+<p>The other possibility is that you’re not interested in the coefficients, just in prediction. When you want to do prediction, the strategy is to fit a whole bunch of models, probably with some sort of complexity penalty, and estimate the prediction error of each one. If the same correlation structure will be present when the models are used, you don’t have a problem. You might be tempted to use the correlation to reduce the set of predictors, but as Charles Dickens shows us, this requires domain knowledge</p>
+<blockquote>
+<p><em>Annual income twenty pounds, annual expenditure nineteen nineteen and six, result happiness. Annual income twenty pounds, annual expenditure twenty pounds ought and six, result misery.</em> – Mr Micawber, in <em>David Copperfield</em></p>
+</blockquote>
+<p>Even though income nor expenditure are highly correlated, neither one separately will do anywhere near as well as the pair in predicting who ends up happy and who ends up in debtor’s prison.</p>
+<p>If the same correlation structure <em>will not</em> be present when the model is used, we’re back in the causal inference setting: it sucks to be you. It will likely matter whether you use just <span class="math inline">\(X\)</span> or just <span class="math inline">\(Z\)</span> or both for prediction, and the data can’t be relied on to advise you.</p>
+</div>
