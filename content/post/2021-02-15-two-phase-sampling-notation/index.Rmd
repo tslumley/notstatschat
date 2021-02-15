@@ -7,6 +7,8 @@ categories: []
 tags: []
 ---
 
+*Attention conservation notice: an attempt to get a small number of other people, probably not including you, to adopt our notation.*
+
 Together with groups at the University of Pennsylvania and Vanderbilt, we have been working on methods for the design and analysis of two-phase samples, samples taken from an existing cohort or database to measure new variables.  The problem combines measurement-error, missing-data, and sampling ideas, so questions of notation can get fraught.  For example, there are otherwise reasonable people who would like $W$ to be something other than a vector of weights. 
 
 Here is an attempt at notation
