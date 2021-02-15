@@ -12,6 +12,7 @@ Together with groups at the University of Pennsylvania and Vanderbilt, we have b
 Here is an attempt at notation
 
 - We sample $n$ observations from a **cohort** of $N$, where the $i$th observation is sampled with known probability $\pi_i$. Often the sampling is independent (or independent except for fixed $n$); if not, we also know the pairwise probability $\pi_{ij}$ that both $i$ and $j$ were sampled.
+- The **sampling weights** $w_i$ are $1/\pi_i$ or adjusted versions of this to incorporate cohort-level information
 - We have variables $Z$, $A$, and (typically) $Y$ measured for everyone in the cohort and $X$ measured on the subsample. 
 - $R_i$ is the indicator that observation $i$ is in the subsample, so $E[R_i|Z,A,Y]=\pi_i$. 
 - The **outcome model** is for $Y|Z,X$. It is the model we would fit if we had complete data. Its parameters are $\beta$; its loglikelihood is $\ell_i(\beta)$; its score function is $U_i(\beta)$
