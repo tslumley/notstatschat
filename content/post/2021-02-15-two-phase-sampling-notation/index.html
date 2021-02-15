@@ -1,0 +1,27 @@
+---
+title: Two-phase sampling notation
+author: Thomas Lumley
+date: '2021-02-15'
+slug: two-phase-sampling-notation
+categories: []
+tags: []
+---
+
+
+
+<p>Together with groups at the University of Pennsylvania and Vanderbilt, we have been working on methods for the design and analysis of two-phase samples, samples taken from an existing cohort or database to measure new variables. The problem combines measurement-error, missing-data, and sampling ideas, so questions of notation can get fraught. For example, there are otherwise reasonable people who would like <span class="math inline">\(W\)</span> to be something other than a vector of weights.</p>
+<p>Here is an attempt at notation</p>
+<ul>
+<li>We sample <span class="math inline">\(n\)</span> observations from a <strong>cohort</strong> of <span class="math inline">\(N\)</span>, where the <span class="math inline">\(i\)</span>th observation is sampled with known probability <span class="math inline">\(\pi_i\)</span>. Often the sampling is independent (or independent except for fixed <span class="math inline">\(n\)</span>); if not, we also know the pairwise probability <span class="math inline">\(\pi_{ij}\)</span> that both <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> were sampled.</li>
+<li>We have variables <span class="math inline">\(Z\)</span>, <span class="math inline">\(A\)</span>, and (typically) <span class="math inline">\(Y\)</span> measured for everyone in the cohort and <span class="math inline">\(X\)</span> measured on the subsample.</li>
+<li><span class="math inline">\(R_i\)</span> is the indicator that observation <span class="math inline">\(i\)</span> is in the subsample, so <span class="math inline">\(E[R_i|Z,A,Y]=\pi_i\)</span>.</li>
+<li>The <strong>outcome model</strong> is for <span class="math inline">\(Y|Z,X\)</span>. It is the model we would fit if we had complete data. Its parameters are <span class="math inline">\(\beta\)</span>; its loglikelihood is <span class="math inline">\(\ell_i(\beta)\)</span>; its score function is <span class="math inline">\(U_i(\beta)\)</span></li>
+<li>The <strong>imputation model</strong> is for <span class="math inline">\(X|Z,Y,A\)</span>. Its parameters are <span class="math inline">\(\alpha\)</span>. It may be used to produce single imputations <span class="math inline">\(\hat X_i\)</span> or multiple imputations <span class="math inline">\(\hat X_i^{(m)}\)</span> or <span class="math inline">\(X^*_{i(m)}\)</span> for <span class="math inline">\(m=1,2,\dots,M\)</span>.</li>
+<li>The <strong>phase-1 model</strong> is for <span class="math inline">\(Y|\hat X, Z\)</span>. It has influence functions <span class="math inline">\(h_i(\beta)\)</span>. Or for multiple imputation it is for <span class="math inline">\(Y|X^*_{i(m)}, Z\)</span> and has influence functions <span class="math inline">\(h_{i,m}(\beta)\)</span></li>
+<li>We use the term <strong>raking</strong> (or <strong>generalised raking</strong>) for the adjusted-weight estimators, to avoid confusion with the unrelated ‘regression calibration’ technique in the measurement-error literature. But we still call the equations
+<span class="math display">\[\sum_{i\in\textrm{sample}}\frac{g_i}{\pi_i}h_i\equiv\sum_i w_iR_ih_i=\sum_i h_i\]</span>
+that constrain the adjusted weights <span class="math inline">\(w_i=g_i/\pi_i\)</span> ‘the calibration constraints’.</li>
+<li>On occasion, we may use <span class="math inline">\(Y^*\)</span> and <span class="math inline">\(X^*\)</span> for elements of <span class="math inline">\(A\)</span> that are versions of <span class="math inline">\(Y\)</span> and <span class="math inline">\(X\)</span> measured with error, because tradition. Obviously we won’t use the stars to indicate multiple imputation when we do.</li>
+</ul>
+<p>The literature has not really made a consistent choice between <span class="math inline">\(X\)</span> and <span class="math inline">\(Z\)</span>, though there is a tendency in measurement-error papers for <span class="math inline">\(X\)</span> to be the true predictor value, which fits our notation. The distinction between <span class="math inline">\(Z\)</span> and <span class="math inline">\(A\)</span> is that <span class="math inline">\(Z\)</span> would be in the outcome model even if you had <span class="math inline">\(X\)</span> for everyone, and <span class="math inline">\(A\)</span> would not. In a classical measurement error approach, the mismeasured covariate would uninteresting if you had the true value, so it would be an <span class="math inline">\(A\)</span>, not a <span class="math inline">\(Z\)</span>.</p>
+<p>When <span class="math inline">\(Y\)</span> isn’t measured on everyone (eg, <span class="math inline">\(Y\)</span> is measured with error on the whole cohort and accurately on the subsample), the imputation model doesn’t have <span class="math inline">\(Y\)</span> on the RHS.</p>

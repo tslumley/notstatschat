@@ -1,0 +1,27 @@
+---
+title: Two-phase sampling notation
+author: Thomas Lumley
+date: '2021-02-15'
+slug: two-phase-sampling-notation
+categories: []
+tags: []
+---
+
+Together with groups at the University of Pennsylvania and Vanderbilt, we have been working on methods for the design and analysis of two-phase samples, samples taken from an existing cohort or database to measure new variables.  The problem combines measurement-error, missing-data, and sampling ideas, so questions of notation can get fraught.  For example, there are otherwise reasonable people who would like $W$ to be something other than a vector of weights. 
+
+Here is an attempt at notation
+
+- We sample $n$ observations from a **cohort** of $N$, where the $i$th observation is sampled with known probability $\pi_i$. Often the sampling is independent (or independent except for fixed $n$); if not, we also know the pairwise probability $\pi_{ij}$ that both $i$ and $j$ were sampled.
+- We have variables $Z$, $A$, and (typically) $Y$ measured for everyone in the cohort and $X$ measured on the subsample. 
+- $R_i$ is the indicator that observation $i$ is in the subsample, so $E[R_i|Z,A,Y]=\pi_i$. 
+- The **outcome model** is for $Y|Z,X$. It is the model we would fit if we had complete data. Its parameters are $\beta$; its loglikelihood is $\ell_i(\beta)$; its score function is $U_i(\beta)$
+- The **imputation model** is for $X|Z,Y,A$. Its parameters  are  $\alpha$. It may be used to produce single imputations $\hat X_i$ or multiple imputations $\hat X_i^{(m)}$ or $X^*_{i(m)}$ for $m=1,2,\dots,M$.
+- The **phase-1 model** is for $Y|\hat X, Z$. It has influence functions $h_i(\beta)$. Or for multiple imputation it is for $Y|X^*_{i(m)}, Z$ and has influence functions $h_{i,m}(\beta)$
+- We use the term **raking** (or **generalised raking**) for the adjusted-weight estimators, to avoid confusion with the unrelated 'regression calibration' technique in the measurement-error literature. But we still call the equations
+$$\sum_{i\in\textrm{sample}}\frac{g_i}{\pi_i}h_i\equiv\sum_i w_iR_ih_i=\sum_i h_i$$
+that constrain the adjusted weights $w_i=g_i/\pi_i$ 'the calibration constraints'.
+- On occasion, we may use $Y^*$ and $X^*$ for elements of $A$ that are versions of $Y$ and $X$ measured with error, because tradition. Obviously we won't use the stars to indicate multiple imputation when we do.
+
+The literature has not really made a consistent choice between $X$ and $Z$, though there is a tendency in measurement-error papers for $X$ to be the true predictor value, which fits our notation.  The distinction between $Z$ and $A$ is that $Z$ would be in the outcome model even if you had $X$ for everyone, and $A$ would not. In a classical measurement error approach, the mismeasured covariate would uninteresting if you had the true value, so it would be an $A$, not a $Z$.
+
+When $Y$ isn't measured on everyone (eg, $Y$ is measured with error on the whole cohort and accurately on the subsample), the imputation model doesn't have $Y$ on the RHS.
