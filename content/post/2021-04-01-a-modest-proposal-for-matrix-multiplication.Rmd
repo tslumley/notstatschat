@@ -1,0 +1,86 @@
+---
+title: A modest proposal for matrix multiplication
+author: Thomas Lumley
+date: '2021-04-01'
+slug: a-modest-proposal-for-matrix-multiplication
+categories: []
+tags: []
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tibble)
+library(dplyr)
+```
+
+
+Suppose you have a data frame containing a matrix.  On tidy principles, it should probably be stored with the values in one column, the row ids in another, and the column ids in another.   If you've got two matrices they could be in different data frames, or they could be in different rows of the same data frame, like this
+
+
+```{r}
+mat_mult <-function(.data, row, col,value, matrix_id){
+        .data %>%
+                distinct({{matrix_id}}) -> ids
+        .data %>% 
+                filter({{matrix_id}}==ids[[1]][1]) %>%
+                rename(.k={{col}}, a_value={{value}}) -> mat_a
+        .data %>% 
+                filter({{matrix_id}}==ids[[1]][2]) %>%
+          rename(.k={{row}}, b_value={{value}}) -> mat_b 
+
+        inner_join(mat_a, mat_b, by=".k") %>%
+                group_by({{row}}, {{col}})  %>%
+                summarise({{value}} := sum(a_value*b_value)) %>%
+                ungroup() %>% 
+                collect()
+       
+}
+```
+
+
+The connection between joins and matrix multiplication may be more natural if you've ever worked with tensors and the Einstein summation convention. The convention says that you leave implicit all the sums involved in tensor operations, and you just assume that when the same index is repeated, it's summed over.  So the formula
+$$(AB)_{ij} = \sum_k a_{ik}b_{kj}$$
+would be written as
+$$(AB)_{ij} = a_{ik}b_{kj}$$
+or (if you are being appropriately careful about index lowering and raising)
+$$(AB)^i_{j} = a^i_{k}b^k_j$$
+To evalute the expression on the RHS, join on all the repeated indices and then sum.
+
+#### Example
+
+From `?matmult`
+```{r}
+y <- diag(1:4)
+z <- matrix(1:12, ncol = 3, nrow = 4)
+y %*% z
+
+make_mat<-function(x, name){
+   tibble(.value=as.vector(x), 
+          .row=as.vector(row(x)),
+          .col=as.vector(col(x)),
+          .id=name
+          )
+}
+
+
+
+tidy_y<-make_mat(y,"yacht")
+tidy_y
+tidy_z<-make_mat(z,"zoo")
+bind_rows(tidy_y, tidy_z) %>% 
+        mat_mult(.row,.col,.value, .id) 
+```
+
+
+### Sparsity
+
+In addition to all the benefits you get because this is tidy, there are efficiency gains from sparsity.  In a sparse matrix, most of the entries are zero, and so you don't need to store them
+
+```{r}
+sparsify<-function(.data, value) {
+        .data %>% filter({{value}} !=0)
+}
+```
+
+The tidy matrix code *just works* with sparse matrices, with no changes except a speed increase and memory decrease. It will also work with matrices stored in a database, using `dbplyr`. 

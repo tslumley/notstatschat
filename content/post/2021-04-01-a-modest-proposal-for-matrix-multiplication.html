@@ -1,0 +1,106 @@
+---
+title: A modest proposal for matrix multiplication
+author: Thomas Lumley
+date: '2021-04-01'
+slug: a-modest-proposal-for-matrix-multiplication
+categories: []
+tags: []
+---
+
+
+
+<p>Suppose you have a data frame containing a matrix. On tidy principles, it should probably be stored with the values in one column, the row ids in another, and the column ids in another. If you’ve got two matrices they could be in different data frames, or they could be in different rows of the same data frame, like this</p>
+<pre class="r"><code>mat_mult &lt;-function(.data, row, col,value, matrix_id){
+        .data %&gt;%
+                distinct({{matrix_id}}) -&gt; ids
+        .data %&gt;% 
+                filter({{matrix_id}}==ids[[1]][1]) %&gt;%
+                rename(.k={{col}}, a_value={{value}}) -&gt; mat_a
+        .data %&gt;% 
+                filter({{matrix_id}}==ids[[1]][2]) %&gt;%
+          rename(.k={{row}}, b_value={{value}}) -&gt; mat_b 
+
+        inner_join(mat_a, mat_b, by=&quot;.k&quot;) %&gt;%
+                group_by({{row}}, {{col}})  %&gt;%
+                summarise({{value}} := sum(a_value*b_value)) %&gt;%
+                ungroup() %&gt;% 
+                collect()
+       
+}</code></pre>
+<p>The connection between joins and matrix multiplication may be more natural if you’ve ever worked with tensors and the Einstein summation convention. The convention says that you leave implicit all the sums involved in tensor operations, and you just assume that when the same index is repeated, it’s summed over. So the formula
+<span class="math display">\[(AB)_{ij} = \sum_k a_{ik}b_{kj}\]</span>
+would be written as
+<span class="math display">\[(AB)_{ij} = a_{ik}b_{kj}\]</span>
+or (if you are being appropriately careful about index lowering and raising)
+<span class="math display">\[(AB)^i_{j} = a^i_{k}b^k_j\]</span>
+To evalute the expression on the RHS, join on all the repeated indices and then sum.</p>
+<div id="example" class="section level4">
+<h4>Example</h4>
+<p>From <code>?matmult</code></p>
+<pre class="r"><code>y &lt;- diag(1:4)
+z &lt;- matrix(1:12, ncol = 3, nrow = 4)
+y %*% z</code></pre>
+<pre><code>##      [,1] [,2] [,3]
+## [1,]    1    5    9
+## [2,]    4   12   20
+## [3,]    9   21   33
+## [4,]   16   32   48</code></pre>
+<pre class="r"><code>make_mat&lt;-function(x, name){
+   tibble(.value=as.vector(x), 
+          .row=as.vector(row(x)),
+          .col=as.vector(col(x)),
+          .id=name
+          )
+}
+
+
+
+tidy_y&lt;-make_mat(y,&quot;yacht&quot;)
+tidy_y</code></pre>
+<pre><code>## # A tibble: 16 x 4
+##    .value  .row  .col .id  
+##     &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt;
+##  1      1     1     1 yacht
+##  2      0     2     1 yacht
+##  3      0     3     1 yacht
+##  4      0     4     1 yacht
+##  5      0     1     2 yacht
+##  6      2     2     2 yacht
+##  7      0     3     2 yacht
+##  8      0     4     2 yacht
+##  9      0     1     3 yacht
+## 10      0     2     3 yacht
+## 11      3     3     3 yacht
+## 12      0     4     3 yacht
+## 13      0     1     4 yacht
+## 14      0     2     4 yacht
+## 15      0     3     4 yacht
+## 16      4     4     4 yacht</code></pre>
+<pre class="r"><code>tidy_z&lt;-make_mat(z,&quot;zoo&quot;)
+bind_rows(tidy_y, tidy_z) %&gt;% 
+        mat_mult(.row,.col,.value, .id) </code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;.row&#39; (override with `.groups` argument)</code></pre>
+<pre><code>## # A tibble: 12 x 3
+##     .row  .col .value
+##    &lt;int&gt; &lt;int&gt;  &lt;int&gt;
+##  1     1     1      1
+##  2     1     2      5
+##  3     1     3      9
+##  4     2     1      4
+##  5     2     2     12
+##  6     2     3     20
+##  7     3     1      9
+##  8     3     2     21
+##  9     3     3     33
+## 10     4     1     16
+## 11     4     2     32
+## 12     4     3     48</code></pre>
+</div>
+<div id="sparsity" class="section level3">
+<h3>Sparsity</h3>
+<p>In addition to all the benefits you get because this is tidy, there are efficiency gains from sparsity. In a sparse matrix, most of the entries are zero, and so you don’t need to store them</p>
+<pre class="r"><code>sparsify&lt;-function(.data, value) {
+        .data %&gt;% filter({{value}} !=0)
+}</code></pre>
+<p>The tidy matrix code <em>just works</em> with sparse matrices, with no changes except a speed increase and memory decrease. It will also work with matrices stored in a database, using <code>dbplyr</code>.</p>
+</div>
