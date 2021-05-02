@@ -1,0 +1,16 @@
+---
+title: Generalisability, prediction, and causation
+author: ''
+date: '2021-05-02'
+slug: generalisability-prediction-and-causation
+categories: []
+tags: []
+---
+
+One of the big steps forward in statistics over the past few decades is the widespread appreciation that regression modelling for causal inference and predictive inference are different^[there's also purely descriptive regression modelling, and there's a nice paper I can't find right now on regression for process control, I think by Lindley].  In causal inference you choose your model so that one of the coefficients means what you want it to mean; in predictive inference you choose your model so that it predicts well, and you don't care about the interpretations of the coefficients. A relationship can provide reliable prediction without being causal.  For example, in the US, insurance companies sent me letters saying I could save money on car insurance by switching to them^[even though I didn't have a car or a drivers licence]. I called one of them and was told the letters were because I had a good credit score and this predicted low insurance risk.  A good credit score obviously does not *cause* low driving risk or low risk of theft, but that's not a problem if you're just using it to select potential victims.
+
+This actually isn't a good example, because the association between credit score and insurance risk probably is causal, and it wouldn't be useful to the insurance companies if it wasn't. It's not *directly* causal -- it's confounded by age and income and where you live and general level of risk aversion -- but the association exists *for reasons*.  If you drew an appropriate causal DAG and worked out the implied conditional independence relations, you would (I argue) find that the causal DAG says credit score would be associated with insurance risk conditional on other variables the insurance companies are able to measure on non-customers. And if you asked how someone originally came up with the idea, there's a good chance the motivation would have been an informal version of this causal argument rather than a chance observation of a correlation.  
+
+Causality is not important to prediction when the training set is a simple random sample of the data the model will be used on in production. In that case, the associations are whatever they are, and you can just estimate them.  It's pretty common, though, for a model to be used in prediction for *new* data not available at the time it was fitted -- either data measured at a later time or data from different target populations. Prediction requires at least some limited sort of generalisability, so if you're interested in prediction you should be interested in reasons for generalisability. The second-best reason for generalisability (after genuine probability sampling) is that the associations are the result of some causally stable relationships. You don't necessarily need to know [why](https://theconversation.com/red-sky-at-night-shepherds-delight-the-science-of-beautiful-sunsets-99598) *red sky at night is shepherd's delight* in order to use the relationship^[though knowing might stop you trying to use the rule in the tropics], but you should care that there *are* reasons. 
+
+
