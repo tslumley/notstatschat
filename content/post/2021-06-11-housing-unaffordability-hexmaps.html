@@ -1,0 +1,54 @@
+---
+title: Housing unaffordability hexmaps
+author: Thomas Lumley
+date: '2021-06-11'
+slug: housing-unaffordability-hexmaps
+categories: []
+tags: []
+---
+
+
+
+<p>A couple of days ago, Emma Vitz posted some depressing maps of NZ housing affordability <a href="https://twitter.com/EmmaVitz/status/1402503179086950402">on Twitter</a>. Here’s one of them
+<img src="/post/2021-06-11-housing-unaffordability-hexmaps_files/shortfall.jpeg" style="width:80.0%" /></p>
+<p>The map shows, for each NZ region, the difference between the median household income and the income required to buy the average house. ‘Income required’ is based on the recommendation to spend no more than 30% of your income on housing, together with assuming a 20% deposit and 4% mortage interest.</p>
+<p>I wanted to compare with hexmap versions. First, the data:</p>
+<pre class="r"><code>df&lt;-read.table(text=&quot;
+region  shortfall
+Northland -30936
+Auckland -66099
+&#39;Bay of Plenty&#39; -43337
+Waikato -33074
+Gisborne -34082
+Taranaki -9028
+&#39;Hawkes Bay&#39; -46322
+Manawatu-Wanganui -21039
+Wellington -29876
+Nelson -42493
+Tasman -46213
+Marlborough -31653
+&#39;West Coast&#39; 29027
+Canterbury 885
+Otago -34399
+Southland 17748
+&quot;, header=TRUE)</code></pre>
+<p>The hexmaps are created with the <code>DHBins</code> package</p>
+<pre class="r"><code>library(DHBins)</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>ggplot(df)+
+  geom_region(aes(map_id=region_fixname(region), 
+                  fill=shortfall),colour=&quot;grey&quot;)+
+  geom_label_region(short=TRUE,colour=&quot;black&quot;)+
+  scale_fill_distiller(type=&quot;div&quot;,palette=&quot;RdYlGn&quot;,direction=1,limits=c(-70000,70000))</code></pre>
+<p><img src="/post/2021-06-11-housing-unaffordability-hexmaps_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p><code>geom_region</code> does the layout of NZ regions and <code>geom_label_region</code> labels them. The explicit limits on the colour scale force zero to be in the middle of the diverging scale</p>
+<p>The hexmap is much less pretty than the real map. It’s less readable if you aren’t from New Zealand. The real map also shows more geographical detail, such as exactly where Canterbury splits from Otago or Otago from Southland. From another point of view, that’s the advantage of the hexmap: the data really are just a single average value per region, and don’t have all the geographic detail implied by the real map.</p>
+<p>Here’s another variation, avoiding a red:green colour scale and using the full region names, and with light gray outlines around the hexes:</p>
+<pre class="r"><code>ggplot(df)+
+    geom_region(aes(map_id=region_fixname(region),
+                    fill=shortfall),colour=&quot;grey&quot;)+
+  geom_label_region(short=FALSE,colour=&quot;grey10&quot;,size=2.5)+
+  scale_fill_distiller(type=&quot;div&quot;,palette=&quot;PuOr&quot;,
+                       direction=1,limits=c(-70000,70000),
+                       name=&quot;Income\nmargin/\nshortfall&quot;)</code></pre>
+<p><img src="/post/2021-06-11-housing-unaffordability-hexmaps_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
