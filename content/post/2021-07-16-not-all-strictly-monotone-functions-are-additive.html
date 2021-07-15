@@ -1,0 +1,25 @@
+---
+title: Not all strictly monotone functions are additive
+author: Thomas Lumley
+date: '2021-07-16'
+slug: not-all-strictly-monotone-functions-are-additive
+categories: []
+tags: []
+---
+
+
+
+<p><strong>Lemma</strong>: Suppose <span class="math inline">\(X_1,\dots,X_K\)</span> are bounded non-negative random variables, <span class="math inline">\(f_1,\dots, f_K\)</span> are bounded non-negative functions of the corresponding <span class="math inline">\(X_k\)</span>, and <span class="math inline">\(g(X_1,\dots,X_K)=\sum_{k=1}^K f_k(X_k)\)</span>. Write <span class="math inline">\({\cal G}\)</span> for the class of functions generated
+this way. Write <span class="math inline">\({\cal H}\)</span> for the classs of strictly monotone functions mapping the <span class="math inline">\(X_k\)</span> onto <span class="math inline">\([0,1]\)</span>. Then <span class="math inline">\({{\cal G}}\)</span> is not dense in <span class="math inline">\({\cal H}\)</span></p>
+<p><strong>Proof</strong> It’s obvious, innit.</p>
+<p>This post is actually a complaint about grading policies. When rating things there is increasing pressure to break the problem down into little pieces (two cheers for reductionism), assign points to each one (two cheers for maths), and then add them up. If we stipulate that you do want to attach numbers to lots of little subdomains, perhaps for transparency or reproducibility, it’s pretty clear that the overall number needs to be a strictly monotone function of all the components. It’s not at all obvious that it needs to be additive.</p>
+<p>In education, we have mastery grading, “an approach to student assessment in which student work is graded directly on whether it demonstrates mastery of a clear list of objectives.”<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> The student gets multiple attempts to demonstrate they understand a particular topic, and then can move on to the next topic. The grade is, conceptually, an AND of ORs: you need to get a passing grade on at least one attempt for every component. In practice it might be a sum of ORS. Forcing it to be additive defeats the purpose.</p>
+<p>In grant reviews at the Health Research Council we rate proposals on a set of domains: is the question important? is the study actually feasible? We should fund only proposals that rate high enough on important AND feasible: it doesn’t matter how good the science is if the budget or the NZ population isn’t enough to do the work.</p>
+<p>One advantage of additive rules is that it’s easier to implement them with off-the-shelf ‘learning management’ systems: software-driven policy. It’s also easier to pretend there are well-defined percentages assigned to each component – ‘pretend’, because it’s actually the variation in each component that drives its importance for the final grade.</p>
+<p>Stack-ranking is sometimes unavoidable, but we shouldn’t pretend that turning a partial order into a linear order can only be done one way.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>masterygrading.com<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
