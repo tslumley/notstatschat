@@ -1,0 +1,113 @@
+---
+title: What's new in the survey package
+author: Thomas Lumley
+date: '2021-07-20'
+slug: what-s-new-in-the-survey-package
+categories: []
+tags: []
+---
+
+
+
+<p>There’s a new version of the <code>survey</code> package on CRAN (yay!). A lot of it is minor or relatively esoteric fixes. There’s one big change, which will break some people’s code. The <code>svyquantile</code> function has been completely rewritten. You might naively think quantiles are easy, but they aren’t</p>
+<p>The <span class="math inline">\(p\)</span>th quantile is defined as the value where the estimated cumulative distribution function is equal to <span class="math inline">\(p\)</span>. As with quantiles in unweighted data, this definition only pins down the quantile to an interval between two observations, and a rule is needed to interpolate. As the help for the base R function  explains, even before considering sampling weights there are many possible rules (like all the ones base R adopted from Hyndman &amp; Fan’s <a href="https://www.jstor.org/stable/2684934">paper</a>).</p>
+<p>As a result of the rewrite, the format of the output is different. If you want the old output, the old function is available as <code>oldsvyquantile</code>. But the new one is better. There’s more information in the <code>qrule</code> vignette.</p>
+<p>The <code>svydesign</code> function is much faster for very large data sets with character strings for PSU and stratum identifiers (these got slower when R changed to <code>stringsAsFactors=FALSE</code>).</p>
+<p>Another important change is that <code>svyglm</code> handles negative residual degrees of freedom better. The design degrees of freedom for a survey are fairly well defined, but it’s less clear what happens to the residual df in a regression model. Subtracting a degree of freedom for each predictor is conservative (it would be correct if all the predictors were PSU-level). When the predictors are at the individual level it is quite possible to have more predictors than design degrees of freedom, so the residual df are negative. Previously, the <code>summary</code> method just lost it at the idea of negative df; now it gives parameter estimates and standard errors but no <span class="math inline">\(p\)</span>-values. If you know what residual df you want to use, you can supply it as an argument to <code>summary</code>.</p>
+<p>There’s a new convenience function <code>svybys</code>, which does stratified analyses by a list of variables one at a time (rather than jointly, as <code>svyby</code> does)</p>
+<p>Also, primarily for teaching, there’s a function <code>poisson_sampling()</code> to set up a design object with Poisson sampling</p>
+<p>The complete list of newness is</p>
+<pre><code>    svyquantile() has been COMPLETELY REWRITTEN. The old version is available
+    as oldsvyquantile() (for David Eduardo Jorquera Petersen)
+
+    svycontrast()&#39;s improvements for statistics with replicates are now also there with
+    svyby(), for domain comparisons (Robert Baskin)
+
+    svyttest() now gives an error message if the binary group variable isn&#39;t binary
+    (for StackOverflow 60930323)
+
+    confint.svyglm Wald-type intervals now correctly label the columns (eg 2.5%, 97.5%)
+    (for Molly Petersen)
+
+    svyolr() using linearisation had the wrong standard errors for intercepts
+    other than the first, if extracted using vcov (it was correct in summary() output)
+
+    svyglm() gave deffs that were too large by a factor of nrow(design). (Adrianne Bradford)
+
+    svycoxph() now warns if you try to use frailty or other penalised terms, because they
+    just come from calling coxph and I have no reason to believe they work correctly
+    in complex samples (for Claudia Rivera)
+
+    coef.svyglm() now has a complete= argument to match coef.default(). (for Thomas Leeper)
+
+    summary.svyglm() now gives NA p-values and a warning, rather than Inf standard errors,
+    when the residual df are zero or negative (for Dan Simpson and Lauren Kennedy)
+
+    In the multigroup case, svyranktest() now documents which elements of the &#39;htest&#39;
+    object have which parts of the result, because it&#39;s a bit weird (for Justin Allen)
+
+    svycontrast() gets a new argument add=TRUE to keep the old coefficients as well
+
+    twophase() can now take strata= arguments that are character, not just factor
+    or numeric. (for Pam Shaw)
+
+    add reference to Chen &amp; Lumley on tail probabilities for quadratic forms.
+
+    add reference to Breslow et al for calibrate()
+
+    add svyqqplot and svyqqmath for quantile-quantile plots
+
+    SE.svyby would grab confidence interval limits instead of SEs if vartype=c(&quot;ci&quot;,&quot;se&quot;).
+
+    svylogrank(method=&quot;small&quot;) was wrong (though method=&quot;score&quot; and method=&quot;large&quot; are ok),
+    because of problems in obtaining the at-risk matrix from coxph.detail. (for Zhiwen Yao)
+
+    added as.svrepdesign.svyimputationList and withReplicates.svyimputationList
+    (for Ángel Rodríguez Laso)
+
+    logLik.svyglm used to return the deviance and now divides it by -2
+
+    svybys() to make multiple tables by separate variables rather than a joint table
+    (for Hannah Evans)
+
+    added predictat= option to svypredmeans for Steven Johnston.
+
+    Fixed bug in postStratify.svyrep.design, was reweighting all reps the same (Steven Johnston)
+
+    Fix date for Thomas &amp; Rao (1987) (Neil Diamond)
+
+    Add svygofchisq() for one-sample chisquared goodness of fit (for Natalie Gallagher)
+
+    confint.svyglm(method=&quot;Wald&quot;) now uses t distribution with design df by default.
+    (for Ehsan Karim)
+
+    confint.svyglm() checks for zero/negative degrees of freedom
+
+
+    confint.svyglm() checks for zero/negative degrees of freedom
+
+    mrb bootstrap now doesn&#39;t throw an error when there&#39;s a single PSU in a stratum
+    (Steve White)
+
+    oldsvyquantile() bug with producing replicate-weight confidence intervals for
+    multiple quantiles (Ben Schneider)
+
+    regTermTest(,method=&quot;LRT&quot;) didn&#39;t work if the survey design object and model were
+    defined in a function (for Keiran Shao)
+
+    svyglm() has clearer error message when the subset= argument contains NAs (for Pam Shaw)
+    and when the weights contain NAs (for Paige Johnson)
+
+    regTermTest was dropping the first term for coxph() models (Adam Elder)
+
+    svydesign() is much faster for very large datasets with character ids or strata.
+
+    svyglm() now works with na.action=na.exclude (for Terry Therneau)
+
+    extractAIC.svylm does the design-based AIC for the two-parameter Gaussian model, so
+    estimating the variance parameter as well as the regression parameters.
+    (for Benmei Liu and Barry Graubard)
+
+    svydesign(, pps=poisson_sampling()) for Poisson sampling, and ppscov() for
+    specifying PPS design with weighted or unweighted covariance of sampling indicators
+    (for Claudia Rivera Rodriguez)</code></pre>
