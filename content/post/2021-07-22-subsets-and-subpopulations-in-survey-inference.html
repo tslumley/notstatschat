@@ -1,0 +1,76 @@
+---
+title: Subsets and subpopulations in survey inference
+author: Thomas Lumley
+date: '2021-07-22'
+slug: subsets-and-subpopulations-in-survey-inference
+categories: []
+tags: []
+---
+
+
+
+<p>A question I’ve now answered enough times that it’s worth turning into a blog post: when it is ok and not ok to take a subset of a probability sample?</p>
+<div id="it-matters" class="section level3">
+<h3>It matters</h3>
+<p>Let’s look at a simple example. We can use the <code>API</code> dataset built into the <code>survey</code> package to estimate the number of school students in California in the year 2000.</p>
+<pre class="r"><code>suppressMessages(library(survey))
+data(api)
+dclus1&lt;-svydesign(id=~dnum,weights=~pw, data=apiclus1, fpc=~fpc)
+svytotal(~enroll, dclus1)</code></pre>
+<pre><code>##          total     SE
+## enroll 3404940 932235</code></pre>
+<p>Suppose we wanted to estimate the number of students at high schools in California. We could trust the survey package</p>
+<pre class="r"><code>svytotal(~enroll, subset(dclus1, stype==&quot;H&quot;))</code></pre>
+<pre><code>##         total     SE
+## enroll 535595 226717</code></pre>
+<p>or we could look up in a textbook how subpopulation estimators are defined and so</p>
+<pre class="r"><code>svytotal(~I(enroll*(stype==&quot;H&quot;)),dclus1)</code></pre>
+<pre><code>##                             total     SE
+## I(enroll * (stype == &quot;H&quot;)) 535595 226717</code></pre>
+<p>or we might try just subsetting the data before creating the design object</p>
+<pre class="r"><code>apiclus1H&lt;-subset(apiclus1, stype==&quot;H&quot;)
+dclus1H&lt;-svydesign(id=~dnum,weights=~pw, data=apiclus1H, fpc=~fpc)
+svytotal(~enroll, dclus1H)</code></pre>
+<pre><code>##         total     SE
+## enroll 535595 190846</code></pre>
+<p>The first two are identical; the third has the same point estimate but an importantly different standard error. The standard error in the third one is wrong, because the description of the design is wrong. The design is actually a cluster sample of all the schools in 15 school districts, but the subset contains only the eight districts where there is at least one high school. We’re lying to R by telling it we have a sample of 8 school districts (which all have high schools) when we actually have a sample of 15 school districts (only 8 of which have high schools).</p>
+<p>Leaving out the zeroes matters because the definition of the standard error is in terms of hypothetical repetitions of the sample. These hypothetical repetitions of the actual sample would have 15 school districts, varying numbers of which would have high schools. The hypothetical repetitions of the incorrect sample would have 8 school districts, all of which would have high schools. The implied variability is different.</p>
+<p>Here I used totals, but basically everything else in survey statistics is estimated via totals, with standard errors estimated via the delta method.</p>
+</div>
+<div id="why-does-it-matter" class="section level3">
+<h3><strong>Why</strong> does it matter?</h3>
+<p>Suppose we want a total of a variable <span class="math inline">\(X\)</span>, and that we have strata and clusters at the first stage, treated as from an infinite population<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, and sampling weights for each individual. Write <span class="math inline">\(Z_{hi}\)</span> for the weighted sum <span class="math inline">\(\sum_j w_{hij} X_{hij}\)</span> over observations in stratum <span class="math inline">\(h\)</span> and cluster <span class="math inline">\(i\)</span>, and <span class="math inline">\(n_h\)</span> for the number of clusters sampling in stratum <span class="math inline">\(h\)</span>. The estimated variance of the estimated total is
+<span class="math display">\[\hat V = \sum_{h}\frac{n_h}{n_h-1}\sum_i (Z_{hi}-\bar Z_{h\cdot})^2\]</span>
+The correct design-based variance for a subpopulation total is obtained by setting the weights to zero outside the subpopulation. Equivalently, in our example it’s the total of a variable that is <code>enroll</code> for high schools and <code>0</code> for other schools. If a district has no high schools, it has <span class="math inline">\(Z_{hi}=0\)</span> and contributes a residual <span class="math inline">\(0-\bar Z_{h\cdot}\)</span>. If, instead, we subset before setting up the survey design, a district with no high schools does not contribute at all to the computation.</p>
+</div>
+<div id="when-doesnt-it-matter" class="section level3">
+<h3>When doesn’t it matter</h3>
+<p>There are two situations where it doesn’t matter whether you subset the data before setting up the survey information or set the weights to zero afterwards. We can see them both from the variance formula. The first is when your subpopulation is a stratum or set of strata. The variance formula is a simple sum across strata; different strata are basically independent samples from distinct subpopulations. It’s absolutely ok to subset the data based on strata.</p>
+<p>The second situation when it doesn’t matter is when your subpopulation appears in all the clusters, so that subsetting the data doesn’t make any clusters disappear from the sample. This is a more untidy situation, because it only exactly doesn’t matter for the simplified infinite-population variance formula. If you had the full Horvitz-Thompson variance computation taking all the population sizes into account, there would be some differences. So it’s a bit dodgy to subset this way before setting up the design information.</p>
+</div>
+<div id="bayesian-and-model-based-inference" class="section level3">
+<h3>Bayesian and model-based inference</h3>
+<p>If you are getting your uncertainty summaries purely from a generative model for the data rather than by considering the sampling, you obviously don’t need to care about this. Subsetting will typically affect your model for the data, but you knew that already.</p>
+</div>
+<div id="when-theres-a-completely-different-issue" class="section level3">
+<h3>When there’s a completely different issue</h3>
+<p>In some survey public use data sets there is more than one sample included in the file. NHANES, for example, has a clinical examination sample, but has smaller samples of people who do a dietary interview or have a blood sample taken. If you do an analysis that includes the dietary record data, you need to use the design information for that sample, not the design information for the larger sample who had a clinical examination. <a href="https://wwwn.cdc.gov/Nchs/Nhanes/2013-2014/DR1IFF_H.htm#Analytic_Notes">For example</a>,</p>
+<blockquote>
+<p>For NHANES 2013-2014, there were 14,332 persons selected; of these 9,813 were considered participants to the MEC examination and data collection. A total of 8,661 MEC participants provided complete dietary intakes for Day 1, and of those providing the Day 1 data, 7,574 provided complete dietary intakes for Day 2.</p>
+</blockquote>
+<p>There are separate sampling-weight variables, <code>WTMEC2YR</code> for the clinical-examination sample and <code>WTDRD1</code> for the dietary record sample.</p>
+<blockquote>
+<p>A set of weights (WTDRD1) is provided that should be used when an analysis uses the Day 1 dietary recall data (either alone or when Day 1 nutrient data are used in conjunction with MEC data). The set of weights (WTDRD1) is applicable to the 8,661 participants with Day 1 data. Day 1 weights were constructed by taking the MEC sample weights (WTMEC2YR) and further adjusting for (a) the additional non-response and (b) the differential allocation by weekdays (Monday through Thursday), Fridays, Saturdays and Sundays for the dietary intake data collection. These Day 1 weights are more variable than the MEC weights, and the sample size is smaller, so estimated standard errors using Day 1 data and Day 1 weights are larger than standard errors for similar estimates based on MEC weights.</p>
+</blockquote>
+<p>So, roughly 1200 rows in the data file are for people who are in the clinical examination sample but are not in the dietary record sample. When you set up design information for the dietary record sample, you need to omit these rows; they aren’t part of the sample. Operationally, you have to omit them because they have missing values for the sampling-weight variable <code>WTDRD1</code> and your software will complain if you try to include them.</p>
+</div>
+<div id="computers-eh" class="section level3">
+<h3>Computers, eh?</h3>
+<p>The issue is really a software issue. If you were doing this by hand, you wouldn’t get confused. A district with no high schools has zero high-school students, so <span class="math inline">\(Z_{hi}=0\)</span>. The problem comes with trying to describe your design to a computer. The computer thinks that the cluster identifiers it sees are all the ones there are, and so it does get confused. In principle, you could have a separate file specifying all the cluster identifiers, so you could drop records from the data set and the computer would know to put that many zeroes in the variance formula. That’s actually what R does,at least for relatively simple survey designs. The <code>subset</code> method for surveys drops the records that are not in the subpopulation (saving memory) but keeps track of how many sampling units it has discarded, and the variance computations put the zeroes back in. That’s only possible <em>after</em> you have told the computer the full survey design, so you need to do that first.</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>‘with replacement’, which is a terrible term for it<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
