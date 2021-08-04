@@ -1,0 +1,28 @@
+---
+title: Maintenance of Headway
+author: Thomas Lumley
+date: '2021-08-04'
+slug: maintenance-of-headway
+categories: []
+tags: []
+---
+
+The Twitter bus bot, @tuureiti, which I [wrote about before](https://notstatschat.rbind.io/2017/08/10/the-bus-bot/), is back!  
+It now has a new feature. In addition to showing a dot plot of bus delays, and a summary of the percentage on time, it summarises headway.  The details might change in the future^[comes with absolutely no warranty; uses data from Auckland Transport's live GTFS feed; may contain nuts], but this post describes what it does now. 
+
+*Headway* is the spacing between buses.  Maintenance of headway is [very important](https://en.wikipedia.org/wiki/The_Maintenance_of_Headway) in running a high-frequency bus route.  On a low-frequency route, it's important to keep to timetable: people will show up to catch the 7:18am bus and they will be upset if it left at 7:15 or if it doesn't arrive until 7:45.  On a high-frequency route, you don't make a calendar appointment to catch a bus; you just show up and wait.  If buses come every fifteen minutes and they're all ten minutes late, no-one except the drivers will care; the average waiting time is still 7.5 minutes and the maximum is 15. But if buses alternate between being ten minutes late and five minutes early, so two buses come at once, the average waiting time is 15 minutes and the maximum is 30. 
+
+Headway has a natural tendency to slip. As Flanders and Swann wrote about London buses *"We like to drive in convoys, we're most gregarious".*  When a bus gets late it will tend to see more passengers at each stop, and move more slowly; when it gets early it will see fewer passengers and move faster.  Sporadic slowing events such as transient traffic jams are more likely to fall in the longer interval ahead of the late bus than the shorter interval in front of the early bus. Combatting this tendency requires buses to wait for unnaturally long periods at empty stops, or to skip stops, practices that make passengers unhappy. 
+
+The current headway analysis does the following
+
+- For each bus route with at least four active buses
+      - find the self-reported delay for each buse
+      - sort the buses by stop number along the route (so, actual order rather than timetable order)
+      - compute the absolute value of the difference in delay for each interbus interval
+      - take the mean
+- Report the median and 90th percentile over routes
+
+These are in the tweet as "Typical headway slippage is `median` (gusting to `90th %ile`) based on `number of routes` routes". So, if the tweet says "4 minutes (gusting to 14) based on 40 routes", it means there were 40 routes with at least four visible active buses, and the median over those  40 routes of the mean absolute headway difference was 4 minutes, and the 90th percentile was 14 minutes. 
+
+A 4-minute headway slippage means you can expect to wait about two minutes longer; a 14 minute slippage means about 7 minutes longer wait. Auckland Transport does better than I expected on this scale -- long gaps between buses are annoying, and so you overestimate how often or how severe the problem is. 
