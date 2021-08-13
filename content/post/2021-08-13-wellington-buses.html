@@ -1,0 +1,36 @@
+---
+title: Wellington buses
+author: Thomas Lumley
+date: '2021-08-13'
+slug: wellington-buses
+categories: []
+tags: []
+---
+
+
+
+<p>When there are problems with public transport it’s much more salient than when things are going well, so I think it’s helpful to have consistent data available on what the problems actually are. For a few years, the bot <code>@tuureiti</code> has been tweeting status information about the Auckland bus network: number of buses, a graph of delays, and now a summary of headway. Now it’s Wellington’s turn. Wellington used to have an open but non-standard information feed. It now has <a href="https://opendata.metlink.org.nz/">a standard GTFS feed</a>. Yay!</p>
+<p>At the moment, the information is on webpages:</p>
+<ul>
+<li><a href="https://www.stat.auckland.ac.nz/~tlum005/buses/wlg.html">On-time summary</a> (like <code>@tuureiti</code>)</li>
+<li><a href="https://www.stat.auckland.ac.nz/~tlum005/buses/wellybus.html">Map</a></li>
+<li>List of <a href="https://www.stat.auckland.ac.nz/~tlum005/buses/cancels.html">cancellations</a></li>
+</ul>
+<p>The cancellation list is something I hadn’t done for Auckland, but just as the … idiosyncratic … punctuality data were a popular concern in Auckland, the cancellation rate seems to be a popular concern in Wellington (where punctuality is a lot better).</p>
+<p>Eventually, some of this information will be on twitter: the account <code>@head_ways</code> is waiting for Twitter approval to be used as a bot. For now, we’ve got the <code>head_ways</code> title on the webpages. The name comes partly from the importance of headway in public transport, and partly from the traditional description of the Wellington region as <em>Te Upoko o Te Ika a Maui</em>; the head of the fish of Maui.</p>
+<div id="everyone-gets-a-standard" class="section level3">
+<h3>Everyone gets a standard</h3>
+<p>The GTFS standard is not particularly constraining – different transit agencies have different data, so there are a lot of options. I had code for Auckland, but it didn’t quite just transfer to Wellington.</p>
+<p>The first difference was that the data had one less layer of nesting in Wellington. The list of bus updates that was <code>content(gtfs)[[2]][[2]]</code> in Auckland is just <code>content(gtfs)[[2]]</code> in Wellington. A more important difference is that Wellington does not include the <code>route_id</code> variable in the trip updates and location updates, just a <code>trip_id</code>. Working out which buses are on the same route (for headway) or finding the passenger-compatible route name requires joining to the static trips data. At one point I was having problems because the <code>trip_id</code> variable wasn’t (quite) the same in the real-time and static data. This problem seems to have gone away. Eddies in the space-time continuum?<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<p>Another difference that would have been more problematic in the other direction is that Auckland has some ‘stop departure’ and some ‘stop arrival’ updates; Wellington only seems to have stop arrival. Both cities have some updates that, per their timestamp, come from the future and some that come from implausibly far in the past; in Auckland this seems to systematically come from buses that have finished a route or that are yet to start.</p>
+</div>
+<div id="disclaimer" class="section level3">
+<h3>Disclaimer</h3>
+<p>The output relies on my code running, on the virtual machine it’s on running, on various disk mounts and internet proxies being up, and on Metlink’s GTFS feed. It could break at any time and not get fixed until I get around to it. My code could be wrong or I might have misinterpreted the GTFS data. Not intended to treat, cure, diagnose, or prevent any disease; may contain nuts.</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>obligatory sofa joke<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

@@ -1,0 +1,34 @@
+---
+title: Wellington buses
+author: Thomas Lumley
+date: '2021-08-13'
+slug: wellington-buses
+categories: []
+tags: []
+---
+
+When there are problems with public transport it's much more salient than when things are going well, so I think it's helpful to have consistent data available on what the problems actually are. For a few years, the bot `@tuureiti` has been tweeting status information about the Auckland bus network: number of buses, a graph of delays, and now a summary of headway. Now it's Wellington's turn. Wellington used to have an open but non-standard information feed. It now has [a standard GTFS feed](https://opendata.metlink.org.nz/). Yay!
+
+At the moment, the information is on webpages:
+
+- [On-time summary](https://www.stat.auckland.ac.nz/~tlum005/buses/wlg.html) (like `@tuureiti`)
+- [Map](https://www.stat.auckland.ac.nz/~tlum005/buses/wellybus.html)
+- List of [cancellations](https://www.stat.auckland.ac.nz/~tlum005/buses/cancels.html)
+
+The cancellation list is something I hadn't done for Auckland, but just as the ... idiosyncratic ... punctuality data were a popular concern in Auckland, the cancellation rate seems to be a popular concern in Wellington (where punctuality is a lot better).
+
+
+Eventually, some of this information will be on twitter: the account `@head_ways` is waiting for Twitter approval to be used as a bot. For now, we've got the `head_ways` title on the webpages. The name comes partly from the importance of headway in public transport, and partly from the traditional description of the Wellington region as *Te Upoko o Te Ika a Maui*; the head of the fish of Maui. 
+
+### Everyone gets a standard
+
+The GTFS standard is not particularly constraining -- different transit agencies have different data, so there are a lot of options. I had code for Auckland, but it didn't quite just transfer to Wellington.
+
+The first difference was that the data had one less layer of nesting in Wellington.  The list of bus updates that was `content(gtfs)[[2]][[2]]` in Auckland is just `content(gtfs)[[2]]` in Wellington.  A more important difference is that Wellington does not include the `route_id` variable in the trip updates and location updates, just a `trip_id`. Working out which buses are on the same route (for headway) or finding the passenger-compatible route name requires joining to the static trips data.  At one point I was having problems because the `trip_id` variable wasn't (quite) the same in the real-time and static data. This problem seems to have gone away. Eddies in the space-time continuum?^[obligatory sofa joke]
+
+Another difference that would have been more problematic in the other direction is that Auckland has some 'stop departure' and some 'stop arrival' updates; Wellington only seems to have stop arrival. Both cities have some updates that, per their timestamp, come from the future and some that come from implausibly far in the past; in Auckland this seems to systematically come from buses that have finished a route or that are yet to start. 
+
+
+### Disclaimer
+
+The output relies on my code running, on the virtual machine it's on running, on various disk mounts and internet proxies being up, and on Metlink's GTFS feed. It could break at any time and not get fixed until I get around to it. My code could be wrong or I might have misinterpreted the GTFS data. Not intended to treat, cure, diagnose, or prevent any disease; may contain nuts. 
