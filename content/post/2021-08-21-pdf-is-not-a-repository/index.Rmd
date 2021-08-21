@@ -13,7 +13,7 @@ The first example looks to be just wrong.  The data were on the failure times of
 
 The second example actually gave R code, which is a big step forward. There were two problems with it, though. Here's what the code looked like
 
-<img src="./index_files/codeshot.png" width="90%">
+![](/2021-08-21-pdf-is-not-a-repository/index_files/codeshot.png){width=90%}
 
 I spent quite a while trying to get this to work. One potential issue I thought of was numerical instability, so I simplified the log(power) terms and used `log1p` to handle the `log(1+)` terms. Weirdly, the result didn't change after some of my edits. 
 
