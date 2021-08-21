@@ -11,7 +11,7 @@ We're in Covid lockdown again in Auckland, and it's a weekend, so I happened to 
 
 The first example looks to be just wrong.  The data were on the failure times of fifty "components", not further specified; the distribution was a new modified half-logistic distribution with two extra shape parameters.  The person asking the question worked out the MLE, and I duplicated his answer and also worked it out a different way. We got the same result, with higher loglikelihood than the estimate in the paper. I suspected a typo in the data, but it matches the textbook it was taken from. Who knows -- or, really, cares? 
 
-The second example actually gave R code, which is a big step forward. There were two problems with it, though. Here's what the code looked like
+The second paper actually gave R code, which is a big step forward. There were two problems with it, though. Here's what the code looked like
 
 <img src="https://raw.githubusercontent.com/tslumley/notstatschat/master/content/post/2021-08-21-pdf-is-not-a-repository/index_files/codeshot.png" width="90%">
 
