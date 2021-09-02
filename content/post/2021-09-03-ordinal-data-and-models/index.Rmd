@@ -1,0 +1,44 @@
+---
+title: Ordinal data, metadata, and models
+author: Thomas Lumley
+date: '2021-09-03'
+slug: ordinal-data-and-models
+categories: []
+tags: []
+---
+
+Ok, this is another attempt at clarifying my thinking about what is and isn't problematic with ordinal data. 
+
+We have:
+
+- ordinal data, as a scale of measurement: data that has a finite (or, I suppose,  infinite) set of possible values and where the metadata specifies a linear ordering on the values but nothing more.
+- rank tests: tests that are functions only of the ranks of the observations in a dataset
+- ordinal models: genuine parametric or semiparametric models that imply an ordering (usually, but not necessarily a linear order) of values but not on any other constraints on the values.
+
+## Ordinal data
+
+There are two problems with ordinal data, or possibly two views of the same problem.  The mathematical problem is that a linear ordering on values does not extend uniquely to a linear order on distributions or data samples. The data science problem is that metadata should not specify only a linear ordering on values. 
+
+In both cases, the underlying problem is tradeoffs. Suppose we take the canonical Kiwi self-rated ordinal health scale, with values *"Above average" > "Average" > "A bit average" > "Pretty average" > "Pretty bloody average"*. If an intervention increases the number who feel a bit average or pretty average but reduces the number who feel pretty bloody average, has it helped?  The two distributions aren't orderable by the ordinal measurement scale of the individual observations. 
+
+Mathematically, it turns out that if you have some ordering on all empirical distributions (allowing for two distributions being indistinguishable, but not for them being unorderable), and the ordering is countably bounded, and continuous for some topology in which the space of distributions is pathwise connected, then you can assign a single real number to each distribution so that the ordering of the distributions is the same as the ordering of the numbers.^[actually more than that; the order topology is the same] That is, if there's an ordering of possible data distributions that's self-consistent, it depends on the data only through some one-number summary. Pairwise orderings (such as the Wilcoxon/Mann-Whitney ordering) that don't depend on a one-number summary of each distribution aren't *transitive*; they aren't consistent with *any* ordering of all distributions.
+
+In a sense, that should be obvious, and the only difficulty is finding the right mathematical sanity conditions to prove it. If you have a way to order all possible data distributions, you *ipso facto* have *some* way to handle the tradeoffs when part of the  distribution is better and part is worse. That leads to the data science part of the problem.  If you have some way to make decisions about which set of outcomes is better, you have necessarily taken a position on the tradeoffs between a lot of people feeling "a bit average" and a few feeling "pretty bloody average". If you have done this automathically, with no information on actual relative severity of the levels, your analysis is bad and you should feel bad. Yes, it's *hard* to decide how to evaluate those tradeoffs. Yes, the information is probably subjective and possibly unreliable. And yes, you could reasonably just refuse to evaluate those tradeoffs and force the decision back to the domain experts. What you can't do is sweep the tradeoffs under the carpet and pretend that maths made them go away. 
+
+## Rank tests
+
+The issue with rank tests is their use as a statistical garbage disposal for data where someone feels uncomfortable about the shape of a distribution. 
+
+There's no real problem with them^[ok, there are several, but not for today's purposes] when domain considerations make it clear you will have stochastic ordering of two distributions.  For example, if you use Science to put green glowing stuff into parts of a zebrafish embryo^[I'm not making this up, except that it actually only glows under blue or UV light] and compare the amount of green glowing stuff in those embryos and in controls, it's pretty plausible that the amount can only go up. The null hypothesis of "basically the same" and the alternative of "more in the treatment group" fit with the null of the same distribution and the alternative of stochastic ordering that make rank tests work. Wilcoxon was a chemist, so it would be natural for him to think in terms of this sort of alternative. The example in the [paper](https://www.jstor.org/stable/3001968) where he proposed the test was comparing two fly sprays in terms of percentage of flies killed, where stochastic ordering makes perfect sense. 
+
+On the other hand, if you have two samples and decide to compare them using a Wilcoxon/Mann-Whitney rank test because their distributions are icky and you don't want to make assumptions, you will get an ordering of the two distributions regardless of whether it makes any sense. If you have an exposure that makes the outcome go up for some individuals and down for others, the Wilcoxon test will pick one of those as more important. Its choice will give more per-observation weight to common values of the outcome than rare ones, which I would guess has less than a even-money chance of being the right weighting.
+
+## Ordinal models
+
+Assuming that a set of ordinal distributions is stochastically ordered is a mathematically strong assumption, but it's not necessarily an unreasonable one.  There are perfectly sensible generative models, well-motivated in some applications, that give rise to stochastically ordered families of distributions. Under these models you don't need to worry about evaluating tradeoffs because there aren't any.  If two empirical CDFs cross, it's just a small-sample issue; the underlying CDFs don't. 
+
+It probably does matter whether the stochastic ordering assumption is *true*, at least approximately. Even quite badly misspecified models for means seem to estimate some sort of average contrast in means reasonably well, and I think that's because differences in mean are estimable separately from any assumptions about distributions^[Yes, I have heard of the Cauchy distribution; no, I'm not worried] in a way that Mann-Whitney-type contrasts aren't.
+
+## Assumptions
+
+A common thread here is assumptions. People will often say or imply that ordinal analyses of data make weaker assumptions. They really don't. If you are unable or unwilling to evaluate tradeoffs between levels of a variable, you need to assume either that there are no such tradeoffs or that it doesn't matter how they are made. This can be a reasonable assumption, but it's quite a strong one -- and it's the *opposite* of how people often think of ordinal data. 
