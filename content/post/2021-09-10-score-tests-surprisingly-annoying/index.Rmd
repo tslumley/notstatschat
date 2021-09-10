@@ -1,0 +1,30 @@
+---
+title: 'Score tests: surprisingly annoying'
+author: Thomas Lumley
+date: '2021-09-10'
+slug: score-tests-surprisingly-annoying
+categories: []
+tags: []
+---
+
+I've just been adding score tests for generalised linear models to the `survey` package. The folklore on score tests is that they're computationally easy because you only need to fit the restricted model, not the full model. This... turns out not to be the case.
+
+It's true in some settings that score tests are easy. The big example is when the null model really is a null model and, eg, you get the Wilcoxon rank test instead of having to go and fit a proportional odds model, or when the score test in a bunch of different generalised linear models reduce to the same covariance statistic. 
+
+It's not so true for comparing two survey generalised linear models, in the modern world.  The computational effort for fitting the full model is pretty minor, but constructing a design matrix is pain. What's even more of a pain is checking for linear dependencies between the design matrix for the restricted model and the full model. That takes almost as much computational work as fitting the full model -- and probably more computational bookkeeping.
+
+Part of the problem is that the rank of a matrix is not nearly as well-defined as some linear algebra textbooks would like you to believe, 
+
+> *Inigo Montoya : He's dead. He can't talk.*
+
+> *Miracle Max : Whoo-hoo-hoo, look who knows so much. It just so happens that your friend here is only MOSTLY dead. There's a big difference between mostly dead and all dead. Mostly dead is slightly alive. With all dead, well, with all dead there's usually only one thing you can do.*
+
+If $X$ is a rank-deficient matrix, there are matrices $\tilde X$ arbitrarily close to $X$ of full rank. With finite-precision arithmetic a matrix can't really be rank-deficient; the residuals for a new column can't be zero, it can only be MOSTLY zero and slightly non-zero. This is annoying. 
+
+In some cases you can manage all this stuff symbolically. In my book, I used the term *symbolically nested*, which I'm surprised to find I may have coined.  Two models are symbolically nested if you can tell they are nested just by looking at the model formula. The models `~Age+Sex` and `~Age*Sex` are symbolically nested, but `~Age+Sex` and `~AgeGroup+Sex` are not, because you'd need to know the definitions of the variables `Age` and `AgeGroup` to tell.  When the two models are symbolically nested you can just write down which bits of the full model matrix are linearly independent of the restricted model matrix. When they aren't; you can't -- you need to do numerically-unstable linear algebra. 
+
+The theory for score tests in survey generalised linear models comes from Rao, Scott, and Skinner [(JSTOR)](https://www.jstor.org/stable/24306524]) The score test for a single parameter is fairly straightforward. For multiple parameters there are choices. You can weight the parameter estimates using the inverse of their covariance matrix (as Gauss would want). That's a bit unstable, because the covariance matrix is not very well estimated.  You could also follow Rao and Scott (same Rao, different paper) and weight according to the population Fisher information matrix.  That's better estimated, and it also doesn't depend on the actual survey design. For tests of independence in contingency tables we know the Rao--Scott tests are better behaved, and everyone seems to use them. Keiran Shao is currently looking at the empirical performance of these tests and a bunch of others in glms. 
+
+Anyway, we now have `svyscoretest`, which does both sorts of score test and allows you either to drop terms from a given model or to add terms to it. There's an example taken from the Rao, Scott, and Skinner paper.^[Ahem. Modified from the Rao, Scott, and Skinner problem, because there's a typo in their data table. Back in 1998, putting the data in a table in the paper was best practice; today we'd want the data file that the authors *actually used*] It seems to work, though I'll be checking it a bit more before release.
+
+
