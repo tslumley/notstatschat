@@ -1,0 +1,132 @@
+---
+title: Is it binary?
+author: Package Build
+date: '2021-11-10'
+slug: is-it-binary
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>As part of adding <a href="https://notstatschat.rbind.io/2021/09/18/crossed-clustering-and-parallel-invention/">crossed correlations</a> (and other sparse correlation) to the <code>survey</code> package, I was writing code to test whether a user-supplied adjacency matrix had only 0 and 1 values. Since this is just a validity test for a user-supplied argument, it will usually pass and needs to pass as fast as possible. How fast it fails is less important. Also, since the <code>survey</code> package is pure R, it needs to be pure R.</p>
+<p>For a <code>matrix</code> object, the obvious solution is <code>all(m %in% c(0,1))</code>, but these are going to be potentially large matrices that are mostly zero, so supporting sparse <code>Matrix</code> objects is important. These store the non-zero elements of the matrix, with a couple of integer vectors to indicate which elements those are. Converting a sparse <code>Matrix</code> object to a traditional <code>matrix</code> will force all the implicit zeroes to be filled in, making the object much larger</p>
+<p>If <code>m</code> is a sparse <code>Matrix</code> object, <code>all(m %in% c(0,1))</code> will be inefficient. It also won’t work, because <code>%in%</code> doesn’t have a method for these objects, but <code>all(as.matrix(m) %in% c(0,1))</code> will work and be inefficient. There are two sorts of strategies. One is to do something clever with the properties of binary matrices to get an efficient solution, the other is to open up the object and work with however it stores the non-zero elements. There’s actually also a third class of strategy worth considering: brute force and ignorance.</p>
+<p>I’m going to work with two examples here. One is a plausible size for a large set of measurements. The other is a plausible size for a large set of <em>pairs</em> of measurements (and so is bigger). They are both block diagonal. The first one has 500 blocks of size <span class="math inline">\(10\times 10\)</span>; the second has 320 blocks of size <span class="math inline">\(100\times 100\)</span></p>
+<pre class="r"><code>library(Matrix)
+m0&lt;-bdiag(lapply(1:500, function(i) matrix(1L,10,10) ))
+## number of elements
+prod(dim(m0))</code></pre>
+<pre><code>## [1] 2.5e+07</code></pre>
+<pre class="r"><code>## size
+object.size(m0)</code></pre>
+<pre><code>## 621504 bytes</code></pre>
+<pre class="r"><code>m1&lt;-bdiag(lapply(1:320, function(i) matrix(1,100,100) ))
+## number of elements
+prod(dim(m1))</code></pre>
+<pre><code>## [1] 1.024e+09</code></pre>
+<pre class="r"><code>## size
+object.size(m1)</code></pre>
+<pre><code>## 38529504 bytes</code></pre>
+<p>On my home computer, <code>as.matrix(m1)</code> is a bit too big to fit in memory, but <code>as.matrix(m0)</code> fits easily. In sparse form, the first matrix uses about 0.025 bytes per element and the second uses about 0.04 bytes per element. They’d use about 8 bytes per element (plus a small amount of overhead) as <code>matrix</code> objects</p>
+<div id="clever-matrix-ideas" class="section level3">
+<h3>Clever matrix ideas</h3>
+<p>Peter Dalgaard and either CT Bergstrom or Jevin West (<code>@callin_bull</code>) suggested <span class="math inline">\(M\cdot M-M=0\)</span> as an identity satisfied by binary matrices. This has potential, because the elementwise product and subtracting and testing might all be done on the sparse representation. On the other hand, the subtraction operator might not realise <span class="math inline">\(M\cdot M\)</span> and <span class="math inline">\(M\)</span> have the same sparsity pattern, so the implementation could be unnecessarily slow. On top of that, the final check against zero could be slow.</p>
+<pre class="r"><code>system.time(z0&lt;-m0*m0-m0)</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.005   0.000   0.006</code></pre>
+<pre class="r"><code>system.time(all(z0==0))</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.172   0.038   0.222</code></pre>
+<pre class="r"><code>system.time(z1&lt;-m1*m1-m1)</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.402   0.068   0.481</code></pre>
+<pre class="r"><code>system.time(all(z1==0))</code></pre>
+<pre><code>##    user  system elapsed 
+##   5.309   2.942  10.920</code></pre>
+<p>It turns out that the test vs zero (<code>z1==0</code>) creates a dense logical matrix, which I wasn’t expecting. However, <code>identical</code> seems to work efficiently</p>
+<pre class="r"><code>system.time(identical(m0*m0,m0))</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.003   0.001   0.003</code></pre>
+<pre class="r"><code>system.time(identical(m1*m1,m1))</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.193   0.032   0.233</code></pre>
+<p>On the other hand, using <code>identical</code> is a bit fragile, because any additional attributes will make it fail</p>
+<pre class="r"><code>m2&lt;-m0
+attr(m2,&quot;trombones&quot;)&lt;-76
+identical(m2*m2,m2)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+</div>
+<div id="using-the-internal-representation" class="section level3">
+<h3>Using the internal representation</h3>
+<p>In the comic fantasy novel <em>One for the Morning Glory</em>, there’s a reference to a book <em>Highly Unpleasant Things it is Sometimes Necessary to Know</em>. The internal representation of other people’s objects falls into this category. In contrast to a lot of other programming languages, R doesn’t actually stop you from meddling with these internals, it just trusts you to know when to stop.</p>
+<p>Fortunately, the <code>Matrix</code> class was designed to be infrastructure for other people’s code, and sparse matrices are established technology, so it’s pretty stable and well documented. The non-zero elements of the matrix<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> are stored in the <code>x</code> slot. So</p>
+<pre class="r"><code>system.time(all(m0@x %in% c(0,1)))</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.000   0.001   0.000</code></pre>
+<pre class="r"><code>system.time(all(m1@x %in% c(0,1)))</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.019   0.002   0.021</code></pre>
+<p>There are slightly faster ways of testing whether all the non-zero entries are 0 or 1. Gabe Becker suggested</p>
+<pre class="r"><code>system.time(
+length(setdiff(unique(m0@x), c(0, 1)))
+)</code></pre>
+<pre><code>##    user  system elapsed 
+##       0       0       0</code></pre>
+<pre class="r"><code>system.time(
+length(setdiff(unique(m1@x), c(0, 1))) 
+)</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.020   0.002   0.022</code></pre>
+<p>This microbenchmarks to be faster, but not so as you’d notice. Also, from Michael T Young</p>
+<pre class="r"><code>system.time({
+n_zero &lt;- length(m0) - nnzero(m0) 
+n_zero == length(m0) || n_zero + sum(m0@x == 1L) == length(m0)
+})</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.001   0.000   0.002</code></pre>
+<pre class="r"><code>system.time({
+n_zero &lt;- length(m1) - nnzero(m1) 
+n_zero == length(m1) || n_zero + sum(m1@x == 1L) == length(m1)
+})</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.012   0.001   0.013</code></pre>
+<p>which is faster for the large example and maybe slower for the small one<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
+</div>
+<div id="brute-force-and-ignorance" class="section level3">
+<h3>Brute force and ignorance</h3>
+<p>Computers have gotten faster over the years<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>, and it’s surprising how often a brute force solution to a problem is now feasible.</p>
+<p>In this example</p>
+<pre class="r"><code>system.time(all(as.vector(m0) %in% c(0,1)))</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.156   0.041   0.197</code></pre>
+<p>That’s <em>relatively</em> slow, but it’s about a third of a second. We could live with it.</p>
+<p>For a submatrix of 1/4 of the bigger example it’s still a bit too slow</p>
+<pre class="r"><code>system.time(all(as.vector(m1[1:16000,1:16000]) %in% c(0,1)))</code></pre>
+<pre><code>##    user  system elapsed 
+##   1.866   1.200   4.028</code></pre>
+</div>
+<div id="decisions" class="section level3">
+<h3>Decisions</h3>
+<p>I like the <code>identical</code> solution that doesn’t use the matrix internals, and I … appreciate… Michael Young’s solution, but in the end I went with something less fragile than the former and easier to understand than the latter</p>
+<pre><code>is.binary&lt;-function(object) {
+
+    if (is.matrix(object)){
+       all(object %in% c(0,1))
+    } else if (inherits(object, &quot;lMatrix&quot;) || inherits(object,&quot;nMatrix&quot;)){
+        TRUE
+    } else{
+        all(object@x %in% c(0,1))
+    }
+}</code></pre>
+<p>The middle check is for two <code>Matrix</code> classes that are always binary: a logical matrix and a 0/1 ‘pattern matrix’</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>some of which may actually be zero, pro tip<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>though not so as you’d actually notice<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>[citation needed]<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
