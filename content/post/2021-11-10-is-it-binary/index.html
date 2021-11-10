@@ -38,21 +38,21 @@ object.size(m1)</code></pre>
 ##   0.005   0.000   0.006</code></pre>
 <pre class="r"><code>system.time(all(z0==0))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.172   0.038   0.222</code></pre>
+##   0.175   0.032   0.216</code></pre>
 <pre class="r"><code>system.time(z1&lt;-m1*m1-m1)</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.402   0.068   0.481</code></pre>
+##   0.398   0.066   0.498</code></pre>
 <pre class="r"><code>system.time(all(z1==0))</code></pre>
 <pre><code>##    user  system elapsed 
-##   5.309   2.942  10.920</code></pre>
-<p>It turns out that the test vs zero (<code>z1==0</code>) creates a dense logical matrix, which I wasn’t expecting. However, <code>identical</code> seems to work efficiently</p>
+##   5.139   2.649   9.628</code></pre>
+<p>It turns out that the test vs zero (<code>z1==0</code>) creates a dense logical matrix, which I wasn’t expecting. However, <code>identical</code> seems to work efficiently:</p>
 <pre class="r"><code>system.time(identical(m0*m0,m0))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.003   0.001   0.003</code></pre>
+##   0.003   0.001   0.004</code></pre>
 <pre class="r"><code>system.time(identical(m1*m1,m1))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.193   0.032   0.233</code></pre>
-<p>On the other hand, using <code>identical</code> is a bit fragile, because any additional attributes will make it fail</p>
+##   0.192   0.036   0.235</code></pre>
+<p>On the other hand, using <code>identical</code> is a bit fragile, because any additional attributes will make it fail:</p>
 <pre class="r"><code>m2&lt;-m0
 attr(m2,&quot;trombones&quot;)&lt;-76
 identical(m2*m2,m2)</code></pre>
@@ -64,7 +64,7 @@ identical(m2*m2,m2)</code></pre>
 <p>Fortunately, the <code>Matrix</code> class was designed to be infrastructure for other people’s code, and sparse matrices are established technology, so it’s pretty stable and well documented. The non-zero elements of the matrix<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> are stored in the <code>x</code> slot. So</p>
 <pre class="r"><code>system.time(all(m0@x %in% c(0,1)))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.000   0.001   0.000</code></pre>
+##       0       0       0</code></pre>
 <pre class="r"><code>system.time(all(m1@x %in% c(0,1)))</code></pre>
 <pre><code>##    user  system elapsed 
 ##   0.019   0.002   0.021</code></pre>
@@ -73,19 +73,19 @@ identical(m2*m2,m2)</code></pre>
 length(setdiff(unique(m0@x), c(0, 1)))
 )</code></pre>
 <pre><code>##    user  system elapsed 
-##       0       0       0</code></pre>
+##   0.001   0.000   0.001</code></pre>
 <pre class="r"><code>system.time(
 length(setdiff(unique(m1@x), c(0, 1))) 
 )</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.020   0.002   0.022</code></pre>
+##   0.020   0.003   0.022</code></pre>
 <p>This microbenchmarks to be faster, but not so as you’d notice. Also, from Michael T Young</p>
 <pre class="r"><code>system.time({
 n_zero &lt;- length(m0) - nnzero(m0) 
 n_zero == length(m0) || n_zero + sum(m0@x == 1L) == length(m0)
 })</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.001   0.000   0.002</code></pre>
+##   0.000   0.000   0.002</code></pre>
 <pre class="r"><code>system.time({
 n_zero &lt;- length(m1) - nnzero(m1) 
 n_zero == length(m1) || n_zero + sum(m1@x == 1L) == length(m1)
@@ -100,12 +100,12 @@ n_zero == length(m1) || n_zero + sum(m1@x == 1L) == length(m1)
 <p>In this example</p>
 <pre class="r"><code>system.time(all(as.vector(m0) %in% c(0,1)))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.156   0.041   0.197</code></pre>
+##   0.155   0.042   0.198</code></pre>
 <p>That’s <em>relatively</em> slow, but it’s about a third of a second. We could live with it.</p>
 <p>For a submatrix of 1/4 of the bigger example it’s still a bit too slow</p>
 <pre class="r"><code>system.time(all(as.vector(m1[1:16000,1:16000]) %in% c(0,1)))</code></pre>
 <pre><code>##    user  system elapsed 
-##   1.866   1.200   4.028</code></pre>
+##   1.856   1.012   3.496</code></pre>
 </div>
 <div id="decisions" class="section level3">
 <h3>Decisions</h3>
