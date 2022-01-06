@@ -1,0 +1,28 @@
+---
+title: Optimal design for raking/AIPW estimation
+author: Thomas Lumley
+date: '2022-01-07'
+slug: optimal-design-for-raking-aipw-estimation
+categories: []
+tags: []
+---
+
+The second paper from Tong Chen's PhD thesis with me has just been published at [*Statistics in Medicine*](https://onlinelibrary.wiley.com/doi/10.1002/sim.9300). First, here's what an AI thinks of it:
+
+![](images/Dream_TradingCard.jpg){width=60%}
+
+As I mentioned [back here](https://notstatschat.rbind.io/2019/01/26/two-quick-survey-items/), you can work out the optimal stratum allocations for the inverse-probability-weighted (IPW) version of any^[regular asymptotically linear] estimator by using the classical "Neyman Allocation" formula on the influence functions of the estimator. The estimator is the approximately sum of its influence functions (which is what influence functions are *for*), and Neyman allocation for optimal estimation of sums.
+
+That's all fine, and we've [used it in a fairly large example](https://arxiv.org/abs/2109.14001).  The problem is that we don't actually use IPW estimation; we [Use The Whole Cohort](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2768499/). That is, to fit a model $Y|Z,X$ to the subsample we take advantage of $Y,Z$ and auxiliary variables $A$ available on the whole cohort/population. Survey people call this calibration or generalised raking; biostatisticians call it AIPW estimation. 
+
+Raking is always^[well, always asymptotically] going to reduce standard errors compared to not using the auxiliary information. This is good. But that means optimising the design for IPW estimation isn't necessarily going to optimise it for raking estimation. This is bad. 
+
+We can still use Neyman allocation; we just need to replace the standard deviation of the influence functions with the conditional standard errors given the auxiliary information^[strictly, variance of residuals from a linear projection, not conditional variance]. This is good. The problem is that we don't know the conditional standard errors and there's no obvious way to estimate them from data. This is bad.
+
+This doesn't seem to have a nice tidy solution, but we looked at various examples with a mixture of simulation and analysis and found
+
+- the optimal raking design is often quite different from the optimal IPW design in terms of stratum allocation 
+- however, optimal raking design typically had very similar efficiency for the raking estimator to the optimal IPW design
+- you need to work quite hard to come up with a scenario where optimising the design for the IPW estimator does badly
+
+So, it looks like optimising the design for the IPW estimator then doing raking/AIPW for the analysis actually does pretty well, which is good because that's something we can usefully approximate. 
