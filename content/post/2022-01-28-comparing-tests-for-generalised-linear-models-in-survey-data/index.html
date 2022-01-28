@@ -1,0 +1,26 @@
+---
+title: Comparing tests for generalised linear models in survey data
+author: Thomas Lumley
+date: '2022-01-28'
+slug: comparing-tests-for-generalised-linear-models-in-survey-data
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>In ordinary statistics, there are three popular types of model-based tests: score tests, Wald tests, and likelihood ratio tests. They agree pretty well; they are <em>locally asymptotically equivalent</em>; the picture is <a href="https://notstatschat.rbind.io/2019/06/20/wald-score-lrt-the-picture/">here</a>.</p>
+<p>In survey data, things get more complicated because you’re not actually fitting by maximum likelihood. There are two branches to testing</p>
+<ul>
+<li>‘working model’ tests, where you take the test statistic you would use under iid sampling and compute its actual distribution under the null hypothesis that the population data generating process satisfies the null hypothesis. In the survey literature these are well known for loglinear models, where they are called Rao-Scott tests, after J.N.K. Rao and the late Alastair Scott. Alastair and I extended them to a wider class of models including generalised linear models.</li>
+<li>tests that don’t have a good name based on taking the denominator of the test statistic and standardising it by a consistent estimator of its variance</li>
+</ul>
+<p>The ‘working’ or ‘Rao-Scott’ tests are asymptotically equivalent to each other. The null distribution for a single parameter is a multiple of <span class="math inline">\(\chi^2_1\)</span>, but for multi-parameter tests it’s a linear combination of <span class="math inline">\(\chi^2_1\)</span> and not (in general) a <span class="math inline">\(\chi^2_p\)</span>. <a href="https://notstatschat.rbind.io/2017/12/06/how-to-add-chi-squareds/">We can handle this</a>. There are Wald, score, and likelihood ratio tests, though the Wald tests haven’t historically been used much.</p>
+<p>The other tests have <span class="math inline">\(\chi^2_p\)</span> distributions, so that’s easy. There are Wald and score tests, but not likelihood ratio tests.</p>
+<p>So we have five tests. Actually, we have ten tests, because we can put in an <em>ad-hoc</em>-but-I’m-not-apologising denominator degrees of freedom and get an F test.
+Kuiyan Shao did a dissertation project with me comparing all these tests. We found that the working (Rao-Scott) tests control Type I error better than the others, and that the F test is helpful. I was a bit surprised that the working Wald test did as well as it did – the statistical folklore is that score and likelihood ratio tests do better than Wald-type tests.</p>
+<p>Interestingly, the other tests, especially the Wald-type test, had better power than the working (Rao-Scott) tests, at honest level. That can’t be <em>uniformly</em> true, but we weren’t trying to rig it and that’s what we saw.</p>
+<p>The Rao-Scott-type tests weight different directions of departure from the null according to their precision in the population and the other tests weight according to the precision in the sample. The advantage of the Rao-Scott-type tests is, thus, that the weighting of different directions doesn’t depend on the survey design; the disadvantage is that the weighting of different directions doesn’t depend on the survey designs. You could easily imagine that weighting according to precision in the sample would tend to be more powerful, I suppose.</p>
+<p>In practice, the fact that the other tests (especially the Wald-type test) do not accurately control their Type I error makes it harder to take advantage of any increase in power. You can’t easily tell how much the low <span class="math inline">\(p\)</span>-value you see is due to departure from the null and how much is due to the test being poorly calibrated.</p>
+<p>Anyway, <code>survey::regTermTest</code> does both sorts of Wald test and the Rao-Scott LRT, and in the next version of the package <code>svyscoretest</code> will do both sorts of score tests. And maybe we’ll get around to publishing an actual paper on Kuiyan’s Honours project.</p>
