@@ -1,0 +1,33 @@
+---
+title: Nine and sixty ways
+author: Thomas Lumley
+date: '2022-02-20'
+slug: relevant-asymptotics
+categories: []
+tags: []
+---
+
+*Attention Conservation Notice: there's not actually anything new here*
+
+A few years ago, in a (mostly positive) review of Proschan & Shaw's *Essentials of Probability Theory for Statisticians*, I wrote
+
+> *As some statistics students notice, there’s a bit of a bait-and-switch when we talk about rigor for statistics but then prove theorems about infinite sequences of real-valued random variables. Actual random variables are available for only one $n$ in the infinite sequence, and are discrete and bounded. There’s room for a careful discussion of why it’s useful to consider infinite sequences, and how there are choices when setting up an asymptotic context that need to be made sensibly in order for the infinite limits to be relevant.*
+
+In particular, I think it's important to have examples showing there are choices in setting up an infinite sequence and that these aren't more or less correct; they're more or less helpful.  The goal in setting up an infinite sequence is to simplify a mathematical argument by letting you ignore terms that you can reasonably hope will be small, either in mathematical analysis or in setting up simulations. Choosing a particular infinite sequence means choosing particular sets of terms to ignore. 
+
+One example that just came up was test statistics for randomised trials, especially response-adaptive randomisation.  In real life^[imaginary real life] you have, say, a trial with a risk ratio of 0.7 between the treatments, a sample size of 1000, and 90% power for detecting that risk ratio.  If you want to study the asymptotic distribution of a test statistic you could set up an infinite sequence of trials with sample sizes $n$ in two obvious ways
+
+a. Fix the risk ratio at 0.7 and let the power go to 1
+b. Fix the power at 90% and let the risk ratio go to 1
+
+Neither of these is *wrong*, but I think (b) is more useful.  In real life, one of the primary facts about clinical trials is that they're barely large enough at best.  It's economically impractical and arguably unethical to make them much larger than they need to be. If your infinite mathematical abstraction of a clinical trial misses out on this critical fact, it's not a good abstraction 
+
+In other settings the context may be different.  Maybe you have Big Data^[characterised, we're told, by the 5 "V"s: volume, vorticity, vexacity, voracity, velleity. Or something] and one of the important facts about your analysis is that any straightforward hypothesis test you do will return a p-value of $10^{-{\mathrm{interesting}}}$, regardless of whether it's a difference that matters. You want the asymptotic model to preserve *this* problem. 
+
+Or maybe you're doing model selection in your Big Data, and it's high-dimensional as well as Big. If you have $p$ variables and $n$ observations, and you fix $p$ and send $n\to\infty$, you've made model selection a mathematically trivial problem. You've got all the data  you need and only finitely many possible models, so just try them all and see which is best.  That's not a good way to think about real-world model selection, where even if you're Google you have way more candidate models than observations. In order to abstract the actual model selection problem you'll need $p_n\to\infty$ as well, to preserve the whole point of the question, that model selection is hard. You might also want the coefficients to converge to zero -- an important division in thinking about large $p$ problems is whether or not you assume the small $p$ version of them would be trivial.
+
+Or, even before model selection, you might want to fit a model with $p$ variables and want to know how big $p$ can be before everything turns to custard. In the classical Normal regression model it's just necessary that $n-p\to\infty$, but for other regression models things are more complicated. Since an important feature of the question is that $p$ is not negligibly small compared to $n$, that has to be a feature of any useful mathematical representation.  This particular question was my first encounter with 'two-index' asymptotics, in a [paper by Huber](https://www.jstor.org/stable/2958283)
+
+Or, in genomics, you might want to know what happens when you have a large sample size but you're doing a very large number of tests with some sort of multiple-testing penalty.  Peter Hall co-authored two nice papers on this (with [Sandy Clarke](https://projecteuclid.org/journals/annals-of-statistics/volume-37/issue-1/Robustness-of-multiple-testing-procedures-against-dependence/10.1214/07-AOS557.full) and with [Qiying Wang](https://www.jstor.org/stable/24308724))
+
+Unless you're just playing for mathematical coolness points^[in which case, go in good health], asymptotic analysis is a way to replace your real question with an easier question that has, in some sense, the same essence and same answer.  Different choices of infinite sequence give you different questions, and it's up to you to choose one.  

@@ -1,0 +1,37 @@
+---
+title: Nine and sixty ways
+author: Thomas Lumley
+date: '2022-02-20'
+slug: relevant-asymptotics
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p><em>Attention Conservation Notice: there’s not actually anything new here</em></p>
+<p>A few years ago, in a (mostly positive) review of Proschan &amp; Shaw’s <em>Essentials of Probability Theory for Statisticians</em>, I wrote</p>
+<blockquote>
+<p><em>As some statistics students notice, there’s a bit of a bait-and-switch when we talk about rigor for statistics but then prove theorems about infinite sequences of real-valued random variables. Actual random variables are available for only one <span class="math inline">\(n\)</span> in the infinite sequence, and are discrete and bounded. There’s room for a careful discussion of why it’s useful to consider infinite sequences, and how there are choices when setting up an asymptotic context that need to be made sensibly in order for the infinite limits to be relevant.</em></p>
+</blockquote>
+<p>In particular, I think it’s important to have examples showing there are choices in setting up an infinite sequence and that these aren’t more or less correct; they’re more or less helpful. The goal in setting up an infinite sequence is to simplify a mathematical argument by letting you ignore terms that you can reasonably hope will be small, either in mathematical analysis or in setting up simulations. Choosing a particular infinite sequence means choosing particular sets of terms to ignore.</p>
+<p>One example that just came up was test statistics for randomised trials, especially response-adaptive randomisation. In real life<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> you have, say, a trial with a risk ratio of 0.7 between the treatments, a sample size of 1000, and 90% power for detecting that risk ratio. If you want to study the asymptotic distribution of a test statistic you could set up an infinite sequence of trials with sample sizes <span class="math inline">\(n\)</span> in two obvious ways</p>
+<ol style="list-style-type: lower-alpha">
+<li>Fix the risk ratio at 0.7 and let the power go to 1</li>
+<li>Fix the power at 90% and let the risk ratio go to 1</li>
+</ol>
+<p>Neither of these is <em>wrong</em>, but I think (b) is more useful. In real life, one of the primary facts about clinical trials is that they’re barely large enough at best. It’s economically impractical and arguably unethical to make them much larger than they need to be. If your infinite mathematical abstraction of a clinical trial misses out on this critical fact, it’s not a good abstraction</p>
+<p>In other settings the context may be different. Maybe you have Big Data<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> and one of the important facts about your analysis is that any straightforward hypothesis test you do will return a p-value of <span class="math inline">\(10^{-{\mathrm{interesting}}}\)</span>, regardless of whether it’s a difference that matters. You want the asymptotic model to preserve <em>this</em> problem.</p>
+<p>Or maybe you’re doing model selection in your Big Data, and it’s high-dimensional as well as Big. If you have <span class="math inline">\(p\)</span> variables and <span class="math inline">\(n\)</span> observations, and you fix <span class="math inline">\(p\)</span> and send <span class="math inline">\(n\to\infty\)</span>, you’ve made model selection a mathematically trivial problem. You’ve got all the data you need and only finitely many possible models, so just try them all and see which is best. That’s not a good way to think about real-world model selection, where even if you’re Google you have way more candidate models than observations. In order to abstract the actual model selection problem you’ll need <span class="math inline">\(p_n\to\infty\)</span> as well, to preserve the whole point of the question, that model selection is hard. You might also want the coefficients to converge to zero – an important division in thinking about large <span class="math inline">\(p\)</span> problems is whether or not you assume the small <span class="math inline">\(p\)</span> version of them would be trivial.</p>
+<p>Or, even before model selection, you might want to fit a model with <span class="math inline">\(p\)</span> variables and want to know how big <span class="math inline">\(p\)</span> can be before everything turns to custard. In the classical Normal regression model it’s just necessary that <span class="math inline">\(n-p\to\infty\)</span>, but for other regression models things are more complicated. Since an important feature of the question is that <span class="math inline">\(p\)</span> is not negligibly small compared to <span class="math inline">\(n\)</span>, that has to be a feature of any useful mathematical representation. This particular question was my first encounter with ‘two-index’ asymptotics, in a <a href="https://www.jstor.org/stable/2958283">paper by Huber</a></p>
+<p>Or, in genomics, you might want to know what happens when you have a large sample size but you’re doing a very large number of tests with some sort of multiple-testing penalty. Peter Hall co-authored two nice papers on this (with <a href="https://projecteuclid.org/journals/annals-of-statistics/volume-37/issue-1/Robustness-of-multiple-testing-procedures-against-dependence/10.1214/07-AOS557.full">Sandy Clarke</a> and with <a href="https://www.jstor.org/stable/24308724">Qiying Wang</a>)</p>
+<p>Unless you’re just playing for mathematical coolness points<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>, asymptotic analysis is a way to replace your real question with an easier question that has, in some sense, the same essence and same answer. Different choices of infinite sequence give you different questions, and it’s up to you to choose one.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>imaginary real life<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>characterised, we’re told, by the 5 “V”s: volume, vorticity, vexacity, voracity, velleity. Or something<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>in which case, go in good health<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
