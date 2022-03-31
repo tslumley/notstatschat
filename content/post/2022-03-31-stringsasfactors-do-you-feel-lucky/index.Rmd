@@ -1,0 +1,48 @@
+---
+title: stringsAsFactors=do_you_feel_lucky
+author: Package Build
+date: '2022-03-31'
+slug: stringsasfactors-do-you-feel-lucky
+categories: []
+tags: []
+---
+
+Character string variables have suddenly become much more common in R, with the default `stringsAsFactors=TRUE`. That's often good, but factors are actually an important data type.  In particular, factors *know what levels they have*, but strings don't. 
+
+Suppose, following a very helpful bug report I recieved today, you want to estimate the proportions of California schools in each county, and you want to do this separately for schools that do and don't meet their improvement targets in standardised tests. It doesn't have to make sense, it's a reprex for a bug report.
+
+```{r}
+data(api, package = "survey")
+des <- survey::svydesign(id = ~dnum, weights = ~pw, data = apiclus1, fpc = ~fpc)
+est0 <-
+  survey::svyby(design=des, formula=~cname, by=~both, FUN=survey::svymean, keep.var=TRUE) 
+est0Yes <- 
+  survey::svymean(x=~cname, design=subset(des, both=="Yes"))
+est0No <- 
+  survey::svymean(x=~cname, design=subset(des, both=="No")) 
+
+est0
+est0No
+est0Yes
+```
+
+As you will notice, if you do the two groups separately there are different counties in the two groups. If you do them together, there aren't. That's good. What's not so good is that the labels are wrong if you do them together.  Usually this would throw an error, but in this example we're in the very unfortunate setting where there are the same number of counties in each group and R doesn't notice. There are 11 counties in the sample in total, 10 have observations in one subgroup and 10 have observations in the other subgroup.
+
+The problem is that the `cname` variable is a string. Since it's a string, it doesn't know what its possible values are. When `svyby` passes a subset of the data to `svymean` and `svymean` calls `model.frame`, `model.frame` says "What do I look like? Wikipedia?" and decides that the possible counties in `factor(cname)` will just be the ones it sees in the subgroup. That means you get different counties for the two subgroups. If you're lucky, the numbers in the different subgroups are different and `svyby` throws an error. If you're not lucky, it doesn't. Do you feel lucky? 
+
+From a viewpoint of ideological purity, there's no problem. If you want this to work, `cname` has to be a factor, so it will know what levels it is supposed to have and I can just document that there's a problem with data-dependent coercions such as `factor` inside `svyby`. Everyone will transform their variables ahead of time. That's what used to happen automatically in the Bad Old Days with `stringsAsfactors=TRUE`. 
+```{r}
+des <- update(des, cname=factor(cname))
+est0 <-
+  survey::svyby(design=des, formula=~cname, by=~both, FUN=survey::svymean, keep.var=TRUE) 
+est0Yes <- 
+  survey::svymean(x=~cname, design=subset(des, both=="Yes"))
+est0No <- 
+  survey::svymean(x=~cname, design=subset(des, both=="No")) 
+
+est0
+est0No
+est0Yes
+```
+
+In real life, just documenting this doesn't work.^[Ask me how I know] Nor should it: users shouldn't need to know.  Unfortunately, it's a bit tricky to fix. I can't just assume users will never want to pass a string variable through `svyby`, which is designed to work for user-specified functions as well as built-in ones. The function will probably have to acquire a `stringsAsFactors` argument of its own, defaulting to `TRUE`. The price of progress. 

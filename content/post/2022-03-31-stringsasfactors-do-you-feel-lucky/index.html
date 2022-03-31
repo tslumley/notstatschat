@@ -1,0 +1,123 @@
+---
+title: stringsAsFactors=do_you_feel_lucky
+author: Package Build
+date: '2022-03-31'
+slug: stringsasfactors-do-you-feel-lucky
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>Character string variables have suddenly become much more common in R, with the default <code>stringsAsFactors=TRUE</code>. That’s often good, but factors are actually an important data type. In particular, factors <em>know what levels they have</em>, but strings don’t.</p>
+<p>Suppose, following a very helpful bug report I recieved today, you want to estimate the proportions of California schools in each county, and you want to do this separately for schools that do and don’t meet their improvement targets in standardised tests. It doesn’t have to make sense, it’s a reprex for a bug report.</p>
+<pre class="r"><code>data(api, package = &quot;survey&quot;)
+des &lt;- survey::svydesign(id = ~dnum, weights = ~pw, data = apiclus1, fpc = ~fpc)
+est0 &lt;-
+  survey::svyby(design=des, formula=~cname, by=~both, FUN=survey::svymean, keep.var=TRUE) 
+est0Yes &lt;- 
+  survey::svymean(x=~cname, design=subset(des, both==&quot;Yes&quot;))
+est0No &lt;- 
+  survey::svymean(x=~cname, design=subset(des, both==&quot;No&quot;)) 
+
+est0</code></pre>
+<pre><code>##     both cnameAlameda  cnameKern cnameLos Angeles cnameMendocino cnameMerced
+## No    No   0.04000000 0.02000000      0.080000000     0.08000000  0.02000000
+## Yes  Yes   0.06766917 0.03007519      0.007518797     0.08270677  0.02255639
+##     cnameOrange cnamePlumas cnameSan Diego cnameSan Joaquin cnameSanta Clara
+## No   0.06000000  0.10000000      0.3000000        0.2200000        0.0800000
+## Yes  0.09774436  0.03007519      0.3007519        0.1954887        0.1654135
+##     se.cnameAlameda se.cnameKern se.cnameLos Angeles se.cnameMendocino
+## No       0.04193189   0.02136291         0.080594253        0.08059425
+## Yes      0.06886095   0.03175028         0.008104529        0.07129964
+##     se.cnameMerced se.cnameOrange se.cnamePlumas se.cnameSan Diego
+## No      0.02136291     0.06168395     0.09863587         0.1758825
+## Yes     0.02398083     0.09638426     0.03175028         0.1793324
+##     se.cnameSan Joaquin se.cnameSanta Clara
+## No            0.1867871          0.06616823
+## Yes           0.1712131          0.11093933</code></pre>
+<pre class="r"><code>est0No</code></pre>
+<pre><code>##                  mean     SE
+## cnameAlameda     0.04 0.0419
+## cnameKern        0.02 0.0214
+## cnameLos Angeles 0.08 0.0806
+## cnameMendocino   0.08 0.0806
+## cnameMerced      0.02 0.0214
+## cnameOrange      0.06 0.0617
+## cnamePlumas      0.10 0.0986
+## cnameSan Diego   0.30 0.1759
+## cnameSan Joaquin 0.22 0.1868
+## cnameSanta Clara 0.08 0.0662</code></pre>
+<pre class="r"><code>est0Yes</code></pre>
+<pre><code>##                       mean     SE
+## cnameAlameda     0.0676692 0.0689
+## cnameFresno      0.0300752 0.0318
+## cnameKern        0.0075188 0.0081
+## cnameLos Angeles 0.0827068 0.0713
+## cnameMerced      0.0225564 0.0240
+## cnameOrange      0.0977444 0.0964
+## cnamePlumas      0.0300752 0.0318
+## cnameSan Diego   0.3007519 0.1793
+## cnameSan Joaquin 0.1954887 0.1712
+## cnameSanta Clara 0.1654135 0.1109</code></pre>
+<p>As you will notice, if you do the two groups separately there are different counties in the two groups. If you do them together, there aren’t. That’s good. What’s not so good is that the labels are wrong if you do them together. Usually this would throw an error, but in this example we’re in the very unfortunate setting where there are the same number of counties in each group and R doesn’t notice. There are 11 counties in the sample in total, 10 have observations in one subgroup and 10 have observations in the other subgroup.</p>
+<p>The problem is that the <code>cname</code> variable is a string. Since it’s a string, it doesn’t know what its possible values are. When <code>svyby</code> passes a subset of the data to <code>svymean</code> and <code>svymean</code> calls <code>model.frame</code>, <code>model.frame</code> says “What do I look like? Wikipedia?” and decides that the possible counties in <code>factor(cname)</code> will just be the ones it sees in the subgroup. That means you get different counties for the two subgroups. If you’re lucky, the numbers in the different subgroups are different and <code>svyby</code> throws an error. If you’re not lucky, it doesn’t. Do you feel lucky?</p>
+<p>From a viewpoint of ideological purity, there’s no problem. If you want this to work, <code>cname</code> has to be a factor, so it will know what levels it is supposed to have and I can just document that there’s a problem with data-dependent coercions such as <code>factor</code> inside <code>svyby</code>. Everyone will transform their variables ahead of time. That’s what used to happen automatically in the Bad Old Days with <code>stringsAsfactors=TRUE</code>.</p>
+<pre class="r"><code>des &lt;- update(des, cname=factor(cname))
+est0 &lt;-
+  survey::svyby(design=des, formula=~cname, by=~both, FUN=survey::svymean, keep.var=TRUE) 
+est0Yes &lt;- 
+  survey::svymean(x=~cname, design=subset(des, both==&quot;Yes&quot;))
+est0No &lt;- 
+  survey::svymean(x=~cname, design=subset(des, both==&quot;No&quot;)) 
+
+est0</code></pre>
+<pre><code>##     both cnameAlameda cnameFresno   cnameKern cnameLos Angeles cnameMendocino
+## No    No   0.04000000  0.00000000 0.020000000       0.08000000           0.08
+## Yes  Yes   0.06766917  0.03007519 0.007518797       0.08270677           0.00
+##     cnameMerced cnameOrange cnamePlumas cnameSan Diego cnameSan Joaquin
+## No   0.02000000  0.06000000  0.10000000      0.3000000        0.2200000
+## Yes  0.02255639  0.09774436  0.03007519      0.3007519        0.1954887
+##     cnameSanta Clara se.cnameAlameda se.cnameFresno se.cnameKern
+## No         0.0800000      0.04193189     0.00000000  0.021362914
+## Yes        0.1654135      0.06886095     0.03175028  0.008104529
+##     se.cnameLos Angeles se.cnameMendocino se.cnameMerced se.cnameOrange
+## No           0.08059425        0.08059425     0.02136291     0.06168395
+## Yes          0.07129964        0.00000000     0.02398083     0.09638426
+##     se.cnamePlumas se.cnameSan Diego se.cnameSan Joaquin se.cnameSanta Clara
+## No      0.09863587         0.1758825           0.1867871          0.06616823
+## Yes     0.03175028         0.1793324           0.1712131          0.11093933</code></pre>
+<pre class="r"><code>est0No</code></pre>
+<pre><code>##                  mean     SE
+## cnameAlameda     0.04 0.0419
+## cnameFresno      0.00 0.0000
+## cnameKern        0.02 0.0214
+## cnameLos Angeles 0.08 0.0806
+## cnameMendocino   0.08 0.0806
+## cnameMerced      0.02 0.0214
+## cnameOrange      0.06 0.0617
+## cnamePlumas      0.10 0.0986
+## cnameSan Diego   0.30 0.1759
+## cnameSan Joaquin 0.22 0.1868
+## cnameSanta Clara 0.08 0.0662</code></pre>
+<pre class="r"><code>est0Yes</code></pre>
+<pre><code>##                       mean     SE
+## cnameAlameda     0.0676692 0.0689
+## cnameFresno      0.0300752 0.0318
+## cnameKern        0.0075188 0.0081
+## cnameLos Angeles 0.0827068 0.0713
+## cnameMendocino   0.0000000 0.0000
+## cnameMerced      0.0225564 0.0240
+## cnameOrange      0.0977444 0.0964
+## cnamePlumas      0.0300752 0.0318
+## cnameSan Diego   0.3007519 0.1793
+## cnameSan Joaquin 0.1954887 0.1712
+## cnameSanta Clara 0.1654135 0.1109</code></pre>
+<p>In real life, just documenting this doesn’t work.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> Nor should it: users shouldn’t need to know. Unfortunately, it’s a bit tricky to fix. I can’t just assume users will never want to pass a string variable through <code>svyby</code>, which is designed to work for user-specified functions as well as built-in ones. The function will probably have to acquire a <code>stringsAsFactors</code> argument of its own, defaulting to <code>TRUE</code>. The price of progress.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Ask me how I know<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
