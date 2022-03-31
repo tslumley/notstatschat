@@ -10,7 +10,7 @@ tags: []
 <script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
 
 
-<p>Character string variables have suddenly become much more common in R, with the default <code>stringsAsFactors=TRUE</code>. That’s often good, but factors are actually an important data type. In particular, factors <em>know what levels they have</em>, but strings don’t.</p>
+<p>Character string variables have suddenly become much more common in R, with the default <code>stringsAsFactors=FALSE</code>. That’s often good, but factors are actually an important data type. In particular, factors <em>know what levels they have</em>, but strings don’t.</p>
 <p>Suppose, following a very helpful bug report I recieved today, you want to estimate the proportions of California schools in each county, and you want to do this separately for schools that do and don’t meet their improvement targets in standardised tests. It doesn’t have to make sense, it’s a reprex for a bug report.</p>
 <pre class="r"><code>data(api, package = &quot;survey&quot;)
 des &lt;- survey::svydesign(id = ~dnum, weights = ~pw, data = apiclus1, fpc = ~fpc)

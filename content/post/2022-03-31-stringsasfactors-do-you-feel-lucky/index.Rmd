@@ -7,7 +7,7 @@ categories: []
 tags: []
 ---
 
-Character string variables have suddenly become much more common in R, with the default `stringsAsFactors=TRUE`. That's often good, but factors are actually an important data type.  In particular, factors *know what levels they have*, but strings don't. 
+Character string variables have suddenly become much more common in R, with the default `stringsAsFactors=FALSE`. That's often good, but factors are actually an important data type.  In particular, factors *know what levels they have*, but strings don't. 
 
 Suppose, following a very helpful bug report I recieved today, you want to estimate the proportions of California schools in each county, and you want to do this separately for schools that do and don't meet their improvement targets in standardised tests. It doesn't have to make sense, it's a reprex for a bug report.
 
