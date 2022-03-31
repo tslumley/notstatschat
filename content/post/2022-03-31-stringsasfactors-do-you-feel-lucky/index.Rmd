@@ -30,7 +30,7 @@ As you will notice, if you do the two groups separately there are different coun
 
 The problem is that the `cname` variable is a string. Since it's a string, it doesn't know what its possible values are. When `svyby` passes a subset of the data to `svymean` and `svymean` calls `model.frame`, `model.frame` says "What do I look like? Wikipedia?" and decides that the possible counties in `factor(cname)` will just be the ones it sees in the subgroup. That means you get different counties for the two subgroups. If you're lucky, the numbers in the different subgroups are different and `svyby` throws an error. If you're not lucky, it doesn't. Do you feel lucky? 
 
-From a viewpoint of ideological purity, there's no problem. If you want this to work, `cname` has to be a factor, so it will know what levels it is supposed to have and I can just document that there's a problem with data-dependent coercions such as `factor` inside `svyby`. Everyone will transform their variables ahead of time. That's what used to happen automatically in the Bad Old Days with `stringsAsfactors=TRUE`. 
+From a viewpoint of ideological purity, there's no problem. If you want this to work, `cname` has to be a factor, so it will know what levels it is supposed to have and I can just document that there's a problem with data-dependent coercions such as `factor` inside `svyby`. Everyone will transform their variables ahead of time. That's what used to happen automatically in the Bad Old Days with `stringsAsfactors=TRUE`, so the code worked.
 ```{r}
 des <- update(des, cname=factor(cname))
 est0 <-
