@@ -1,0 +1,103 @@
+---
+title: Tables with zeroes
+author: Package Build
+date: '2022-04-17'
+slug: tables-with-zeroes
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>A survey package user asked me (and StackExchange) how to do tests of independence in contingency tables when there’s a zero cell in the table. I didn’t do the sensible thing and check</p>
+<pre class="r"><code>data(api)
+dclus1&lt;-svydesign(id=~dnum, weights=~pw, data=apiclus1, fpc=~fpc)
+svytable(~sch.wide+comp.imp, dclus1) </code></pre>
+<pre><code>##         comp.imp
+## sch.wide        No       Yes
+##      No   778.4809    0.0000
+##      Yes  913.8689 4501.6505</code></pre>
+<pre class="r"><code>svychisq(~sch.wide+comp.imp, dclus1)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
+## 
+## data:  svychisq(~sch.wide + comp.imp, dclus1)
+## F = 236.89, ndf = 1, ddf = 14, p-value = 3.618e-10</code></pre>
+<p>Instead, I looked at the comments and read this 2015 <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4567525/">paper</a> in <em>Biometrics</em> by Stuart Lipsitz <em>et numerous al</em>. The paper says</p>
+<blockquote>
+<p><em>A popular test for independence for (J × K) contingency tables with complex survey data has been proposed by Rao and Scott (1981). This approach uses a design effect to adjust the usual Pearson chi-squared statistic for the complex survey design. Unfortunately, this elegant test fails to exist when one of the observed (or weighted) cells in the contingency table equals zero, because the design effect is a function of the inverse of the weighted cell counts.</em></p>
+</blockquote>
+<p>Now, that’s the test in the code chunk above, so it isn’t entirely true. But it is plausible if you don’t check. It probably is true for some implementations of the Rao-Scott correction, but not the one in R and not the one in Stata. It’s also not true for the implementations in R or Stata of Wald tests for independence.</p>
+<p>Anyway, the Lipsitz <em>et al.</em> approach is clever and looked useful. You expand one of the variables <code>Y</code> from <span class="math inline">\(n\)</span> observations of a <span class="math inline">\(K\)</span>-level factor to <span class="math inline">\(nK\)</span> observations of a binary variable <code>yind</code>, together with a <span class="math inline">\(K\)</span>-level factor <code>l</code> saying which level you’re talking about. You can fit an independence linear regression model <code>yind~l+X</code> and a saturated model <code>yind~l*X</code> and compare them with Wald test or score test. I happen to have recently implemented score tests, so this looked worth trying.</p>
+<p>Here’s a simulation. First, simulate a population with Dirichlet-multinomial distributions for <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> to get clustering while keeping specified marginal probabilities</p>
+<pre class="r"><code>set.seed(2022-4-16)
+rdirichlet&lt;-function(n,p,conc){
+    k&lt;-length(p)
+    gammas&lt;-matrix(rgamma(n*k,shape=p*conc),nrow=k,ncol=n)
+    t(gammas)/colSums(gammas)
+}
+
+library(survey)
+
+g&lt;-1:500
+id&lt;-rep(g,each=100)
+pos&lt;-rep(1:100,500)
+
+p=c(.05,.4,.5)
+cluster_xp&lt;-rdirichlet(500,p,100)
+
+x&lt;-numeric(500*100)
+for(i in 1:500){
+    x[(i-1)*100+1:100]&lt;-sample(1:3,100,prob=cluster_xp[i,],replace=TRUE)
+}
+y&lt;-numeric(500*100)
+p=c(.1,.3,.2,.3)
+cluster_yp&lt;-rdirichlet(500,p,100)
+for(i in 1:500){
+    y[(i-1)*100+1:100]&lt;-sample(1:4,100,prob=cluster_yp[i,],replace=TRUE)
+}
+population=data.frame(X=x,Y=y,cluster=id)</code></pre>
+<p>Now, sample 15 of 500 clusters and 20 of 100 observations in each cluster, in a way that depends on the latent Dirichlet variables. The sampling induces a strong association between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> and we need weighting to correct it. We compute the two Wald tests in the survey package and the Rao-Scott test and new score test, and also report the smallest cell size in the unweighted table of <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>.</p>
+<pre class="r"><code>results&lt;-replicate(1000,{
+  psample&lt;-(cluster_xp%*%(1:3))*(cluster_yp%*%(1:4))
+  p&lt;-exp(psample)*15/sum(exp(psample))
+  sample_psu&lt;-sample(g,15,prob=p)
+
+  in_sample&lt;-(id %in% sample_psu) &amp; (pos&lt;20)
+  population$wt&lt;-(1/p)[id]*(100/20)
+
+  the_sample&lt;-population[in_sample,]
+
+  des&lt;-svydesign(id=~cluster,weights=~wt,data=the_sample)
+  c(
+   adjWald=svychisq(~X+Y,des,statistic=&quot;adjWald&quot;)$p.value, 
+   Score=svychisq(~X+Y,des,statistic=&quot;wls-score&quot;)$p.value, 
+   Wald=svychisq(~X+Y,des,statistic=&quot;Wald&quot;)$p.value, 
+   Rao_Scott=svychisq(~X+Y,des)$p.value,
+   min_cell=min(with(des$variables,table(X,Y)))
+  )
+})
+summary(t(results))</code></pre>
+<pre><code>##     adjWald            Score.p              Wald           Rao_Scott.X-squared
+##  Min.   :0.002205   Min.   :0.001932   Min.   :0.0000337   Min.   :0.0004779  
+##  1st Qu.:0.172342   1st Qu.:0.160374   1st Qu.:0.0391633   1st Qu.:0.2514494  
+##  Median :0.423206   Median :0.404692   Median :0.1849786   Median :0.4520871  
+##  Mean   :0.446808   Mean   :0.434284   Mean   :0.2832927   Mean   :0.4586632  
+##  3rd Qu.:0.705761   3rd Qu.:0.689953   3rd Qu.:0.4757283   3rd Qu.:0.6611491  
+##  Max.   :0.999708   Max.   :0.999675   Max.   :0.9991220   Max.   :0.9956051  
+##     min_cell    
+##  Min.   :0.000  
+##  1st Qu.:1.000  
+##  Median :1.000  
+##  Mean   :1.318  
+##  3rd Qu.:2.000  
+##  Max.   :5.000</code></pre>
+<p>This was when I eventually realised zero cells weren’t a problem – I ran the code expecting to see crashes when there were zero cells, and didn’t. Let’s have a look at the <span class="math inline">\(p\)</span>-values, color-coded by the size of the smallest cell</p>
+<pre class="r"><code>pairs(t(results)[,-5],
+      labels=c(&quot;adjWald&quot;,&quot;wls-score&quot;,&quot;Wald&quot;,&quot;Rao-Scott&quot;),
+      col=adjustcolor(pmin(results[5,],3)+1,alpha.f=0.5),
+      pch=19)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="90%" /></p>
+<p>The new test is almost (but not quite) identical to the existing <code>adjWald</code> option. It’s different from the Rao-Scott test, as would be expected. The Rao-Scott test uses the Pearson <span class="math inline">\(X^2\)</span> test statistic applied to the estimated population table and adjusts the null reference distribution; the other tests use a different statistic. So on the one hand this is a more elegant construction of a test we already have; on the other hand it’s a more elegant construction of a test we already have. I would expect from previous simulations that the <code>adjWald</code> test will be anticonservative, the <code>Wald</code> test much more anticonservative, and the Rao-Scott test less anticonservative, and so it turns out.</p>
+<p>The original user who asked the question turns out to have a more difficult problem: their data is sufficiently sparse that the null-hypothesis model has a singular covariance matrix and even a score test won’t work. I suppose the moral of all this is the famous advice to journalists: “if your mother tells you she loves you, ask for a minimal reproducible example.”</p>
