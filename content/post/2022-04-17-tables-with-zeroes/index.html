@@ -94,10 +94,6 @@ summary(t(results))</code></pre>
 ##  3rd Qu.:2.000  
 ##  Max.   :5.000</code></pre>
 <p>This was when I eventually realised zero cells weren’t a problem – I ran the code expecting to see crashes when there were zero cells, and didn’t. Let’s have a look at the <span class="math inline">\(p\)</span>-values, color-coded by the size of the smallest cell</p>
-<pre class="r"><code>pairs(t(results)[,-5],
-      labels=c(&quot;adjWald&quot;,&quot;wls-score&quot;,&quot;Wald&quot;,&quot;Rao-Scott&quot;),
-      col=adjustcolor(pmin(results[5,],3)+1,alpha.f=0.5),
-      pch=19)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="90%" /></p>
+<p><img src="images/unnamed-chunk-5-1.png" style="width:90.0%" /></p>
 <p>The new test is almost (but not quite) identical to the existing <code>adjWald</code> option. It’s different from the Rao-Scott test, as would be expected. The Rao-Scott test uses the Pearson <span class="math inline">\(X^2\)</span> test statistic applied to the estimated population table and adjusts the null reference distribution; the other tests use a different statistic. So on the one hand this is a more elegant construction of a test we already have; on the other hand it’s a more elegant construction of a test we already have. I would expect from previous simulations that the <code>adjWald</code> test will be anticonservative, the <code>Wald</code> test much more anticonservative, and the Rao-Scott test less anticonservative, and so it turns out.</p>
 <p>The original user who asked the question turns out to have a more difficult problem: their data is sufficiently sparse that the null-hypothesis model has a singular covariance matrix and even a score test won’t work. I suppose the moral of all this is the famous advice to journalists: “if your mother tells you she loves you, ask for a minimal reproducible example.”</p>

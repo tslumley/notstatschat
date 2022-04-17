@@ -85,12 +85,7 @@ summary(t(results))
 ```
 This was when I eventually realised zero cells weren't a problem -- I ran the code expecting to see crashes when there were zero cells, and didn't.  Let's have a look at the $p$-values, color-coded by the size of the smallest cell
 
-```{r, out.width="90%"}
-pairs(t(results)[,-5],
-      labels=c("adjWald","wls-score","Wald","Rao-Scott"),
-      col=adjustcolor(pmin(results[5,],3)+1,alpha.f=0.5),
-      pch=19)
-```
+![](images/unnamed-chunk-5-1.png){width=90%}
 
 The new test is almost (but not quite) identical to the existing `adjWald` option. It's different from the Rao-Scott test, as would be expected. The Rao-Scott test uses the Pearson $X^2$ test statistic applied to the estimated population table and adjusts the null reference distribution; the other tests use a different statistic.  So on the one hand this is a more elegant construction of a test we already have; on the other hand it's a more elegant construction of a test we already have.  I would expect from previous simulations that the `adjWald` test will be anticonservative, the `Wald` test much more anticonservative, and the Rao-Scott test less anticonservative, and so it turns out. 
 
