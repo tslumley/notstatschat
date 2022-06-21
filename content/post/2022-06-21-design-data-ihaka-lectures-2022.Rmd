@@ -17,4 +17,4 @@ We have
 - Luke Tierney, of R Core. Luke will talk about the how and why of the pipe operator in base R. *Thursday 4 August*
 - Wes McKinney, of Voltron Data. Wes will talk about major trends and areas of work in the broader “data science tools” software ecosystem across Python, R, Julia, and other programming languages *Thursday 11 August*
 
-The talks all start at 6:30pm NZST (Pacific/Auckland, UTC+12).  If you're watching from Auckland, the event will be in  Science Building 303, on Princes St at Wellesley St, on the first floor (enter from Princes St opposite Albert Park.) Refreshments start from 6pm. 
+The talks all start at 6:30pm NZST (Pacific/Auckland, UTC+12).  If you're watching from Auckland, the event will be in  Science Building 303, on Princes St at Wellesley St, on the first floor (enter from Princes St opposite Albert Park.) Refreshments start from 6pm.  More details [here](https://www.auckland.ac.nz/en/science/about-the-faculty/department-of-statistics/ihaka-lecture-series.html)
