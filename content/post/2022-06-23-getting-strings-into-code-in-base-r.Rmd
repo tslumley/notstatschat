@@ -1,0 +1,55 @@
+---
+title: Getting strings into code in base R
+author: Thomas Lumley
+date: '2022-06-23'
+slug: getting-strings-into-code-in-base-r
+categories: []
+tags: []
+---
+
+I'm reasonably often asked how to take the value of a character string variable and use it as a variable name in, eg, the `survey` package.  This is the sort of quasiquotation that the tidyverse uses a lot. It's needed much more often in the tidyverse because of the use of bare variable names as function arguments, but sometimes you need it in base R as well.
+
+I should first say that quasiquotation in base R should be a last resort. If you want to iterate over variables, you *usually* will be better off having those variables be elements of a list. R isn't SAS or Stata; we have lists and function calls and we don't need to do everything with macros. However, *sometimes* you really do want to use the value of a character string as a variable, especially in a model formula, and quasiquotation respects the structure of the model formula better than just using string manipulation. 
+
+Suppose we have a variable `v` whose value is `sch.wide` and we want to do
+```{r eval=FALSE}
+svyglm(api00~api99+sch.wide,data=dclus2)
+```
+That is, we want to take the value of `v` and put it into a model formula `api00~api99+the_value_of_v`.
+
+You can do this with `paste`: 
+```{r}
+suppressMessages(library(survey))
+data(api)
+dclus2<-svydesign(id=~dnum+snum, fpc=~fpc1+fpc2, data=apiclus2)
+v<-"sch.wide"
+f <- as.formula(paste("api00~api99",v,sep="+"))
+f
+model<-svyglm(f, design=dclus2)
+model
+```
+
+There are two problems with this. First, it's ugly and fragile, because `paste` doesn't understand model formulas (imagine if you had transformations and interactions). Second, the formula argument to `svyglm` is `f` rather than `api00~api99+sch.wide`, which affects how it prints.
+
+
+The better way to do it is with `bquote`, which quotes an expression except for specified places where it evaluates it first. 
+
+```{r}
+bquote(1+2)
+two<-2
+bquote(1+two)
+bquote(1+.(two))
+eval(bquote(1+.(two)))
+```
+
+Anything wrapped in the `.()` operator is evaluated and the value replaces the `.()` -- like a code chunk in R markdown.
+
+```{r}
+bquote(svyglm(api00~api99+.(as.name(v)), design=dclus2))
+model<-eval(bquote(svyglm(api00~api99+.(as.name(v)), design=dclus2)))
+model
+```
+
+And it works!!
+
+`bquote` also has now the unquote-and-splice operator (the `!!!` from tidyverse), and an argument that lets you choose *where* to evaluate the terms that need evaluating. 
