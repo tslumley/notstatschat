@@ -7,7 +7,7 @@ categories: []
 tags: []
 ---
 
-We have [a paper](https://pubmed.ncbi.nlm.nih.gov/35775996/) coming out in *Biometrics* describing a reasonably complicated example of validation sampling from electronic health records.  "We" here is a lot of people: Bryan E Shepherd, Kyunghee Han, Tong Chen, Aihua Bian, Shannon Pugh, Stephany N Duda, Thomas Lumley, William J Heerman, Pamela A Shaw.  Pam and Bryan led the project from the statistical side, William Heerman was the clinical lead. 
+We have [a paper](https://pubmed.ncbi.nlm.nih.gov/35775996/) coming out in *Biometrics* describing a reasonably complicated example of validation sampling from electronic health records.  "We" here is a lot of people: Bryan Shepherd, Kyunghee Han, Tong Chen, Aihua Bian, Shannon Pugh, Stephany Duda, Thomas Lumley, William  Heerman, Pamela  Shaw.  Pam and Bryan led the project from the statistical side, William Heerman was the clinical lead. 
 
 The project was to see how mothers' weight gain during pregnancy affected the risk of asthma and childhood obesity in kids. We had electronic health record data on about 10,000 mother-child pairs, and we could afford to validate the data on about 1000 of them.  In this case, validating the data means checking with the original electronic records of consultations. 
 
