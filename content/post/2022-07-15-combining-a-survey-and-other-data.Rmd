@@ -1,0 +1,22 @@
+---
+title: Combining a survey and other data
+author: Thomas Lumley
+date: '2022-07-15'
+slug: combining-a-survey-and-other-data
+categories: []
+tags: []
+---
+
+Sometimes you want to do inference that combines a real probability survey sample with some other data.  
+
+I first looked at this when working on [rank tests](https://academic.oup.com/biomet/article-abstract/100/4/831/213064?redirectedFrom=fulltext) for survey data, where people had tried to compare data from convenience samples to semething like NHANES as a population reference. If this was a $t$-test, the inference could just be based on the distribution of the estimated mean in the survey and in the lab data, but for rank tests the two samples need to be combined. This example is admittedly not all that useful, because it's rank tests -- we wrote the paper mostly because we liked the idea about construction of ranks for survey data. 
+
+A more practical example is a [project](https://paa.confex.com/paa/2022/meetingapp.cgi/Paper/27573) by Esteban Valencia at the University of Washington, looking at homicide and suicide risk among law-enforcement personnel. This combined a more-or-less complete census of  events from the National Violent Death Reporting System with microdata from the American Community Survey. 
+
+In both settings, our idea for combining the data is to think of it as a dual-frame survey.  Dual-frame (or multiple-frame) surveys involve independent sampling from two or more overlapping population lists.  You might do this because [none of the available sampling frames is complete](https://medium.com/idinsight-blog/the-magic-of-multiple-frame-sampling-an-introduction-6e9a4e1bbb03), or you might use it to help oversample some target groups. [Sharon Lohr](https://www.sharonlohr.com/articles-talks) has done a lot of work on multiple-frame sampling.
+
+As an example of oversampling, [Patricia Metcalf and Alastair Scott](https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.3566) combined samples from the Māori electoral roll and from a geographical sampling frame to oversample Māori for a health research project.  The electoral roll will be 100% Māori, but only about half of Māori are included on it; the general population sampling means everyone has a chance to be included^[they also oversampled Pacific people, using 'enrolled voters with Pacific-language surnames' as the specialised frame -- surname is a reasonably good indicator, and that's all it needs to be for this purpose, since sampled people were *asked* about ethnicity]. 
+
+In the suicide/homicide example we genuinely have a two-frame sample. The NVDRS is (approximately) a 100% sample of violent deaths, and the ACS is (approximately, given non-response) a probability sample of the US population. The NVDRS population is part of the ACS population.  For an ideal analysis we would have to know whether each NVDRS person was sampled in the ACS that year or not, but since the ACS sampling fraction is small we can just assume they weren't. 
+
+In the convenience-sample case there isn't a well-defined second frame and sampling procedure, but we can still pretend that the convenience sample is a 100% sample from itself, and treat it the same way as the NVDRS data. This isn't ideal, but it's a pretty reasonable approach to the inferential problem. This specific case  could be handled by just not using rank tests, but the problem is more general. 
