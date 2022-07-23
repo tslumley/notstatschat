@@ -1,0 +1,211 @@
+---
+title: Tidying rimu
+author: Thomas Lumley
+date: '2022-07-23'
+slug: tidying-rimu
+categories: []
+tags: []
+---
+
+![](images/rimu.png){width=25%}
+
+I've been working on the `rimu` package recently, which handles multiple-response categorical data. This has involved miscellaneous fixing, but also getting these new types to work happily with data frames, in preparation for the `rata` package that will support  modelling and inference^[If you have ideas about modelling and inference that you want it to support, now would be an excellent time to voice them]. 
+
+For example, consider this little six-observation pretend dataset:
+
+```{r}
+library(rimu)
+data(nzbirds)
+seen <- as.mr(nzbirds)
+seen
+str(seen)
+```
+
+The print method for the `mr` object prints the birds that were observed in each record. The `?` indicates an `NA`: record number 6 isn't clear on whether a [ruru](https://en.wikipedia.org/wiki/Morepork) was seen. 
+
+The underlying representation, however, is a logical matrix with an attribute specifying which bird corresponds to each column.  If you just try to put a matrix object into a data frame, it decays to the matrix and you end up with a 5-column data frame. That's ugly. More importantly, there's nothing to keep those five columns together in further data processing
+
+```{r}
+data.frame(as.matrix(seen))
+```
+
+One of the features of a data frame is that it can hold a wide variety of object types -- but it's tricky to get it to hold multi-column types.  What I did was to borrow Terry Therneau's solution for the `Surv` objects in the `survival` package. These are two-column or three-column matrices that mostly look and behave like simple vectors. I must once have known how this all worked, but it has been about 25 years since I did the initial port of the package to R. Looking the code again, it looks like overriding the `length` method to give the number of observations and the `names` method to give row names, and the `as.data.frame` method will keep the object in a single column of the data frame.  Here's a test example with a temporary class
+
+```{r}
+seen2<-as.matrix(seen)
+class(seen2)<-"tmp"
+length.tmp <- function(x) nrow(x)
+names.tmp <- function(x) rownames(x)
+as.data.frame.tmp <- function(x, ...) as.data.frame.model.matrix(x, ...)
+dim(data.frame(birds=seen2))
+```
+
+It still displays as a binary matrix: 
+
+```{r}
+data.frame(birds=seen2)
+```
+
+Writing a `format` method fixes that, too. It's a bit of a pain to write one for the temporary class, but the one for the real class is just
+```{r}
+rimu:::format.mr
+```
+
+and it works
+
+```{r}
+data.frame(birds=seen)
+```
+
+Let's look at a slightly less trivial example, with data from the RStudio Community Survey. One of the questions is about other software used, presented as a comma-and-space-separated list. 
+
+```{r}
+data(rstudiosurvey)
+names(rstudiosurvey)[40]
+## Other software being used
+head(rstudiosurvey[[40]])
+```
+
+The `as.mr` method for strings breaks the string at the specified separator and sets up a multiple-response object; `mtable` does tables that count all the responses.
+
+```{r}
+other_software<- as.mr(rstudiosurvey[[40]], sep=", ")
+## only those with at least 20 responses
+common<-mr_lump(other_software, n=20)
+mtable(common)
+## 'None' isn't really another package
+common<-mr_drop(common, "None")
+mtable(common)
+```
+
+
+Another question asked how happy people were using R, on a 1-5 scale
+
+```{r}
+names(rstudiosurvey)[18]
+happy<-factor(rstudiosurvey[[18]])
+mtable(happy, common)
+round(prop.table(mtable(happy,common),2),2)
+```
+
+And here's a little data frame
+```{r}
+timestamp<-as.Date(rstudiosurvey[[1]],format="%m/%d/%y")
+df<-data.frame(timestamp, happy, common)
+dim(df)
+head(df)
+```
+
+But does this work for tibbles? 
+
+```{r}
+library(tibble)
+tibble(birds=seen)
+```
+
+💩
+
+Tibbles have their own rendering system.  If you try to explore it from the command line, you will find yourself in a maze of twisty little methods, all different.  But there's the [`vctrs` package](https://cran.r-project.org/web/packages/vctrs/vignettes/s3-vector.html) to create new vector types.
+
+Multiple-response objects don't map neatly on to any of the existing `vctrs` examples.  There are multi-column types, such as the `rational` and `decimal2` examples at that link, but these have the same number of component columns for every instance of the type. There are list-of-vectors types, such as the polynomial example at that link, but these have potentially varying numbers of elements for every item in a vector.  The multiple-response objects have the same 'width' for every item in a vector -- five, for the birds; twenty for the common software packages -- but different multiple response objects have different widths.  
+
+I settled for the list-of-vectors approach. It will be relatively inefficient to do column operations with this representation, but that's a problem for the future. Slightly more problematically, the list representation doesn't straightforwardly allow `NA` values. 
+
+Following the polynomial example, we get 
+
+```{r}
+library(vctrs)
+library(rimu)
+
+new_vmr <- function(x,levels=unique(do.call(c,x))) {
+  new_list_of(x, ptype = character(), class = "vmr", levs=levels)
+}
+
+as.vmr<-function(x,...) UseMethod("as.vmr")
+as.vmr.mr<-function(x,...) {
+    l<-levels(x)
+    y<-lapply(apply(x,1,c, simplify=FALSE), function(i) l[as.logical(i)])
+    new_vmr(y,l)
+}
+as.vmr.default<-function(x,...) as.vmr(as.mr(x,...))
+
+vec_ptype_full.vmr <- function(x, ...) "vmr"
+vec_ptype_abbr.vmr <- function(x, ...) "vmr"
+
+format.vmr <- function(x, ...) {
+    format(as.mr(unclass(x),...,levels=attr(x,"levs")))
+}
+
+obj_print_data.vmr <- function(x, ...) {
+  if (length(x) == 0)
+    return()
+  print(format(x), quote = FALSE)
+}
+```
+
+Now to test this -- remembering to drop the `NA` value for ruru:
+
+```{r}
+v_seen<- as.vmr(mr_na(seen,FALSE))
+v_seen
+
+test<-tibble(birbs=v_seen, id=1:6,count=mr_count(seen))
+dim(test)
+test
+```
+
+Everything mostly works -- but inside the tibble, the object prints in  a weird shorthand that turns out to be the length of the vector for that row. This is a bit confusing, because the `vctrs` vignette says *The format method is also used by data frames, tibbles, and str()*.  After a while trying to find the code that actually did the formatting, it occurred to me to try the polynomial example that the vignette provides.  It also prints as `[2]`, etc, rather than calling the `format` method.  So this is what's supposed to be happening.
+
+There's a [separate vignette](https://cran.r-project.org/web/packages/vctrs/vignettes/pillar.html) on how to complicate the printing of tibbles with the `pillar` package. Following that, we can try
+
+```{r}
+library(pillar)
+ pillar_shaft.vmr<-function (x, ...) {
+     out <- style_subtle(format(x))
+    new_pillar_shaft_simple(out, align = "right")
+ }
+```
+
+which works
+
+```{r}
+test
+```
+
+One more refinement: `vctrs` allows for full-width and abbreviated printing, and this printing format can get pretty wide, so I tried also defining an abbreviated format that's just the binary values pasted together
+
+```{r}
+pillar_shaft.vmr <- function(x, ...) {
+  full <- format(x)
+  binary <- apply(as.matrix(as.mr(x)),1, paste0,collapse="")
+
+  pillar::new_pillar_shaft(
+    list(full = full, binary =binary),
+    width = pillar::get_max_extent(full),
+    min_width = pillar::get_max_extent(binary),
+    class = "pillar_shaft_vmr"
+  )
+}
+
+
+format.pillar_shaft_vmr <- function(x, width, ...) {
+  if (get_max_extent(x$full) <= width) {
+    ornament <- x$full
+  } else {
+    ornament <- x$binary
+  }
+
+  pillar::new_ornament(ornament, align = "right")
+}
+```
+
+And it works. 
+
+```{r}
+tibble(birbs=v_seen, more_birbs=v_seen,
+       yet_more_birbs=v_seen, 
+       all_the_birbs=v_seen, 
+       will_it_never_end=v_seen)
+```
+
+I'm still not sure what I want for an abbreviated printout, but at least it can be done. We have a `vctrs` class, and one that's a bit different from the existing examples. There's still an issue with `NA` entries, but that should be fixable somehow.

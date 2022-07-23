@@ -1,0 +1,276 @@
+---
+title: Tidying rimu
+author: Thomas Lumley
+date: '2022-07-23'
+slug: tidying-rimu
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p><img src="images/rimu.png" style="width:25.0%" /></p>
+<p>I’ve been working on the <code>rimu</code> package recently, which handles multiple-response categorical data. This has involved miscellaneous fixing, but also getting these new types to work happily with data frames, in preparation for the <code>rata</code> package that will support modelling and inference<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
+<p>For example, consider this little six-observation pretend dataset:</p>
+<pre class="r"><code>library(rimu)
+data(nzbirds)
+seen &lt;- as.mr(nzbirds)
+seen</code></pre>
+<pre><code>## [1] &quot;kea+tui&quot;           &quot;kea+ruru+kaki&quot;     &quot;ruru&quot;             
+## [4] &quot;ruru+tui&quot;          &quot;kea+ruru+tui+kaki&quot; &quot;kea+?ruru+tauhou&quot;</code></pre>
+<pre class="r"><code>str(seen)</code></pre>
+<pre><code>##  &#39;mr&#39; logi [1:6, 1:5] kea+tui           kea+ruru+kaki     ruru              ruru+tui          kea+ruru+tui+kaki kea+tauhou       
+##  - attr(*, &quot;dimnames&quot;)=List of 2
+##   ..$ : NULL
+##   ..$ : chr [1:5] &quot;kea&quot; &quot;ruru&quot; &quot;tui&quot; &quot;tauhou&quot; ...</code></pre>
+<p>The print method for the <code>mr</code> object prints the birds that were observed in each record. The <code>?</code> indicates an <code>NA</code>: record number 6 isn’t clear on whether a <a href="https://en.wikipedia.org/wiki/Morepork">ruru</a> was seen.</p>
+<p>The underlying representation, however, is a logical matrix with an attribute specifying which bird corresponds to each column. If you just try to put a matrix object into a data frame, it decays to the matrix and you end up with a 5-column data frame. That’s ugly. More importantly, there’s nothing to keep those five columns together in further data processing</p>
+<pre class="r"><code>data.frame(as.matrix(seen))</code></pre>
+<pre><code>##   kea ruru tui tauhou kaki
+## 1   1    0   1      0    0
+## 2   1    1   0      0    1
+## 3   0    1   0      0    0
+## 4   0    1   1      0    0
+## 5   1    1   1      0    1
+## 6   1   NA   0      1    0</code></pre>
+<p>One of the features of a data frame is that it can hold a wide variety of object types – but it’s tricky to get it to hold multi-column types. What I did was to borrow Terry Therneau’s solution for the <code>Surv</code> objects in the <code>survival</code> package. These are two-column or three-column matrices that mostly look and behave like simple vectors. I must once have known how this all worked, but it has been about 25 years since I did the initial port of the package to R. Looking the code again, it looks like overriding the <code>length</code> method to give the number of observations and the <code>names</code> method to give row names, and the <code>as.data.frame</code> method will keep the object in a single column of the data frame. Here’s a test example with a temporary class</p>
+<pre class="r"><code>seen2&lt;-as.matrix(seen)
+class(seen2)&lt;-&quot;tmp&quot;
+length.tmp &lt;- function(x) nrow(x)
+names.tmp &lt;- function(x) rownames(x)
+as.data.frame.tmp &lt;- function(x, ...) as.data.frame.model.matrix(x, ...)
+dim(data.frame(birds=seen2))</code></pre>
+<pre><code>## [1] 6 1</code></pre>
+<p>It still displays as a binary matrix:</p>
+<pre class="r"><code>data.frame(birds=seen2)</code></pre>
+<pre><code>##   birds.kea birds.ruru birds.tui birds.tauhou birds.kaki
+## 1         1          0         1            0          0
+## 2         1          1         0            0          1
+## 3         0          1         0            0          0
+## 4         0          1         1            0          0
+## 5         1          1         1            0          1
+## 6         1         NA         0            1          0</code></pre>
+<p>Writing a <code>format</code> method fixes that, too. It’s a bit of a pain to write one for the temporary class, but the one for the real class is just</p>
+<pre class="r"><code>rimu:::format.mr</code></pre>
+<pre><code>## function (x, ...) 
+## format(as.character.mr(x), ...)
+## &lt;bytecode: 0x123572070&gt;
+## &lt;environment: namespace:rimu&gt;</code></pre>
+<p>and it works</p>
+<pre class="r"><code>data.frame(birds=seen)</code></pre>
+<pre><code>##               birds
+## 1           kea+tui
+## 2     kea+ruru+kaki
+## 3              ruru
+## 4          ruru+tui
+## 5 kea+ruru+tui+kaki
+## 6        kea+tauhou</code></pre>
+<p>Let’s look at a slightly less trivial example, with data from the RStudio Community Survey. One of the questions is about other software used, presented as a comma-and-space-separated list.</p>
+<pre class="r"><code>data(rstudiosurvey)
+names(rstudiosurvey)[40]</code></pre>
+<pre><code>## [1] &quot;What computer tools and/or languages have you used besides R?&quot;</code></pre>
+<pre class="r"><code>## Other software being used
+head(rstudiosurvey[[40]])</code></pre>
+<pre><code>## [1] &quot;C/C++, Python&quot;                                                              
+## [2] &quot;Excel, Tableau&quot;                                                             
+## [3] &quot;Excel, Tableau&quot;                                                             
+## [4] &quot;C/C++, Excel, Go, Java, Javascript, Matlab, PHP, Python, Ruby, Visual Basic&quot;
+## [5] &quot;Excel, SPSS, Mplus&quot;                                                         
+## [6] &quot;Excel, Javascript, PHP, Python, scala&quot;</code></pre>
+<p>The <code>as.mr</code> method for strings breaks the string at the specified separator and sets up a multiple-response object; <code>mtable</code> does tables that count all the responses.</p>
+<pre class="r"><code>other_software&lt;- as.mr(rstudiosurvey[[40]], sep=&quot;, &quot;)
+## only those with at least 20 responses
+common&lt;-mr_lump(other_software, n=20)
+mtable(common)</code></pre>
+<pre><code>##  C/C++ Python Excel Tableau Go Java Javascript Matlab PHP Ruby Visual Basic
+##    533   1076  1511     435 47  291        459    436 176   89          360
+##  SPSS Stata SAS SQL Fortran Julia None Perl Rust Other
+##   493    89 393  59      22    33   36   26   28   302</code></pre>
+<pre class="r"><code>## &#39;None&#39; isn&#39;t really another package
+common&lt;-mr_drop(common, &quot;None&quot;)
+mtable(common)</code></pre>
+<pre><code>##  C/C++ Python Excel Tableau Go Java Javascript Matlab PHP Ruby Visual Basic
+##    533   1076  1511     435 47  291        459    436 176   89          360
+##  SPSS Stata SAS SQL Fortran Julia Perl Rust Other
+##   493    89 393  59      22    33   26   28   302</code></pre>
+<p>Another question asked how happy people were using R, on a 1-5 scale</p>
+<pre class="r"><code>names(rstudiosurvey)[18]</code></pre>
+<pre><code>## [1] &quot;Please rate how much you enjoy using R on a scale of 1 to 5, where 1 is you don&#39;t enjoy it at all, and 5 is that you enjoy it a great deal.&quot;</code></pre>
+<pre class="r"><code>happy&lt;-factor(rstudiosurvey[[18]])
+mtable(happy, common)</code></pre>
+<pre><code>##   C/C++ Python Excel Tableau Go Java Javascript Matlab PHP Ruby Visual Basic
+## 1     2      2     2       0  0    1          0      1   0    0            1
+## 2     7     12    14       4  1    6          6      5   5    2            2
+## 3    22     33    51      17  1    9         12     17   6    4           10
+## 4   120    246   370      96  9   71        102    109  39   18           85
+## 5   379    780  1068     317 36  202        336    303 124   64          260
+##   SPSS Stata SAS SQL Fortran Julia Perl Rust Other
+## 1    1     0   0   0       0     0    0    0     0
+## 2    3     1   3   0       0     2    1    1     7
+## 3   24     9  14   0       1     1    0    2     7
+## 4  103    21  94  10       5    13    6    9    69
+## 5  359    58 282  49      16    17   19   16   219</code></pre>
+<pre class="r"><code>round(prop.table(mtable(happy,common),2),2)</code></pre>
+<pre><code>##   C/C++ Python Excel Tableau   Go Java Javascript Matlab  PHP Ruby Visual Basic
+## 1  0.00   0.00  0.00    0.00 0.00 0.00       0.00   0.00 0.00 0.00         0.00
+## 2  0.01   0.01  0.01    0.01 0.02 0.02       0.01   0.01 0.03 0.02         0.01
+## 3  0.04   0.03  0.03    0.04 0.02 0.03       0.03   0.04 0.03 0.05         0.03
+## 4  0.23   0.23  0.25    0.22 0.19 0.25       0.22   0.25 0.22 0.20         0.24
+## 5  0.72   0.73  0.71    0.73 0.77 0.70       0.74   0.70 0.71 0.73         0.73
+##   SPSS Stata  SAS  SQL Fortran Julia Perl Rust Other
+## 1 0.00  0.00 0.00 0.00    0.00  0.00 0.00 0.00  0.00
+## 2 0.01  0.01 0.01 0.00    0.00  0.06 0.04 0.04  0.02
+## 3 0.05  0.10 0.04 0.00    0.05  0.03 0.00 0.07  0.02
+## 4 0.21  0.24 0.24 0.17    0.23  0.39 0.23 0.32  0.23
+## 5 0.73  0.65 0.72 0.83    0.73  0.52 0.73 0.57  0.73</code></pre>
+<p>And here’s a little data frame</p>
+<pre class="r"><code>timestamp&lt;-as.Date(rstudiosurvey[[1]],format=&quot;%m/%d/%y&quot;)
+df&lt;-data.frame(timestamp, happy, common)
+dim(df)</code></pre>
+<pre><code>## [1] 1838    3</code></pre>
+<pre class="r"><code>head(df)</code></pre>
+<pre><code>##    timestamp happy
+## 1 2019-12-13     5
+## 2 2019-12-13     5
+## 3 2019-12-13     5
+## 4 2019-12-13     5
+## 5 2019-12-13     5
+## 6 2019-12-13     5
+##                                                               common
+## 1                                                       C/C+++Python
+## 2                                                      Excel+Tableau
+## 3                                                      Excel+Tableau
+## 4 C/C+++Python+Excel+Go+Java+Javascript+Matlab+PHP+Ruby+Visual Basic
+## 5                                                   Excel+SPSS+Other
+## 6                                  Python+Excel+Javascript+PHP+Other</code></pre>
+<p>But does this work for tibbles?</p>
+<pre class="r"><code>library(tibble)
+tibble(birds=seen)</code></pre>
+<pre><code>## # A tibble: 6 × 1
+##   birds[,&quot;kea&quot;] [,&quot;ruru&quot;] [,&quot;tui&quot;] [,&quot;tauhou&quot;] [,&quot;kaki&quot;]
+##   &lt;mr[,1]&gt;      &lt;mr[,1]&gt;  &lt;mr[,1]&gt; &lt;mr[,1]&gt;    &lt;mr[,1]&gt; 
+## 1 kea                     tui                           
+## 2 kea           ruru                           kaki     
+## 3               ruru                                    
+## 4               ruru      tui                           
+## 5 kea           ruru      tui                  kaki     
+## 6 kea                              tauhou</code></pre>
+<p>💩</p>
+<p>Tibbles have their own rendering system. If you try to explore it from the command line, you will find yourself in a maze of twisty little methods, all different. But there’s the <a href="https://cran.r-project.org/web/packages/vctrs/vignettes/s3-vector.html"><code>vctrs</code> package</a> to create new vector types.</p>
+<p>Multiple-response objects don’t map neatly on to any of the existing <code>vctrs</code> examples. There are multi-column types, such as the <code>rational</code> and <code>decimal2</code> examples at that link, but these have the same number of component columns for every instance of the type. There are list-of-vectors types, such as the polynomial example at that link, but these have potentially varying numbers of elements for every item in a vector. The multiple-response objects have the same ‘width’ for every item in a vector – five, for the birds; twenty for the common software packages – but different multiple response objects have different widths.</p>
+<p>I settled for the list-of-vectors approach. It will be relatively inefficient to do column operations with this representation, but that’s a problem for the future. Slightly more problematically, the list representation doesn’t straightforwardly allow <code>NA</code> values.</p>
+<p>Following the polynomial example, we get</p>
+<pre class="r"><code>library(vctrs)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;vctrs&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:tibble&#39;:
+## 
+##     data_frame</code></pre>
+<pre class="r"><code>library(rimu)
+
+new_vmr &lt;- function(x,levels=unique(do.call(c,x))) {
+  new_list_of(x, ptype = character(), class = &quot;vmr&quot;, levs=levels)
+}
+
+as.vmr&lt;-function(x,...) UseMethod(&quot;as.vmr&quot;)
+as.vmr.mr&lt;-function(x,...) {
+    l&lt;-levels(x)
+    y&lt;-lapply(apply(x,1,c, simplify=FALSE), function(i) l[as.logical(i)])
+    new_vmr(y,l)
+}
+as.vmr.default&lt;-function(x,...) as.vmr(as.mr(x,...))
+
+vec_ptype_full.vmr &lt;- function(x, ...) &quot;vmr&quot;
+vec_ptype_abbr.vmr &lt;- function(x, ...) &quot;vmr&quot;
+
+format.vmr &lt;- function(x, ...) {
+    format(as.mr(unclass(x),...,levels=attr(x,&quot;levs&quot;)))
+}
+
+obj_print_data.vmr &lt;- function(x, ...) {
+  if (length(x) == 0)
+    return()
+  print(format(x), quote = FALSE)
+}</code></pre>
+<p>Now to test this – remembering to drop the <code>NA</code> value for ruru:</p>
+<pre class="r"><code>v_seen&lt;- as.vmr(mr_na(seen,FALSE))
+v_seen</code></pre>
+<pre><code>## &lt;vmr[6]&gt;
+## [1] kea+tui           kea+ruru+kaki     ruru              ruru+tui         
+## [5] kea+ruru+tui+kaki kea+tauhou</code></pre>
+<pre class="r"><code>test&lt;-tibble(birbs=v_seen, id=1:6,count=mr_count(seen))
+dim(test)</code></pre>
+<pre><code>## [1] 6 3</code></pre>
+<pre class="r"><code>test</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##   birbs    id count
+##   &lt;vmr&gt; &lt;int&gt; &lt;dbl&gt;
+## 1   [2]     1     2
+## 2   [3]     2     3
+## 3   [1]     3     1
+## 4   [2]     4     2
+## 5   [4]     5     4
+## 6   [2]     6     2</code></pre>
+<p>Everything mostly works – but inside the tibble, the object prints in a weird shorthand that turns out to be the length of the vector for that row. This is a bit confusing, because the <code>vctrs</code> vignette says <em>The format method is also used by data frames, tibbles, and str()</em>. After a while trying to find the code that actually did the formatting, it occurred to me to try the polynomial example that the vignette provides. It also prints as <code>[2]</code>, etc, rather than calling the <code>format</code> method. So this is what’s supposed to be happening.</p>
+<p>There’s a <a href="https://cran.r-project.org/web/packages/vctrs/vignettes/pillar.html">separate vignette</a> on how to complicate the printing of tibbles with the <code>pillar</code> package. Following that, we can try</p>
+<pre class="r"><code>library(pillar)
+ pillar_shaft.vmr&lt;-function (x, ...) {
+     out &lt;- style_subtle(format(x))
+    new_pillar_shaft_simple(out, align = &quot;right&quot;)
+ }</code></pre>
+<p>which works</p>
+<pre class="r"><code>test</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##               birbs    id count
+##               &lt;vmr&gt; &lt;int&gt; &lt;dbl&gt;
+## 1 kea+tui               1     2
+## 2 kea+ruru+kaki         2     3
+## 3 ruru                  3     1
+## 4 ruru+tui              4     2
+## 5 kea+ruru+tui+kaki     5     4
+## 6 kea+tauhou            6     2</code></pre>
+<p>One more refinement: <code>vctrs</code> allows for full-width and abbreviated printing, and this printing format can get pretty wide, so I tried also defining an abbreviated format that’s just the binary values pasted together</p>
+<pre class="r"><code>pillar_shaft.vmr &lt;- function(x, ...) {
+  full &lt;- format(x)
+  binary &lt;- apply(as.matrix(as.mr(x)),1, paste0,collapse=&quot;&quot;)
+
+  pillar::new_pillar_shaft(
+    list(full = full, binary =binary),
+    width = pillar::get_max_extent(full),
+    min_width = pillar::get_max_extent(binary),
+    class = &quot;pillar_shaft_vmr&quot;
+  )
+}
+
+
+format.pillar_shaft_vmr &lt;- function(x, width, ...) {
+  if (get_max_extent(x$full) &lt;= width) {
+    ornament &lt;- x$full
+  } else {
+    ornament &lt;- x$binary
+  }
+
+  pillar::new_ornament(ornament, align = &quot;right&quot;)
+}</code></pre>
+<p>And it works.</p>
+<pre class="r"><code>tibble(birbs=v_seen, more_birbs=v_seen,
+       yet_more_birbs=v_seen, 
+       all_the_birbs=v_seen, 
+       will_it_never_end=v_seen)</code></pre>
+<pre><code>## # A tibble: 6 × 5
+##               birbs        more_birbs yet_more_birbs all_the_birbs will_it_never_e…
+##               &lt;vmr&gt;             &lt;vmr&gt;          &lt;vmr&gt;         &lt;vmr&gt;            &lt;vmr&gt;
+## 1 kea+tui           kea+tui                    11000         11000            11000
+## 2 kea+ruru+kaki     kea+ruru+kaki              10110         10110            10110
+## 3 ruru              ruru                       00100         00100            00100
+## 4 ruru+tui          ruru+tui                   01100         01100            01100
+## 5 kea+ruru+tui+kaki kea+ruru+tui+kaki          11110         11110            11110
+## 6 kea+tauhou        kea+tauhou                 10001         10001            10001</code></pre>
+<p>I’m still not sure what I want for an abbreviated printout, but at least it can be done. We have a <code>vctrs</code> class, and one that’s a bit different from the existing examples. There’s still an issue with <code>NA</code> entries, but that should be fixable somehow.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>If you have ideas about modelling and inference that you want it to support, now would be an excellent time to voice them<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
