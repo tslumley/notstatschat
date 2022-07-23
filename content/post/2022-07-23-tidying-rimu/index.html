@@ -55,7 +55,7 @@ dim(data.frame(birds=seen2))</code></pre>
 <pre class="r"><code>rimu:::format.mr</code></pre>
 <pre><code>## function (x, ...) 
 ## format(as.character.mr(x), ...)
-## &lt;bytecode: 0x123572070&gt;
+## &lt;bytecode: 0x151fc2070&gt;
 ## &lt;environment: namespace:rimu&gt;</code></pre>
 <p>and it works</p>
 <pre class="r"><code>data.frame(birds=seen)</code></pre>
@@ -267,7 +267,7 @@ format.pillar_shaft_vmr &lt;- function(x, width, ...) {
 ## 4 ruru+tui          ruru+tui                   01100         01100            01100
 ## 5 kea+ruru+tui+kaki kea+ruru+tui+kaki          11110         11110            11110
 ## 6 kea+tauhou        kea+tauhou                 10001         10001            10001</code></pre>
-<p>I’m still not sure what I want for an abbreviated printout, but at least it can be done. We have a <code>vctrs</code> class, and one that’s a bit different from the existing examples. There’s still an issue with <code>NA</code> entries, but that should be fixable somehow.</p>
+<p>I’m still not sure what I want for an abbreviated printout, but at least it can be done. We have a <code>vctrs</code> class, and one that’s a bit different from the existing examples. There’s still an issue with <code>NA</code> entries, but that should be fixable somehow. The <code>vctrs</code> approach will probably get added to the package – it isn’t there now.</p>
 <div class="footnotes">
 <hr />
 <ol>

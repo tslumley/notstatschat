@@ -208,4 +208,4 @@ tibble(birbs=v_seen, more_birbs=v_seen,
        will_it_never_end=v_seen)
 ```
 
-I'm still not sure what I want for an abbreviated printout, but at least it can be done. We have a `vctrs` class, and one that's a bit different from the existing examples. There's still an issue with `NA` entries, but that should be fixable somehow.
+I'm still not sure what I want for an abbreviated printout, but at least it can be done. We have a `vctrs` class, and one that's a bit different from the existing examples. There's still an issue with `NA` entries, but that should be fixable somehow. The `vctrs` approach will probably get added to the package -- it isn't there now. 
