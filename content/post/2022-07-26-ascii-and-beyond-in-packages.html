@@ -1,0 +1,15 @@
+---
+title: ASCII and beyond — will it play in Peoria?
+author: Thomas Lumley
+date: '2022-07-26'
+slug: ascii-and-beyond-in-packages
+categories: []
+tags: []
+---
+
+
+
+<p>One of the checks in <code>R CMD check</code> is for non-ASCII strings in data objects. Another is for non-ASCII variable names. At first, this sounds wrong. Why shouldn’t you use non-ASCII strings in data objects? If you want to count the number of cafés in Ōtautahi serving guláš, R can handle the accent aigu and the tohutō and the háček perfectly well.</p>
+<p>There are two quite separate issues. First, can you, dear reader, use non-ASCII strings properly? Yes. If you care about Ōtautahi, you probably have a system locale that can represent Unicode code point <code>U+014C Latin Capital Letter O with Macron</code> and that knows it’s a letter, and a set of fonts that can render it. That’s not the problem.</p>
+<p>The real problem is something different. If you put non-ASCII strings into your package, what will happen to the user in Peoria or Timbuktu or Xi’an who doesn’t have your system setup? You work with te reo Māori all the time, but they work with Amharic or Chinese or Algonquian, and they have different alphabetic needs. You think you’re specifying <code>U+014C Latin Capital Letter O with Macron</code>, but they may be seeing the two-letter pair 0xC4,0x81. That’s a problem if the data set is important to understanding your package – and if it isn’t, why are you including it?</p>
+<p><code>R CMD check</code> and CRAN are correctly obsessed with worldwide portability of R packages. If you aren’t, you might make different choices about non-ASCII strings, and that’s ok.</p>
