@@ -1,0 +1,25 @@
+---
+title: Tracking down a Real Data Set(tm)
+author: Thomas Lumley
+date: '2022-08-14'
+slug: tracking-down-a-real-data-set
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>As you may have noticed, I’ve been writing software for handling multiple-response data: a package for data manipulation and another one for modelling. Ivy Liu sent me two data sets she had used in a <a href="https://onlinelibrary.wiley.com/doi/10.1002/bimj.200710395">paper</a>. One was an interesting experiment from a linguist colleague in Wellington; the other was from <a href="https://pubmed.ncbi.nlm.nih.gov/11890315/">a competing stats paper</a> by Bilder and Loughin proposing a different analysis method. This data set was on the relative risk of urinary tract infection in 239 women at a university according to the type(s) of contraception they used.</p>
+<p>Bilder and Loughin attributed the data to the manual for LogXact, a package from Cytel Software for inference in logistic regression using an exact conditional likelihood. This is obviously a bit unsatisfactory as a source in an R package. I did find a copy of a manual online <a href="https://www.cytel.com/hubfs/0-library-0/pdfs/LX9-manual-12.2.11.pdf">(PDF)</a>. It describes a data set that’s addressing a similar question (though focused on separation in one covariate, because that’s their thing). The sample size is different, though: 437 rather than 239. The Cytel version of the data is given in the <a href="https://rdrr.io/cran/elrm/man/utiDat.html"><code>elrm</code> package</a>, down to the representation as 55 unique covariate patterns with frequency weights.</p>
+<p>Cytel do <a href="https://pubmed.ncbi.nlm.nih.gov/9345662/">give a primary reference</a>. The DOI and full-text links from that PubMed page are wrong: they’re to an editorial commentary, not to the paper. When you get to <a href="https://journals.lww.com/epidem/Abstract/1997/10000/Condom_Use_and_First_Time_Urinary_Tract_Infection.8.aspx">the paper itself</a>, it turns out that it’s a 1997 <em>case-control</em> study of <em>first-time</em> UTI – which is kind of important for, say, interpreting the proportion with UTIs. It’s also interesting that age, which is dichotomised at 24 in the Cytel version of the data, is divided up as 18-19/20-21/21+ in the original version. The original question was whether lubrication or spermicide on condoms had an effect on the risk of UTIs.</p>
+<p>So, we have <em>a</em> source but it looks as though these are not the data we’re looking for. Except that the key feature from Cytel’s point of view – that 7 out of 7 women who used a diaphragm were cases – it also present in the smaller dataset. Poking around in archive.org, I found the 239-observation data set on archives of Cytel’s website, so the attribution by Bilder and Loughin looks good. The 239-observation version has also been published in the <a href="https://rdrr.io/cran/logistf/man/sex2.html"><code>logistf</code> package</a>, cited to Cytel, and without any mention of its being case-control study, but I was unable to find any analysis or description at Cytel.</p>
+<p>I did try to reconstruct the smaller dataset as a subset of the larger one. I didn’t have any success, but that doesn’t mean much. It could be, for example, that the smaller dataset was an initial subset of the data or that it was a subset based on more than one covariate. I want to emphasise here that this is a good example, not a bad one. <strong>Everyone</strong> attributed the data to the source they personally got them from. It was still hard to track the original source, and there were still key descriptive details lost along the way.</p>
+<p>There are multiple reasons to use real data in statistical examples. You might want to interest the reader by implying that the method is useful in some setting they care about. You might want to use their knowledge of the background to support the choices you make in data analysis<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>. In a methods paper you might want an ‘admissibility example’<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> where your method is superior. Or you might genuinely have done the analysis because you (or a collaborator or client) wanted to know something about the data. All of these goals rely on data provenance, otherwise we can just land where we have with Anderson’s irises, endlessly benchmarking a myth.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>One reason teaching introductory statistics in graduate health sciences is easier than in undergraduate science is that there’s more overlap in students’ knowledge, so it’s easier to use real data this way<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>a term I have been told is due to Jerome Friedman<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
