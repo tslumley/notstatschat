@@ -1,0 +1,92 @@
+---
+title: A plug-in uniform law of large numbers
+author: Thomas Lumley
+date: '2022-09-28'
+slug: uniform-law-of-large-numbers
+categories: []
+tags: []
+---
+
+*Attention Conservation Notice:  I'm writing this down because I just spent too long trying to find a citation for it to give a student. A useful citation for many purposes is Newey WK (1989) "Uniform Convergence in Probability and Stochastic Equicontinuity" [Princeton Econometric Research Memorandum No 342](https://www.princeton.edu/~erp/ERParchives/archivepdfs/M342.pdf)* 
+
+There are lots of laws of large numbers: theorems whose conclusions are that an average $\bar X_n$ converges in some useful sense to an expected value $\mu$. You might have the simplest weak LLN: if $X_i$ are iid and $E[X_i^2]$ and $\mu=E[X_i]$ exist then
+$$\bar X_n-\mu\stackrel{p}{\to}0.$$
+You might have a law of large numbers for independent but not identically distributed sequences. Or for strong mixing random fields, or survey samples, or sparsely correlated sequences, or sequences of random functions, or whatever. Many of these are fairly easy to prove^[Chebyshev's inequality is your friend]; some are much more difficult^[Chebyshev's inequality is probably still your friend, but the sort of friend that's vaguely supportive without being helpful].  For notational reasons I'll assume we have a weak law of large numbers, with convergence in probability, but the argument goes through the same for other modes of convergence.
+
+The next complication is that you might have more than one such sequence.  If you have finitely many sequences ($K$, say), and $\bar X_{nk}$ is the mean of the first $n$ elements of sequence $k$, then
+$$\sup_{k\in 1\dots K} \left| \bar X_{nk}-\mu_k\right|\stackrel{p}{\to}0$$
+because the supremum is just a finite maximum.  
+
+If you have infinitely many sequences, things can go wrong.  There is, however, a fairly simple intermediate setting, where $X(\theta)$ is indexed by a parameter $\theta$ taking values in a compact set $\Theta$. The problem with general $\Theta$ is that weird stuff can happen at the remote edges, and the point of a compact set is that it doesn't have any remote edges for weird stuff to happen at. 
+
+We'll obviously need a bit more in the way of assumptions, because assuming $\Theta$ is compact gets you precisely nothing if $X(\theta)$ doesn't have some well-behavedness as a function of $\theta$. I will assume $X(\theta)$ is Lipschitz in $\theta$, in the sense that there is a metric $d()$ on $\Theta$ and a random variable $M$ with finite mean such that for any $\theta_1$, $\theta_2$,
+$$\left|X_i(\theta_1)-X_i(\theta_2)\right|\leq Md(\theta_1,\theta_2)$$
+<hr>
+
+Theorem: If $\bar X_n(\theta)\stackrel{p}{\to}\mu(\theta)$ pointwise and $X_i(\theta)$ satisfies the stochastic Lipschitz condition for all $\theta$ in a compact set $\Theta$, then 
+$$\sup_{\theta\in\Theta}\left |\bar X_n(\theta)-\mu(\theta)\right|\stackrel{p}{\to}0$$
+
+Proof:
+Let $\epsilon$ be given and choose $\theta_1\dots\theta_K$ so that the balls of radius $\epsilon$ around the $\theta_k$ cover all of $\Theta$ (using compactness). For any $\theta\in\Theta$ and the $\theta_k$ it belongs to,
+$$ |\bar X_n(\theta)-\mu(\theta)|< |X_n(\theta)-X_n(\theta_k)|+|\bar X_n(\theta_k)-\mu(\theta_k)|+|\mu(\theta_k)-\mu(\theta)|$$
+The middle term goes to zero in probability as $n\to\infty$ by the pointwise law of large numbers, the first and last terms are bounded in probability by $M\epsilon$ and bounded by $E[M]\epsilon$ respectively. 
+
+<hr>
+
+
+This proof is reminiscent of the classical proof of the Glivenko-Cantelli Lemma. It's a bit different, because it uses a Lipschitz condition rather than monotonicity to bound the first and last terms.  Notably, the Glivenko-Cantelli Lemma does not need the index set $\Theta$ to be compact and does not need $X_i(\theta)$ and $\mu(\theta)$ to even be continuous.  
+
+
+My result above is not quite the theorem given in Newey's report; he does not assume that the function $\bar X_n(\theta)$ is actually a sample average. That's important because assuming it's a sample average is valuable: for the analogue of the Glivenko-Cantelli theorem where you just have an arbitrary sequence $F_n$ of monotone functions converging to a monotone limit $F$, the convergence is in general *not* uniform on intervals containing a discontinuity of $F$.  The key thing about a sample average is that the points stay where you put them: they accumulate, but they don't move around.  The counterexamples to uniform convergence for monotone functions involve the discontinuities moving -- eg $F_n$ has a jump at $1-\frac{1}{n}$ and $F$ has a jump at 1.  Newey needs some additional assumptions to get equicontinuity as the price for generalising beyond sample averages. 
+
+
+For comparison, here's the Glivenko-Cantelli lemma, upgraded to take a plug-in pointwise LLN. 
+
+<hr>
+
+Theorem: Let $X_i$, $i=1\dots n$ be a sequence of real-value random variables with common marginal distribution $F$. Let 
+$$\mathbb{F}_n(t)=\frac{1}{n}\sum_{i=1}^n I(X\leq t)$$
+be the empirical cumulative distribution function.  If $\mathbb{F}_n(t)\stackrel{p}{\to}F(t)$ for every fixed $t$ then 
+$$\sup_t\left|\mathbb{F}_n(t)-F(t)\right|\stackrel{p}{\to}0$$
+Proof: Let $\epsilon>0$ be given. Choose $-\infty=t_1< t_2<\cdots< t_K=\infty$ so that $\max_k  (F(t_K)-F(t_{k-1}))<\epsilon$, where $F(-\infty)=0$ and $F(\infty)=1$. For any $t$, let $t^*$ be the first $t_k$ with $t\leq t_k$
+$$\mathbb{F}_n(t)-F(t)\leq (F(t^*)-F(t))+|\mathbb{F}_n(t^*)-F(t^*)|\leq \epsilon+\max_k|\mathbb{F}_n(t_k)-F(t_k)|$$
+By assumption, we have pointwise (and thus uniform) convergence over $k$, so the second term on the right goes to zero in probability. 
+
+Similarly,
+$$ \mathbb{F}_n(t)-F(t)\geq (F(t^*)-F(t))-|\mathbb{F}_n(t^*)-F(t^*)|\geq\epsilon-\max_k|\mathbb{F}_n(t^*)-F(t^*)|$$
+which again goes to $\epsilon$ in probability.
+
+Since $\epsilon$ was arbitrary we are done. 
+<hr>
+
+The two proofs can be reunited by using bracketing numbers, which gives the proof I actually want to present. I got this proof from *Weak Convergence and Empirical Processes* by van der Vaart and Wellner, where it's about a third of the first page of Chapter 2.4, but (a) not everyone has read that book,^[shocking, I know] and (b) the proof is presented there for iid sequences, so it's not that useful to me as a citation.
+
+To start with, we need to define bracketing numbers.  Given two functions $\ell$ and $u$, the bracket $[\ell,u]$ is the set of functions $f$ with $\ell\leq f\leq u$. An $\epsilon$-bracket in some norm $\|\cdot\|$is a bracket with $\|u-l\|\leq \epsilon.$ The bracketing number $N_{[\,]}(\epsilon,\|\cdot\|,{\cal F})$ of a set ${\cal F}$ of functions is the minimum number of $\epsilon$-brackets needed to cover ${\cal F}$.
+
+<hr>
+
+Theorem: Let ${\cal F}$ be a class of measurable functions such that (i) $f(X)$ satisfies a weak law of large numbers for each $f\in{\cal F}$ and (ii) the bracketing numbers $N_{[\,]}(\epsilon,\|\cdot\|,{\cal F})$ are finite for every $\epsilon>0$. The law of large numbers holds uniformly over $f\in{\cal F}$. 
+
+Proof:
+Let $\epsilon>0$ be given. Write $\bar X_n(f)$ for $\frac{1}{n}\sum_i f(X_i)$ and $\mu(f)$ for $E[f(X)]$. Choose $N_{[\,]}(\epsilon,\|\cdot\|,{\cal F})$ $\epsilon$-brackets that cover ${\cal F}$.  Write $u_f$ for the upper function in the bracketing containing $f$ and $\ell_f$ for the corresponding lower function. 
+
+$$\bar X_n(f)-\mu(f)\leq(\mu(u_f)-\mu(f))+|\bar X_n(u_f)-\mu(u_f)|$$
+so 
+$$\begin{align}\sup_{f\in{\cal F}} (\bar X_n(f)-\mu(f)) &\leq \sup_{f\in{\cal F}}(\mu(u_f)-\mu(f))+ \sup_{f\in{\cal F}}|\bar X_n(u_f)-\mu(u_f)|\\&=\sup_{f\in{\cal F}}(\mu(u_f)-\mu(f))+ \max_{i}|\bar X_n(u_i)-\mu(u_I)|\end{align}$$
+The first term is bounded by $\epsilon$ (by construction). Because there are only finitely many distinct $u_i$ and we assume pointwise convergence, the second term converges to zero in probability as $n\to\infty$.
+
+Similarly
+$$\bar X_n(f)-\mu(f)\geq(\mu(u_f)-\mu(f))-|\bar X_n(u_f)-\mu(u_f)|$$
+so 
+$$\begin{align}\inf_{f\in{\cal F}} (\bar X_n(f)-\mu(f)) &\geq \inf_{f\in{\cal F}}(\mu(u_f)-\mu(f))- \inf_{f\in{\cal F}}|\bar X_n(u_f)-\mu(u_f)|\\&=\inf_{f\in{\cal F}}(\mu(u_f)-\mu(f))- \min_{i}|\bar X_n(u_i)-\mu(u_I)|\end{align}$$
+The first term is bounded by $\epsilon$ (by construction); the second term again converges to zero in probability as $n\to\infty$.
+
+Since  $\epsilon$ was arbitrary, we are done.
+
+<hr>
+
+The classical Glivenko-Cantelli lemma is the case where ${\cal F}$ is the set of indicators of half-lines: ${\cal F}=\{f_t(x)=I(x\geq t), t\in\mathbb{R}\}$, whose bracketing numbers that are $O(\epsilon^{-1})$.  The first result above is for a set of functions indexed by a compact metric space $\Theta$, where the functions are Lipschitz in the parameter. The bracketing numbers are proportional to the number of $\epsilon$-balls it takes to cover $\Theta$, which is finite for every $\epsilon$.^[The property of having this sort of finite cover for every $\epsilon$ is called "total boundedness". A compact set in a metric space is totally bounded, and a totally bounded set in a metric space has compact closure.] 
+
+This Lipschitz-in-the-parameter example is also valuable because the bracketing numbers are small enough that you get a uniform central limit theorem for ${\cal F}$ with independent data -- though, sadly, there aren't plug-in uniform CLTs for dependent data.^[The hard part... one of the hard parts... is proving tightness, which involves expectations of suprema over $\theta$, and these genuinely are affected by the dependence. There aren't even fully standardised ways to do the proofs, though something like Bernstein's inequality is a good start] The uniform CLT for iid data is Theorem 5.31 of van der Vaart's *Asymptotic Statistics* (though it's not actually proved until Chapter 19). For independent but not iid data I think you need the van der Vaart and Wellner book, Theorem 2.11.9 and its corollaries and follow-ups. 
+
+There are a few similar uniform CLT results for dependent data; for example, there's a [very pretty argument](http://www.numdam.org/item/?id=AIHPB_1995__31_2_393_0]) by Doukhan, Massart and Rio for stationary $\beta$-mixing sequences.  Most of the work is for stationary sequences, because probabilists understandably don't want to complicate the interesting and intricate arguments needed to handle dependence with boring and intricate arguments needed to handle non-stationary sequences. One [useful exception](https://doi.org/10.2307/1403549) is by Andrews and Pollard, handling not necessarily stationary strong mixing sequences.
