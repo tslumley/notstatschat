@@ -65,7 +65,7 @@ To start with, we need to define bracketing numbers.  Given two functions $\ell$
 
 <hr>
 
-Theorem: Let ${\cal F}$ be a class of measurable functions such that (i) $f(X)$ satisfies a weak law of large numbers for each $f\in{\cal F}$ and (ii) the bracketing numbers $N_{[\,]}(\epsilon,\|\cdot\|,{\cal F})$ are finite for every $\epsilon>0$. The law of large numbers holds uniformly over $f\in{\cal F}$. 
+Theorem: Let ${\cal F}$ be a class of measurable functions and $X_i$ a sequence such that (i) $f(X_i)$ satisfies a weak law of large numbers for each $f\in{\cal F}$ and (ii) the bracketing numbers $N_{[\,]}(\epsilon,\|\cdot\|,{\cal F})$ are finite for every $\epsilon>0$. The law of large numbers holds uniformly over $f\in{\cal F}$. 
 
 Proof:
 Let $\epsilon>0$ be given. Write $\bar X_n(f)$ for $\frac{1}{n}\sum_i f(X_i)$ and $\mu(f)$ for $E[f(X)]$. Choose $N_{[\,]}(\epsilon,\|\cdot\|,{\cal F})$ $\epsilon$-brackets that cover ${\cal F}$.  Write $u_f$ for the upper function in the bracketing containing $f$ and $\ell_f$ for the corresponding lower function. 
