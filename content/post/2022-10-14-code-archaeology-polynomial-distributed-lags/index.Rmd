@@ -1,0 +1,29 @@
+---
+title: 'Code archaeology: polynomial distributed lags'
+author: Thomas Lumley
+date: '2022-10-14'
+slug: code-archaeology-polynomial-distributed-lags
+categories: []
+tags: []
+---
+
+Back in the early 2000s, when I was working on air pollution epidemiology, I wrote some code to fit polynomial distributed lag models.  These are a slightly primitive form of regularisation for when you want several lags of an exposure variable as predictors. Last week I was looking for an R package to fit these models, for a student working on Covid wastewater modelling. I didn't find an R package, but my code was still on the University of Washington website, [here](https://faculty.washington.edu/tlumley/pdl.R).
+
+One fix was needed due to changes in R.  The function `contr.poly` acquired a new second argument, `scores`, in version 1.8.0, so a call `contr.poly(lag,F)` needed editing to `contr.poly(lag, contrasts=F)`.  I've moved the code to [a github gist](https://gist.github.com/tslumley/614b8ae9f0207bc602e9a007665846c2). Otherwise, the code still does what it did twenty years ago. 
+
+
+So, what do polynomial distributed lag models do? The idea is that you want to fit, say,
+$$E[Y_t]=\alpha+\beta_0X_t+\beta_1X_{t-1}+\beta_2X_{t-2}+\cdots+\beta_KX_{t-K}+\gamma X^*_t$$
+Since the lagged values of $X$ are likely to be highly correlated, the individual estimates $\hat\beta_{t-k}$ are going to look strange. They might oscillate a lot, someone of them might have the 'wrong' sign, and so on. You might prefer to regularise them so that the coefficients from adjacent lags are close in value.  The polynomial distributed lag approach does this smoothing by fitting $\beta_k$ as a polynomial of degree less than $K+1$ in $k$. Suppose we choose $4$ as  the degree. We can create $4$ new variables:
+$$\begin{align} Z_{0t}=1\times X_t+1\times X_{t-1}+1\times X_{t-2}+\cdots&+1\times X_K\\ Z_{1t}=0\times X_t+1\times X_{t-1}+2\times X_{t-2}+\cdots&+K\times X_K\\Z_{2t}=0\times X_t+1\times X_{t-1}+4\times X_{t-2}+\cdots&+K^2\times X_K\\Z_{3t}=0\times X_t+1\times X_{t-1}+8\times X_{t-2}+\cdots&+K^3\times X_K\end{align}.$$
+The coefficients $\delta_k$ of these variables are a basis for all the $\beta_k$ that can be written as cubic polynomials in $k$. So we can fit `Y~Z0+Z1+Z2+Z2` to get $\hat\delta$s and take linear combinations of them to get $\hat\beta$s.  We don't actually use *these* basis functions, because you get extra numerical analysis coolness points for using an orthogonal basis (hence `contr.poly`, above), but that's the idea. 
+
+Could we do this with some more modern-looking approach, perhaps using cross-validation to select the smoothness? It's not easy to use cross-validation, because the goal of regularisation here isn't to lower the prediction error but to match our prior expectation of smoothness.  It would be possible to penalise the differences $\hat\beta_k-\hat\beta_{k-1}$, much as we do with splines, but the penalty would still have to be chosen based on prior knowledge and/or desired smoothness. 
+
+The other thing to mention here is the code. The linear algebra to transform between ($\beta$, $X$) and $(\delta, Z)$ is not too complicated. Handling the change in the number of columns of the design matrix is trickier.  The code uses the `specials` argument to `terms.formula`, and Terry Therneau's `untangle.specials` function from the `survival` package, and code I wrote to transform the `assign` attribute of a model matrix from the format used in R to the format `untangle.specials` was expecting.  A call like
+
+```
+m<-pdlglm(yy~pdl(zz,4,2)+sin(zz))
+```
+
+asking for a 2-df polynomial for four lags of `zz` calls `glm` with two linear combinations of the four lags and then rewrites the returned object to include the four coefficients $\beta$ for the four lags (and does similar surgery on the estimated covariance matrix). This would be trivial if there was one `pdl` term and no other covariates, but the bookkeeping gets a bit annoying when there might be multiple terms and multiple other covariates. 
