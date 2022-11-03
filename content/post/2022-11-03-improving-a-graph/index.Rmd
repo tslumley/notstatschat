@@ -9,7 +9,7 @@ tags: []
 
 A lot of buses are being cancelled in Auckland at the moment.  This is partly due to Covid, but also due to difficulty in recruiting bus drivers because of poor pay and conditions. And probably other reasons, too.   
 
-```{r hide=TRUE}
+```{r include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, fig.path = "static")
 ```
 
