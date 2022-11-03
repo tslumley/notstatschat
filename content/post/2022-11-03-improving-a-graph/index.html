@@ -10,48 +10,49 @@ tags: []
 
 
 <p>A lot of buses are being cancelled in Auckland at the moment. This is partly due to Covid, but also due to difficulty in recruiting bus drivers because of poor pay and conditions. And probably other reasons, too.</p>
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, fig.path = &quot;static&quot;)</code></pre>
 <p>I’ve put about six weeks of daily cancellation data in a Github <a href="https://gist.github.com/tslumley/9ac8df14309ecc5936183de84b57c987%5D">gist</a></p>
 <p>Here’s a default graph:</p>
 <pre class="r"><code>d&lt;-read.table(&quot;https://gist.githubusercontent.com/tslumley/9ac8df14309ecc5936183de84b57c987/raw/9ebf665b2ff9a93c1dbc73caf5ff346909899827/busdata.txt&quot;,header=TRUE)
-d$date&lt;-as.Date(paste(2022,d$mo,d$d,sep=&quot;-&quot;))
+d$date&lt;-as.Date(paste(2022, d$mo, d$d,sep=&quot;-&quot;))
 plot(cancels~date, data=d)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p><img src="staticunnamed-chunk-2-1.png" width="672" /></p>
 <p>There are a lot of cancellations, but otherwise it’s not all that clear.</p>
 <p>Just adjusting the aspect ratio helps; you can kind of see the weekday/weekend distinction</p>
 <pre class="r"><code>plot(cancels~date, data=d)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-3-1.png" width="90%" /></p>
 <p>We can try fiddling with the plotting style</p>
 <pre class="r"><code>plot(cancels~date, data=d, type=&quot;h&quot;)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-4-1.png" width="90%" /></p>
 <pre class="r"><code>plot(cancels~date, data=d, type=&quot;l&quot;)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-2.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-4-2.png" width="90%" /></p>
 <pre class="r"><code>plot(cancels~date, data=d, type=&quot;o&quot;)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-3.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-4-3.png" width="90%" /></p>
 <pre class="r"><code>plot(cancels~date, data=d, type=&quot;o&quot;,lty=2)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-4.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-4-4.png" width="90%" /></p>
 <p>I think the last one is the best, but the weekday/weekend distinction isn’t that clear</p>
 <pre class="r"><code>d$weekend&lt;-with(d, weekdays(d$date) %in% c(&quot;Saturday&quot;,&quot;Sunday&quot;))
 plot(cancels~date, data=d, type=&quot;o&quot;,col=1+weekend,lty=2)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-4-1.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-5-1.png" width="90%" /></p>
 <pre class="r"><code>plot(cancels~date, data=d,col=1+weekend,lty=2)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-4-2.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-5-2.png" width="90%" /></p>
 <pre class="r"><code>plot(cancels~date, data=d,col=1+weekend,lty=2,pch=19)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-4-3.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-5-3.png" width="90%" /></p>
 <p>The rationale for open circles as a plotting default was that they handle overlaps better, which isn’t an issue here.</p>
 <p>There are now two very obvious weekdays with very low cancellation counts. These, it turns out, are holidays: the memorial day for Queen Elizabeth II, and Labour Day. They should probably be coded together with weekends</p>
 <pre class="r"><code>d$workday&lt;- with(d, !(weekdays(date) %in% c(&quot;Saturday&quot;,&quot;Sunday&quot;)))
 d$workday[d$day==24 &amp; d$mo==10]&lt;-FALSE
 d$workday[d$day==26 &amp; d$mo==9]&lt;-FALSE
 plot(cancels~date, data=d,col=1+workday,lty=2,pch=19)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-6-1.png" width="90%" /></p>
 <pre class="r"><code>plot(cancels~date, data=d,col=4-2*workday,lty=2,pch=19)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-2.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-6-2.png" width="90%" /></p>
 <p>A legend is helpful, and if you might be posting the graph to Twitter it’s good to make sure the background isn’t transparent</p>
 <pre class="r"><code>par(bg=&quot;floralwhite&quot;)
 plot(cancels~date,data=d,pch=19, col=4-2*workday,ylim=c(200,2100),xlab=&quot;&quot;,ylab=&quot;Cancelled trips&quot;)
 legend(&quot;bottomright&quot;,pch=20, col=c(2,4), legend=c(&quot;Working day&quot;,&quot;weekend/holiday&quot;),bty=&quot;n&quot;,ncol=2)
 title(main=&quot;Auckland bus cancellations&quot;)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-7-1.png" width="90%" /></p>
 <p>It would be easier to see trends with connecting lines, but they’d need to be separate for workdays and non-workdays because the colours are different. This code is a bit of a hack and I should use proper conditional statements, but this is how I actually did it. It relies on <code>FALSE/FALSE</code> being <code>NaN</code> and being skipped by <code>lines</code></p>
 <pre class="r"><code>par(bg=&quot;floralwhite&quot;)
 plot(cancels~date,data=d,pch=19, col=4-2*workday,ylim=c(200,2100),xlab=&quot;&quot;,ylab=&quot;Cancelled trips&quot;)
@@ -59,7 +60,7 @@ legend(&quot;bottomright&quot;,pch=20, col=c(2,4), legend=c(&quot;Working day&qu
 title(main=&quot;Auckland bus cancellations&quot;)
 with(d, lines(date,cancels*workday/workday, lty=2,col=2))
 with(d, lines(date,cancels*weekend/weekend, lty=2,col=4))</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-7-1.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-8-1.png" width="90%" /></p>
 <p>And, finally, labels for the two holidays:</p>
 <pre class="r"><code>par(bg=&quot;floralwhite&quot;)
 plot(cancels~date,data=d,pch=19, col=4-2*workday,ylim=c(200,2100),xlab=&quot;&quot;,ylab=&quot;Cancelled trips&quot;)
@@ -70,5 +71,5 @@ with(d, lines(date,cancels*weekend/weekend, lty=2,col=4))
 
 text(as.Date(&quot;2022-9-26&quot;),518,adj=-0.2,&quot;QEII Memorial&quot;,cex=0.9,col=4)
 text(as.Date(&quot;2022-10-24&quot;),708,adj=-0.2,&quot;Labour Day&quot;,cex=0.9,col=4)</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-8-1.png" width="90%" /></p>
+<p><img src="staticunnamed-chunk-9-1.png" width="90%" /></p>
 <p>The colour for the point labels looks lighter than the colour for the point itself. This is an illusion coming from the lines in the letters being relatively thin. I tried to fix it, but getting the colour ‘right’ was hard so I gave up.</p>
