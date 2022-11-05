@@ -1,0 +1,100 @@
+---
+title: Bus pruning
+author: Thomas Lumley
+date: '2022-11-05'
+slug: bus-pruning
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>As I said last time, there have been quite a lot of bus cancellations in Auckland recently. Auckland Transport have decided to (temporarily) give up on some of the more-frequently cancelled trips, so that people can plan their travel more sensibly<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, which is actually a good idea.</p>
+<p>So, which buses are we losing? The static GTFS data at AT currently describes the new timetable and the current timetable.</p>
+<pre class="r"><code>cal&lt;-read.csv(&quot;~/Downloads/gtfs (2)/calendar.txt&quot;)
+routes&lt;-read.csv(&quot;~/Downloads/gtfs (2)/routes.txt&quot;)
+trips&lt;-read.csv(&quot;~/Downloads/gtfs (2)/trips.txt&quot;)
+stoptimes&lt;-read.csv(&quot;~/Downloads/gtfs (2)/stop_times.txt&quot;)</code></pre>
+<p>The <code>calendar</code> file lists which <em>services</em> run, by day of the week. The <code>trips</code> file tells you the <code>trip_id</code> for each service. The <code>routes</code> file tells you the route name for each trip, and the <code>stoptimes</code> file tells you arrival times for each stop on each trip.</p>
+<p>Start off by loading a bit of tidyverse</p>
+<pre class="r"><code>library(dplyr)
+library(stringr)
+library(ggplot2)</code></pre>
+<p>One feature of the GTFS standard is the exciting range of unique identifiers. This is enhanced by the Auckland Transport habit of putting the revision date into the various identifiers to make them more unique – we’re taking advantage of that here, to separate the current and future timetables. The <code>short_trip_id</code> is the <code>trip_id</code> minus the revision tag.</p>
+<pre class="r"><code>buses&lt;- stoptimes |&gt; 
+    inner_join(trips, by=&quot;trip_id&quot;) |&gt;
+    inner_join(routes, by=&quot;route_id&quot;) |&gt;
+    inner_join(cal, by=&quot;service_id&quot;) |&gt;
+    mutate(short_trip_id= str_extract(trip_id, &quot;[^-]+&quot;))</code></pre>
+<p>Separate out new and old timetables.</p>
+<pre class="r"><code>oldtrips&lt;-filter(buses, start_date==&quot;20221026&quot;) 
+newtrips&lt;-filter(buses, start_date==&quot;20221106&quot;) |&gt; 
+    distinct(short_trip_id)</code></pre>
+<p>We have to worry, in principle, that some trips could just have new trip ids – there’s no natural law requiring them to stay constant. Fortunately, the number of trips per weekday that disappear is 1152, which is close to the roughly 1000 we were promised, and the number of new trip ids is much smaller. So I’ll go with looking at <code>short_trip_id</code>s that have been removed.</p>
+<p>Now, do the differencing and set up a time variable. Annoyingly, neither base R nor <code>lubridate</code> has a simple time-of-day variable (perhaps because it’s not actually as simple as it looks). I’ll discard a few rows where this time variable breaks because of times after midnight; these are nearly all trains rather than buses.</p>
+<p>I’m also going to pretend for visualisation purposes that all weekdays are the same (which is approximately true in Auckland, but could be far from true in other GTFS datasets)</p>
+<pre class="r"><code>gone_buses&lt;-oldtrips |&gt;
+    anti_join(newtrips, by=&quot;short_trip_id&quot;) |&gt;
+    mutate(stop_time=as.POSIXct(strptime(arrival_time,format=&quot;%H:%M:%S&quot;))-
+             as.POSIXct(strptime(&quot;00:00:00&quot;,format=&quot;%H:%M:%S&quot;))) |&gt;
+  filter(!is.na(stop_time)) |&gt;
+    mutate(daytype = ifelse(monday==1,&quot;Weekday&quot;,&quot;Weekend&quot;))</code></pre>
+<p>Some pictures: stop visits to be removed, in half-hour bins, by weekday vs weekend</p>
+<pre class="r"><code>print(ggplot(gone_buses)+geom_histogram(aes(x=stop_time),binwidth=0.5)+
+  facet_wrap(&quot;daytype&quot;)+
+  xlab(&quot;Time&quot;)+
+  ylab(&quot;Stops per half-hour&quot;))</code></pre>
+<pre><code>## Don&#39;t know how to automatically pick scale for object of type difftime. Defaulting to continuous.</code></pre>
+<p><img src="staticunnamed-chunk-7-1.png" width="90%" /></p>
+<p>and trips to be removed</p>
+<pre class="r"><code>gone_buses |&gt; 
+    group_by(daytype) |&gt; 
+    distinct(short_trip_id, .keep_all=TRUE) |&gt;
+    ggplot()+geom_histogram(aes(x=stop_time),binwidth=0.5)+
+    facet_wrap(&quot;daytype&quot;)+xlab(&quot;Time&quot;)+
+    ylab(&quot;Trips per half-hour&quot;)</code></pre>
+<pre><code>## Don&#39;t know how to automatically pick scale for object of type difftime. Defaulting to continuous.</code></pre>
+<p><img src="staticunnamed-chunk-8-1.png" width="90%" /></p>
+<p>As you’d expect, the big cuts are in the morning and evening peaks, when the system gets really short of drivers.</p>
+<p>The next question is where in Auckland the trips will be lost. I’ll use the first digit of the route number as a rough indication, with the small number of named routes handled separately</p>
+<pre class="r"><code>gone_routes&lt;-gone_buses |&gt;
+    distinct(short_trip_id, .keep_all=TRUE)
+    
+gone_routes_named&lt;-filter(gone_routes, 
+    route_short_name %in% c(&quot;NX1&quot;,&quot;OUT&quot;,&quot;INN&quot;,&quot;CTY&quot;,&quot;TMK&quot;))
+
+gone_routes_numbered&lt;-mutate(gone_routes, group=substr(route_short_name,1,1)) |&gt;
+    filter(group&lt;&quot;9&quot;)
+    
+gone_routes_named |&gt; 
+  group_by(route_short_name) |&gt; 
+  summarise(n())    </code></pre>
+<pre><code>## # A tibble: 5 × 2
+##   route_short_name `n()`
+##   &lt;chr&gt;            &lt;int&gt;
+## 1 CTY                 50
+## 2 INN                 26
+## 3 NX1                 53
+## 4 OUT                 12
+## 5 TMK                  6</code></pre>
+<pre class="r"><code>gone_routes_numbered |&gt; 
+  group_by(group) |&gt; 
+  summarise(n())    </code></pre>
+<pre><code>## # A tibble: 7 × 2
+##   group `n()`
+##   &lt;chr&gt; &lt;int&gt;
+## 1 1       204
+## 2 2       292
+## 3 3        49
+## 4 5        56
+## 5 6       102
+## 6 7        46
+## 7 8        46</code></pre>
+<p>One obvious place to look is routes beginning with <code>3</code>, which are in south Auckland. They’re actually doing ok. The worst seem to be <code>2</code>, which run down through the central isthmus, and <code>1</code> which go west, though the losses on the NX1 over the Harbour Bridge could hurt.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>and not at all so that the cancellation figures look better<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
