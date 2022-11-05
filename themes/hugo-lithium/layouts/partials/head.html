@@ -9,6 +9,7 @@
 {{ else }}
 <title>{{ .Title }}{{ with .Params.subtitle }} - {{ . }} {{ end }} - {{ .Site.Title }}</title>
 <meta property="og:title" content="{{ .Title }} - {{ .Site.Title }}">
+<a href="https://wandering.shop/@tslumley" rel="me">
 {{ end }}
 
 {{ if eq .URL "/" }}

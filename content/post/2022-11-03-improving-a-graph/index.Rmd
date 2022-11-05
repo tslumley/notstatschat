@@ -97,3 +97,26 @@ text(as.Date("2022-10-24"),708,adj=-0.2,"Labour Day",cex=0.9,col=4)
 ```
 
 The colour for the point labels looks lighter than the colour for the point itself. This is an illusion coming from the lines in the letters being relatively thin. I tried to fix it, but getting the colour 'right' was hard so I gave up.
+
+#### Update
+
+I extracted the totals from the static GTFS data. I'm going to assume the holiday numbers were like Sunday, because I don't want to mess around with the calendar adjustment features of GTFS right now.
+
+```{r, fig.height=5, fig.width=10, out.width="90%"}
+totals<-c(Monday = 13933, Tuesday = 13945, Wednesday = 13934, Thursday = 13937, 
+Friday = 14087, Saturday = 9728, Sunday = 9378)
+d$total<-totals[weekdays(d$date)]
+d$total[!d$workday & !d$weekend]<-totals["Sunday"]
+d$pct<- 100*with(d, cancels/total)
+par(bg="floralwhite")
+plot(pct~date,data=d,pch=19, col=4-2*workday,ylim=c(0,20),xlab="",ylab="% cancelled")
+legend("bottomright",pch=20, col=c(2,4), legend=c("working day","weekend/holiday"),bty="n",ncol=2)
+title(main="Auckland bus cancellations")
+with(d, lines(date,pct*workday/workday, lty=2,col=2))
+with(d, lines(date,pct*weekend/weekend, lty=2,col=4))
+
+text(as.Date("2022-9-26"),100*518/9378,adj=-0.2,"QEII Memorial",cex=0.9,col=4)
+text(as.Date("2022-10-24"),100* 708/9378,adj=-0.2,"Labour Day",cex=0.9,col=4)
+```
+
+There's a lower cancellation *rate* on Saturdays, but not clearly on Sundays.
