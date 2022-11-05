@@ -75,7 +75,7 @@ text(as.Date(&quot;2022-10-24&quot;),708,adj=-0.2,&quot;Labour Day&quot;,cex=0.9
 <p>The colour for the point labels looks lighter than the colour for the point itself. This is an illusion coming from the lines in the letters being relatively thin. I tried to fix it, but getting the colour ‘right’ was hard so I gave up.</p>
 <div id="update" class="section level4">
 <h4>Update</h4>
-<p>I extracted the totals from the static GTFS data. I’m going to assume the holiday numbers were like Sunday, because I don’t want to mess around with the calendar adjustment features of GTFS right now.</p>
+<p>I extracted the totals from <code>calendar.txt</code> in the static GTFS data. I’m going to assume the holiday numbers were like Sunday, because I don’t want to mess around with the calendar adjustment features of GTFS right now.</p>
 <pre class="r"><code>totals&lt;-c(Monday = 13933, Tuesday = 13945, Wednesday = 13934, Thursday = 13937, 
 Friday = 14087, Saturday = 9728, Sunday = 9378)
 d$total&lt;-totals[weekdays(d$date)]

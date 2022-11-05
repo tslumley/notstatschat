@@ -100,7 +100,7 @@ The colour for the point labels looks lighter than the colour for the point itse
 
 #### Update
 
-I extracted the totals from the static GTFS data. I'm going to assume the holiday numbers were like Sunday, because I don't want to mess around with the calendar adjustment features of GTFS right now.
+I extracted the totals from `calendar.txt` in the static GTFS data. I'm going to assume the holiday numbers were like Sunday, because I don't want to mess around with the calendar adjustment features of GTFS right now.
 
 ```{r, fig.height=5, fig.width=10, out.width="90%"}
 totals<-c(Monday = 13933, Tuesday = 13945, Wednesday = 13934, Thursday = 13937, 
