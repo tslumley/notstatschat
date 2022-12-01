@@ -1,0 +1,35 @@
+---
+title: The sandwich and the t-test
+author: Thomas Lumley
+date: '2022-12-01'
+slug: the-sandwich-and-the-t-test
+categories: []
+tags: []
+---
+
+
+
+<p>As every schoolchild know, you can derive the Student <span class="math inline">\(t\)</span>-test as a linear regression with a single binary predictor. How about the Welch/Satterthwaite unequal-variance <span class="math inline">\(t\)</span>-test?</p>
+<p>We have a technique for handling linear regression with unequal variances in the responses, the ‘model-agnostic’<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> or ‘model-robust’ sandwich estimator. You might wonder what happens if you use the sandwich estimator on a linear regression with a single binary predictor.</p>
+<p>Let <span class="math inline">\(X\)</span> be binary, coded so it has zero mean (so that it’s orthogonal to the intercept) and fit a linear model with <span class="math inline">\(Y\)</span> as the outcome and <span class="math inline">\(X\)</span> as the predictor:
+<span class="math display">\[E[Y]=\alpha+\beta X.\]</span></p>
+<p>We know <span class="math inline">\(\hat\beta\)</span> is the difference in mean between the two groups. The sandwich variance estimator for <span class="math inline">\((\hat\alpha,\hat\beta)\)</span> is
+<span class="math display">\[(X^TX)^{-1}\left(\sum_{i=1}^n x_ix_i^T(y_i-\hat\mu_i)^2\right)(X^TX)^{-1}\]</span>
+First, note that the two outer matrices are diagonal, because of the centering of <span class="math inline">\(X\)</span>, so that we need only consider the <span class="math inline">\((\beta,\beta)\)</span> component.</p>
+<p>We can break the inner sum into sums over the two groups. Within each group, <span class="math inline">\(x_ix_i^T\)</span> is constant, so it can be taken out of the sum. Write <span class="math inline">\(x_{(0)}\)</span>, <span class="math inline">\(x_{(1)}\)</span> for the two values of <span class="math inline">\(X\)</span>; <span class="math inline">\(n_0,\,n_1\)</span> for the two sample sizes; and <span class="math inline">\(S_0\)</span>, <span class="math inline">\(S_1\)</span> for the standard deviations of <span class="math inline">\(Y\)</span> in the two groups. Then
+<span class="math display">\[\left(\sum_{i=1}^n x_ix_i^T(y_i-\hat\mu_i)^2\right)=x_{(0)}^2(n_0-1)S_0^2+x_{(1)}^2(n_1-1)S^2_0\]</span></p>
+<p>Next, note that <span class="math inline">\(x_{(0)}\)</span> and <span class="math inline">\(x_{(1)}\)</span> can be determined from <span class="math inline">\(n_0\)</span> and <span class="math inline">\(n_1\)</span>: we have <span class="math inline">\(x_{(1)}-x_{(0)}=1\)</span> and <span class="math inline">\(n_1x_{(1)}+n_0x_{(0)}=0\)</span>, giving <span class="math inline">\(x_{(1)}=n_0/n\)</span> and <span class="math inline">\(x_{(0)}=-n_1/n\)</span>, so
+the middle term is
+<span class="math display">\[\frac{n_1^2(n_0-1)}{n^2}S_0^2+\frac{n_0^2(n_1-1)}{n^2}S_1^2.\]</span></p>
+<p>In the outside of the sandwich the <span class="math inline">\((\beta,\beta)\)</span> element is just <span class="math inline">\(\sum_i x_i^2\)</span>, which is <span class="math display">\[n_1n_0^2/n^2+n_0n_1^2/n^2=n_0n_1/n.\]</span>
+Putting these together, the variance is
+<span class="math display">\[\frac{n}{n_0n_1}\left(\frac{n_1^2(n_0-1)}{n^2}S_0^2+\frac{n_0^2(n_1-1)}{n^2}S_1^2\right)\frac{n}{n_0n_1}= \frac{1}{n_0}\left(\frac{n_0-1}{n_0}S^2_0\right)+ \frac{1}{n_1}\left(\frac{n_1-1}{n_1}S^2_1\right).\]</span>
+This is <em>almost</em> exactly the variance for the Welch-Satterthwaite <span class="math inline">\(t\)</span>-test, except that it uses <span class="math inline">\(n_i\)</span> rather than <span class="math inline">\(n_i-1\)</span> in the denominator of the individual group variances. Or, writing <span class="math inline">\(\hat\sigma^2_i\)</span> for the variance estimator in group <span class="math inline">\(i\)</span> using <span class="math inline">\(n_i\)</span> in the denominator it’s just <span class="math inline">\(\hat\sigma^2_0/n_0+ \hat\sigma^2_1/n_1\)</span>.</p>
+<p>So, the Welch-Satterthwaite <span class="math inline">\(t\)</span>-statistic <em>is</em> basically just a linear regression with a binary predictor and the sandwich variance estimator, just as Student’s <span class="math inline">\(t\)</span>-test is a linear regression with a binary predictor and the Fisher-information variance estimator.</p>
+<p>We <em>don’t</em> get the degrees of freedom that way. Improving on the Normal reference distribution for <span class="math inline">\(t\)</span>-statistics with the sandwich estimator is a bit more complicated.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Nils Lid Hjort’s term for them, which I really like<a href="#fnref1" class="footnote-back">↩</a></p></li>
+</ol>
+</div>

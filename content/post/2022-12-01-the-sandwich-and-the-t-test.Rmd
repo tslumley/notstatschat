@@ -1,0 +1,42 @@
+---
+title: The sandwich and the t-test
+author: Thomas Lumley
+date: '2022-12-01'
+slug: the-sandwich-and-the-t-test
+categories: []
+tags: []
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+As every schoolchild know, you can derive the Student $t$-test as a linear regression with a single binary predictor.  How about the Welch/Satterthwaite unequal-variance $t$-test?  
+
+We have a technique for handling linear regression with unequal variances in the responses, the 'model-agnostic'^[Nils Lid Hjort's term for them, which I really like] or 'model-robust' sandwich estimator. You might wonder what happens if you use the sandwich estimator on a linear regression with a single binary predictor.
+
+Let $X$ be binary, coded so it has zero mean (so that it's orthogonal to the intercept) and fit a linear model with $Y$ as the outcome and $X$ as the predictor:
+$$E[Y]=\alpha+\beta X.$$
+
+We know $\hat\beta$ is the difference in mean between the two groups.  The sandwich variance estimator for $(\hat\alpha,\hat\beta)$ is
+$$(X^TX)^{-1}\left(\sum_{i=1}^n x_ix_i^T(y_i-\hat\mu_i)^2\right)(X^TX)^{-1}$$
+First, note that the two outer matrices are diagonal, because of the centering of $X$, so that we need only consider the $(\beta,\beta)$ component. 
+
+We can break the inner sum into sums over the two groups. Within each group, $x_ix_i^T$ is constant, so it can be taken out of the sum. Write $x_{(0)}$, $x_{(1)}$ for the two values of $X$;  $n_0,\,n_1$ for the two sample sizes; and $S_0$, $S_1$ for the standard deviations of $Y$ in the two groups. Then
+$$\left(\sum_{i=1}^n x_ix_i^T(y_i-\hat\mu_i)^2\right)=x_{(0)}^2(n_0-1)S_0^2+x_{(1)}^2(n_1-1)S^2_0$$
+
+Next,  note that $x_{(0)}$ and $x_{(1)}$ can be determined from $n_0$ and $n_1$: we have $x_{(1)}-x_{(0)}=1$ and $n_1x_{(1)}+n_0x_{(0)}=0$, giving $x_{(1)}=n_0/n$ and $x_{(0)}=-n_1/n$, so
+the middle term is
+$$\frac{n_1^2(n_0-1)}{n^2}S_0^2+\frac{n_0^2(n_1-1)}{n^2}S_1^2.$$
+
+
+In the outside of the sandwich the $(\beta,\beta)$ element is just $\sum_i x_i^2$, which is $$n_1n_0^2/n^2+n_0n_1^2/n^2=n_0n_1/n.$$
+Putting these together, the variance is
+$$\frac{n}{n_0n_1}\left(\frac{n_1^2(n_0-1)}{n^2}S_0^2+\frac{n_0^2(n_1-1)}{n^2}S_1^2\right)\frac{n}{n_0n_1}= \frac{1}{n_0}\left(\frac{n_0-1}{n_0}S^2_0\right)+ \frac{1}{n_1}\left(\frac{n_1-1}{n_1}S^2_1\right).$$
+This is *almost* exactly the variance for the Welch-Satterthwaite $t$-test, except that it uses $n_i$ rather than $n_i-1$ in the denominator of the individual group variances. Or, writing $\hat\sigma^2_i$ for the variance estimator in group $i$ using $n_i$  in the denominator it's just $\hat\sigma^2_0/n_0+ \hat\sigma^2_1/n_1$.
+
+
+So, the Welch-Satterthwaite $t$-statistic *is* basically just a linear regression with a binary predictor and the sandwich variance estimator, just as Student's $t$-test is a linear regression with a binary predictor and the Fisher-information variance estimator.
+
+We *don't* get the degrees of freedom that way. Improving on the Normal reference distribution for $t$-statistics with the sandwich estimator is a bit more complicated.
