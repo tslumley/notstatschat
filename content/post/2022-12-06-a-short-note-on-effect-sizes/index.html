@@ -1,0 +1,45 @@
+---
+title: A short note on effect sizes
+author: Thomas Lumley
+date: '2022-12-06'
+slug: a-short-note-on-effect-sizes
+categories: []
+tags: []
+---
+
+
+
+<p>From time to time, I get asked about estimating effect sizes in the <code>survey</code> package.</p>
+<p>I don’t really use effect sizes, because in the applied fields where I work, people are directly interested in the <span class="math inline">\(X\)</span> variables they measure. They think about the effect of, say, differences in systolic blood pressure and heart disease risk in terms of blood pressure differences, measured in mmHg. They expect the impact of a 10mmHg difference to be similar in similar populations. And while it doesn’t necessarily follow from this, I tend to think of the residual variance in some standard units as being a more natural summary that the dimensionless correlation. The correlation will necessarily change depending on your inclusion criteria; the residual variance need not.</p>
+<p>In some fields, people are interested in variables that you can’t measure directly, like conservatism or depression or consumer confidence. Different research projects might try to get a grip on these concepts using different tools, and so one analysis might have a 100-point scale and another might have a 15-point scale for the same concept. In this setting you obviously need some sort of standardisation to specify how many 100-point conservatism points correspond to one 15-point conservatism point. It’s natural to have some standard way to do standardisation, and so it’s not surprising that people tend to think in terms of standardised effect sizes rather than <span class="math inline">\(\beta\)</span>s in natural units. There aren’t any natural units!</p>
+<p>So, <em>I</em> don’t usually do effect sizes. Other people are allowed to want them, but they have to ask; I probably won’t think of implementing them unless you do.</p>
+<p>This week I got asked about Cramér’s<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> <span class="math inline">\(V\)</span>. This is a omnibus measure of amount of association in a multiway table, based on Pearson’s <span class="math inline">\(X^2\)</span>. Now, to quote <a href="https://www.jstor.org/stable/2281536">Goodman &amp; Kruskal</a></p>
+<blockquote>
+<p><em>The problem is that <span class="math inline">\(\chi^2\)</span> is not a population quantity. The fact that an excellent test of independence may be based on <span class="math inline">\(\chi^2\)</span> does not at all mean that <span class="math inline">\(\chi^2\)</span>, or some simple function of it, is an appropriate measure of degree of association. A discussion of this point is presented by R. A. Fisher. We have been unable to find any convincing published defense of <span class="math inline">\(\chi^2\)</span>-like statistics as measures of association.</em></p>
+</blockquote>
+<p>This matters even more when you’re trying to incorporate survey design, because the first step is to define a population quantity whose true value doesn’t depend on the design of the survey. But people want Cramér’s <span class="math inline">\(V\)</span>, and it’s interesting to think about how you might define it<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
+<p>Cramér’s <span class="math inline">\(V\)</span> for an <span class="math inline">\(r\times c\)</span> table is usually defined in terms of the Pearson <span class="math inline">\(X^2\)</span> statistic, as <span class="math display">\[V=X^2/N/\min(r-1,c-1).\]</span> It’s useful to consider the case of <span class="math inline">\(2\times 2\)</span> tables, where at least the problem is one-dimensional. In this setting <span class="math inline">\(V\)</span> is related to Udny’s <span class="math inline">\(\phi\)</span>, <span class="math inline">\(V=\phi^2\)</span>. If you write <span class="math inline">\(n_{ij}\)</span> for the <span class="math inline">\(ij\)</span> cell of the table and <span class="math inline">\(n_{\cdot j}\)</span> for marginal totals
+<span class="math display">\[\phi=\frac{n_{11}n_{00}-n_{01}n_{10}}{\sqrt{n_{\cdot 1}n_{\cdot 0}n_{1\cdot}n_{0\cdot}}}.\]</span>
+This does estimate a population quantity under simple random sampling: the same thing with <span class="math inline">\(N\)</span>s instead of <span class="math inline">\(n\)</span>s. It’s even an otherwise-meaningful thing; it’s the Pearson correlation between the two indicator variables. You might argue that a tetrachoric correlation or an odds ratio or something might be a <em>better</em> summary, but <span class="math inline">\(\phi\)</span> is at least a thing.</p>
+<p>We can estimate <span class="math inline">\(\phi\)</span> under complex sampling by putting hats on everything:
+<span class="math display">\[\hat\phi = \frac{\hat N_{11}\hat N_{00}-\hat N_{01}\hat N_{10}}{\sqrt{\hat N_{\cdot 1}\hat N_{\cdot 0}\hat N_{1\cdot}\hat N_{0\cdot}}}.\]</span>
+And since <span class="math inline">\(V=\phi^2\)</span>, we can estimate <span class="math inline">\(\hat V=\hat\phi^2\)</span>.</p>
+<p>Now, the next question is what, if anything, <span class="math inline">\(V\)</span> estimates when we go beyond <span class="math inline">\(2\times 2\)</span> tables. <a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Wikipedia</a><a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> says <span class="math inline">\(V\)</span> is “the mean square canonical correlation between the variables <em>[citation needed]</em>”. Stipulating that Wikipedia is right, <span class="math inline">\(V\)</span> estimates a well-defined population quantity under simple random sampling and we can just try to estimate the same quantity under other sampling designs.</p>
+<p>If so, we need to estimate the <em>population</em> contingency table and population size <span class="math inline">\(\hat N\)</span>, compute the Pearson <span class="math inline">\(X^2\)</span> statistic on it (say <span class="math inline">\(\hat X^2\)</span>), and then compute <span class="math inline">\(\hat X^2/\hat N/\min(r-1,c-1)\)</span>. Note that this <em>doesn’t</em> involve design-based association tests – eg the Rao-Scott tests– except to the extent that JNK Rao and Alastair Scott were also motivated by “how do we get useful inferences out of estimated population tables”.</p>
+<p>That is:</p>
+<pre><code>svycramerV&lt;-function(formula,design,...){
+    tbl&lt;-svytable(formula,design,...)
+    chisq&lt;-chisq.test(tbl, correct=FALSE)$statistic
+    N&lt;-sum(tbl)
+    V&lt;-chisq/N/min(dim(tbl)-1)
+    names(V)&lt;-&quot;V&quot;
+    V
+}</code></pre>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>I had to look it up, but, yes, it is the same Cramér<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>or how you might argue that it’s intrinsically bogus, like a Shapiro-Wilk normality test under complex sampling<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>Two cheers for Wikipedia<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
