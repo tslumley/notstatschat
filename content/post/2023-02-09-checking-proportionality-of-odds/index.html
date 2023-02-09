@@ -1,0 +1,145 @@
+---
+title: Checking proportionality of odds
+author: R package build
+date: '2023-02-09'
+slug: checking-proportionality-of-odds
+categories: []
+tags: []
+---
+
+
+
+<div id="the-proportional-odds-model" class="section level3">
+<h3>The proportional odds model</h3>
+<p>The proportional odds model is a generalisation of the logistic model. If you have a <span class="math inline">\(K\)</span>-level ordered factor, you could dichotomise it in <span class="math inline">\(K-1\)</span> different places, and get <span class="math inline">\(K-1\)</span> logistic regression models. The intercepts of these models have to be different, but the slopes could (in principle) be the same or same-ish. That’s the proportional odds model
+<span class="math display">\[\mathrm{logit}\, P(Y&gt;k)=\alpha_k+\beta X\]</span>
+It’s quite attractive as a generative model for ordinal data; it enforces stochastic ordering and has lots of choices for link functions. It’s also a reasonable model for analysing ordinal data; you’d think the <span class="math inline">\(\beta\)</span> will be some sort of appropriately-weighted average of what you’d get for the separate logistic regressions<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<p>If you fit this model, people will ask you if you tested the proportional odds assumption. As usual, testing is not actually all that helpful: in small samples you might not have useful power against important departures, in large samples you will reject for unimportant departures. Also, omnidirectional goodness-of-fit tests don’t tell you where to look for improvements.</p>
+<p>You’d typically prefer to embed the model in one where the <span class="math inline">\(\beta\)</span> can be different for different <span class="math inline">\(k\)</span>. That’s actually a bit of a pain. The model that has separate <span class="math inline">\(\beta_k\)</span> will produce negative fitted probabilities for large enough <span class="math inline">\(X\)</span>. It’s not impossible to find a larger model, but fitting it won’t be all that easy. For this reason, tests are reasonably popular. One such test is due to <a href="https://www.jstor.org/stable/2532457">Rollin Brant</a>. Its starting point is to fit the <span class="math inline">\(K-1\)</span> separate logistic regressions. These then get combined in various ways to give tests. There’s an omnidirectional test with <span class="math inline">\((K-2)P\)</span> degrees of freedom (where <span class="math inline">\(P\)</span> is the number of <span class="math inline">\(X\)</span>s). Brant noted that this wasn’t actually much use:</p>
+<blockquote>
+<p>The above test suffers from two defects common to many omnibus goodness-of-fit procedures. First, if either of <span class="math inline">\(k\)</span> or <span class="math inline">\(p\)</span> is large, the degrees of freedom above will be such that one cannot expect the test to be very powerful. Second, even if the test is sufficiently powerful to detect departures from proportionality, inspection of the individual components
+of the test statistic (i.e., the differences <span class="math inline">\(\tilde\beta_j-\tilde\beta_l\)</span>) may provide no clear indication as to the nature of the discrepancy detected</p>
+</blockquote>
+<p>To get around this problem, he proposed a test that looks for the same deviation from equality across all the coefficients: if we write <span class="math inline">\(\beta_{kp}\)</span> for the coefficient of variable <span class="math inline">\(p\)</span> in the logistic model at cutpoint <span class="math inline">\(k\)</span>, we’re looking for
+<span class="math display">\[\beta_{kp}=\phi_k\beta_p.\]</span>
+The particular form has two motivations, in terms of link misspecification and from what’s called a stereotype model. The score test for <span class="math inline">\(\beta_{kp}=\phi_k\beta_p\)</span> vs <span class="math inline">\(\beta_{kp}=\beta_p\)</span> involves a linear combination of the <span class="math inline">\(\hat\beta_{kp}\)</span> and so it’s all just linear algebra.</p>
+<p>Sadly, the Brant test as implemented tends to be the omnidirectional test that Brant didn’t want: it’s in Stata, in the <code>brant</code> package for R, and it or something with the same degrees of freedom is in SAS. It gets augmented by reporting the per-predictor tests with <span class="math inline">\(K-2\)</span> degrees of freedom that are components of the omnidirectional test.</p>
+</div>
+<div id="visual-model-criticism" class="section level3">
+<h3>Visual model criticism</h3>
+<p>I like the idea of starting off with the separate logistic regressions, but I’d rather have a visual display as the primary output. A visual display is also easier to extend to complex survey data, which is the reason I was looking at the question.</p>
+<p>Let’s start out with a design. I’m going to use a simple random sample that’s built in to the <code>survey</code> package, because the results will be roughly comparable to the original model-based analysis</p>
+<pre class="r"><code>library(survey)</code></pre>
+<pre><code>## Loading required package: grid</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## Loading required package: survival</code></pre>
+<pre><code>## 
+## Attaching package: &#39;survey&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:graphics&#39;:
+## 
+##     dotchart</code></pre>
+<pre class="r"><code>data(api)
+the_design&lt;-svydesign(id=~1, weights=~pw, data=apisrs)
+the_design&lt;-update(the_design, mealcat = cut(meals, c(0, 25, 50, 75, 100)))
+
+formula&lt;-mealcat~avg.ed + mobility + stype
+m1&lt;-svyolr(formula, design = the_design)
+m1</code></pre>
+<pre><code>## Call:
+## svyolr(formula, design = the_design)
+## 
+## Coefficients:
+##      avg.ed    mobility      stypeH      stypeM 
+## -4.65912984  0.01233333 -2.27177297 -0.86182115 
+## 
+## Intercepts:
+##   (0,25]|(25,50]  (25,50]|(50,75] (50,75]|(75,100] 
+##        -15.51044        -12.88261        -10.33571</code></pre>
+<p>We’ll need <span class="math inline">\(K\)</span> and <span class="math inline">\(P\)</span></p>
+<pre class="r"><code>K&lt;-length(m1$lev)
+P&lt;-length(m1$coef)</code></pre>
+<p>The next step is to fit the separate logistic models (easy!) and find the big covariance matrix of all the <span class="math inline">\(\hat\beta\)</span>s (slightly less easy). Fortunately, past me has added a feature to many survey package functions to make them return their influence functions, which allows the covariance matrix to be computed</p>
+<pre class="r"><code>get_infl&lt;-function(k,formula,design){
+    y&lt;-formula[[2]]
+    formula[[2]]&lt;-bquote(I(as.numeric(.(y))&gt;.(k)))
+    mk&lt;-svyglm(formula, design, family=quasibinomial, influence=TRUE)
+    list(coef(mk), attr(mk,&quot;influence&quot;))
+}
+
+fits&lt;-lapply(1:(K-1), function(k) get_infl(k, formula, the_design))
+infs&lt;-do.call(cbind, lapply(fits, &quot;[[&quot;,2))
+combined_V&lt;- vcov(svytotal(infs/weights(the_design), the_design))</code></pre>
+<p>I don’t actually want the variances for the visualisation; I want the conditional variances. That is, the <span class="math inline">\(\hat\beta_{kp}\)</span> for the same <span class="math inline">\(p\)</span> and different <span class="math inline">\(k\)</span> may be correlated, and I want to take that uncertainty out when comparing them. The conditional variances are the reciprocals of the diagonal elements of the inverse of the covariance matrix, and I compute them for the <span class="math inline">\((K-1)\times (K-1)\)</span> covariance matrices corresponding to each variable.</p>
+<pre class="r"><code>conditional_V&lt;- lapply(1:P, 
+                    function(p) 1/diag(solve(combined_V[c(p+1+(0:(K-2))*(P+1)), c(p+1+(0:(K-2))*(P+1))])))
+coefs&lt;-lapply(fits,&quot;[[&quot;,1)</code></pre>
+<p>Now some graphics. I need to construct a data frame that will be fed to <code>ggplot</code></p>
+<pre class="r"><code>library(forcats)
+library(ggplot2)
+res&lt;-data.frame(variable=rep(names(coefs[[1]])[-1],each=K-1),
+                cutpoint=fct_rev(rep(names(m1$zeta),P)),
+                estimate=as.vector(do.call(rbind,coefs)[,-1]),
+                se=sqrt(do.call(c, conditional_V)))
+res$lower=res$estimate-1.96*res$se
+res$upper=res$estimate+1.96*res$se
+
+p&lt;-ggplot(res,aes(y=cutpoint,col=cutpoint))+
+  geom_point(aes(x=estimate))+
+    geom_linerange(aes(xmin=lower,xmax=upper))+
+    facet_wrap(~variable,scales=&quot;free&quot;)+
+    theme(legend.position=&quot;none&quot;)+
+    geom_vline(aes(xintercept=z),linetype=&quot;dotted&quot;,
+               data.frame(z=m1$coef,variable=names(coefs[[1]])[-1]))
+print(p)</code></pre>
+<p><img src="staticunnamed-chunk-5-1.png" width="672" /></p>
+<p>For each variable <span class="math inline">\(p\)</span>, there’s a panel showing the confidence interval of each <span class="math inline">\(\beta_{kp}\)</span> as a forestplot. The vertical dotted lines show the estimates from the proportional odds model. The scales are different for each panel, because there’s no meaningful relationship between the scale of each variable. If you were the sort of person who liked standardised regression coefficients you might go for a fixed scale instead. Using the conditional variances makes the estimates behave as if they were independent; you can, for example, look at whether the point estimate for one <span class="math inline">\(k\)</span> is in the uncertainty interval for a different <span class="math inline">\(k\)</span>. These graphs make sense even under complex sampling, because we’re estimating population parameters (or trying to). If the model is a good fit in the population, the estimates <span class="math inline">\(\hat\beta_{kp}\)</span> should estimate the population <span class="math inline">\(\beta_p\)</span> and the intervals describe the uncertainty.</p>
+<p>In this example, there doesn’t seem to be a lot going on. Maybe the first variable looks a bit weird, but I wouldn’t worry that much.</p>
+</div>
+<div id="testing" class="section level3">
+<h3>Testing</h3>
+<p>Ok, so can we do the tests? Sure, if you like. We have the covariance matrices.</p>
+<p>To do the test that Brant recommended, follow the linear algebra in the paper</p>
+<pre class="r"><code>D&lt;-diag(P)
+for(k in 2:(K-1)){
+    D&lt;-rbind(D,diag(P))
+}
+D&lt;-cbind(D,matrix(0,nrow=(P)*(K-1),ncol=(K-2)))
+for (k in 1:(K-2)){
+    D[(P-1)*k+(1:(P)),P+k]&lt;-coefs[[k+1]][-1]
+}       
+
+B&lt;-do.call(c,lapply(coefs, &quot;[&quot;,-1))
+VarB&lt;-(combined_V[-(1+(0:(K-2))*(P+1)),-(1+(0:(K-2))*(P+1))])
+VarBinv&lt;-solve(VarB)
+deltahat&lt;- solve(t(D)%*%VarBinv%*%D, t(D)%*%VarBinv%*%B)
+VarDelta&lt;-solve(t(D)%*%VarBinv%*%D)
+
+i&lt;-P+(1:(K-2))
+brantTest&lt;-deltahat[i]%*%solve(VarDelta[i,i])%*%deltahat[i]
+brantTest</code></pre>
+<pre><code>##          [,1]
+## [1,] 3.323459</code></pre>
+<pre class="r"><code>pchisq(brantTest,df=(K-2),lower.tail=FALSE)</code></pre>
+<pre><code>##           [,1]
+## [1,] 0.1898104</code></pre>
+<p>Robustly unexciting!</p>
+<p>And now, the omnidirectional test that Brant didn’t recommend but gets blamed for</p>
+<pre class="r"><code>D&lt;-cbind(1,-diag(K-2))%x%diag(P)
+DB&lt;-D%*%B
+bigTest&lt;-t(DB)%*%solve(D%*%VarB%*%t(D))%*%DB
+bigTest</code></pre>
+<pre><code>##          [,1]
+## [1,] 7.400618</code></pre>
+<pre class="r"><code>pchisq(bigTest,df=(K-2)*P,lower.tail=FALSE)</code></pre>
+<pre><code>##           [,1]
+## [1,] 0.4940887</code></pre>
+<p>Also not very interesting. And, I think, clearly less useful than the visual diagnostic</p>
+<p>The results don’t exactly match the <code>brant</code> package (which gets a test statistic of 8 rather than 7.4), but I think that’s down to the difference between model-based and design-based standard error estimates even under simple random sampling where they are both trying to estimate the same thing.</p>
+<p>So, will this be in the survey package some day? I’m not all that enthuastic, but maybe.</p>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>It’s actually more complicated than this: the score test for <span class="math inline">\(\beta\)</span> is the Wilcoxon/Mann-Whitney test, so horrible transitivity paradoxes are lurking if the model fits badly enough<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
