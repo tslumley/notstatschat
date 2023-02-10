@@ -1,0 +1,148 @@
+---
+title: When is population mean rank a thing?
+author: Thomas Lumley
+date: '2023-02-10'
+slug: when-is-population-mean-rank-a-thing
+categories: []
+tags: []
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+You used to see a lot of the incorrect and misleading description of the Wilcoxon rank-sum and Kruskal-Wallis tests as comparing medians. I've tried from time to time, without success, to find where this idea originated. The motivation is clear, though: tests are much more useful if you know what they are testing.  
+
+Increasingly, people know the 'medians' explanation of the Wilcoxon test isn't true and recognise that it isn't helpful.  Nowadays you see more claims that these rank tests compare the population mean rank between groups.  This modern version has the advantage of being *true*, in some precise sense, but I think it's still *misleading*.  
+
+Let's consider comparisons of means ($t$-test and ANOVA), medians (Mood's quantile tests), and whatever it is that the Wilcoxon and Kruskal-Wallis tests compare. 
+
+### Two groups
+
+ANOVA, or the $t$-test, assesses differences in population means. Observationally, if the mean of a variable $X$ in subpopulation $A$ is $\mu_A$ and the mean of $X$ in subpopulation $B$ is $\mu_B$, and we have simple random samples from these subpopulations, the $t$-test is a test for $\mu_A-\mu_B=0$. The test's power will be greater than its (one-tailed) size for rejecting in favour of  $\mu_A>\mu_B$ just exactly when this is true. 
+
+Causally, if the mean of a variable $X$ under condition $A$ is $\mu_A$ and the mean of $X$ under condition $B$ is $\mu_B$, and we have a randomised experiment or other unconfounded setting, the $t$-test is a test for the effect of the conditions on the difference in means $\mu_A-\mu_B=0$. . The test's power will be greater than its (one-tailed) size for rejecting in favour of  $\mu_A>\mu_B$ just exactly when this is true. 
+
+The $t$-test will be well calibrated if the sample sizes are large enough and either the variances are equal or we use an unequal-variance correction.
+
+Mood's test assesses differences in population medians Observationally, if the median of a variable $X$ in subpopulation $A$ is $m_A$ and the median of $X$ in subpopulation $B$ is $m_B$, and we have simple random samples from these subpopulations, Mood's test is  a test for $m_A-m_B=0$. The test's power will be greater than its (one-tailed) size for rejecting in favour of $m_A>m_B$ just exactly when this is true. 
+
+Causally, if the median of a variable $X$ under condition $A$ is $m_A$ and the median of $X$ under condition $B$ is $m_B$, and we have a randomised experiment or other unconfounded setting, Mood's test is  a test for $m_A-m_B=0$. The test's power will be greater than its (one-tailed) size for rejecting in favour of $m_A>m_B$ just exactly when this is true.
+
+A median test will be well calibrated if the distributions are continuous and differ by a location shift^[and perhaps some other settings] or if the sample sizes are large enough and  we use a bootstrap instead of a permutation test. 
+
+### More than two groups
+
+The mean or median of $X$ in subpopulation $A$ does not depend on how we split up the rest of the population: if we sample just from $A$ or $B$, or if we sample from $A,B,C,D,E$, the mean or median in subpopulation $A$ is the same. It is a *population* parameter. 
+
+Similarly, the mean or median of $X$ under condition $A$ does not depend on what other conditions we consider: if we have just $A$ or $B$, or if we have five experimental conditions $A,B,C,D,E$, the mean or median in condition $A$ is the same. It is a *population* (superpopulation?) parameter. 
+
+The *test statistic* may depend on the number of groups. For example, in ANOVA with a common-variance assumption, the standard error of the estimated mean in subpopulation $A$ will depend on data from other subpopulations, but whether in truth $\mu_A>\mu_B$ will not depend on what happens in subpopulations other than $A$ and $B$.  Similarly for medians, the test statistic will depend on data from all groups, but whether in truth $m_A>m_B$ will not depend on what happens in subpopulations other than $A$ and $B$.  In particular, if the population medians are different, there is a well-defined correct answer to $m_A>m_B$ vs $m_A<m_B$, and given enough data the test will get the answer right.
+
+### Expected mean ranks
+
+The Wilcoxon rank-sum test and Kruskal-Wallis test transform the data into ranks, which tends to reduce the impact of outliers to some extent^[though not to the same extent as comparing medians]. In that sense, the Wilcoxon test is a test comparing the sample mean ranks.
+
+The surprisingly subtle aspect of rank transformations is that the transformation applied to each group depends on the data in any and all other groups.  Some of this is obvious. The  mean rank of any subpopulation or of the whole population under any single experimental condition, is $1/2$ (or $N/2$ if you prefer that scaling) taken on its own; that's obviously of no use.  The mean rank of subpopulation $A$ will be different if subpopulation $A$ is compared  to subpopulation $B$ -- and different again if subpopulation $A$ is compared to all of subpopulations $B$, $C$, $D$, and $E$. 
+
+Less obviously, whether the  mean rank of subpopulation or condition $A$ is **greater than** or **less than** the  mean rank of subpopulation or condition $B$ can depend on what other subpopulations or conditions are being considered and the sample sizes for each group.  For example, it is entirely possible that the mean rank of $A$ is greater than the mean rank of $B$ when just those two groups are compared, but that the mean rank of $A$ is less than the mean rank of $B$ in a three-group test involving group $C$.
+
+### Non-transitive dice
+
+That's a fairly strong claim, so let's see some evidence. The easy way to come up with examples is to use non-transitive dice
+
+```{r}
+efron<-list(A=c( 4, 4, 4, 0, 0), 
+            B=c(3, 3, 3, 3, 3, 3), 
+            C=c(6, 6, 2, 2, 2, 2), 
+            D=c(5, 5, 5, 1, 1, 1))
+```
+
+Now, sample from these, and to avoid any issues about discreteness, optionally add some Normal random noise
+
+```{r}
+refron<-function(n, smooth=NULL){
+	 r<-unlist(mapply(sample, efron,n,MoreArgs=list(replace=TRUE)))
+	 if (!is.null(smooth)){
+		r<-rnorm(length(r),m=r,s=smooth)
+   }
+	r
+}
+```
+
+The (relatively) familiar fact about these dice is that the probability A beats B, B beats C, C beats D, and D beats A are all greater than 1/2.  That is, by the equivalence between Mann-Whitney and Wilcoxon tests, the mean rank of A is higher that of B, B higher than C, C higher than D, and D higher than A, compared two at a time. 
+
+```{r}
+set.seed(2023-1-9)
+
+r<-refron(c(100,100,100,100),.2)
+wilcox.test(r[1:100],r[101:200],alt="greater",correct=FALSE)
+wilcox.test(r[101:200],r[201:300],alt="greater",correct=FALSE)
+wilcox.test(r[201:300],r[301:400],alt="greater",correct=FALSE)
+wilcox.test(r[301:400],r[1:100],alt="greater",correct=FALSE)
+```
+
+The Kruskal-Wallis test must come out with *some* self-consistent ordering, but it's not obvious which one it is or that there's a 'correct' one. And which of A and B has higher mean rank does depend on what else is in the ranking
+
+With just A and B; or A, B and C; or A, B, and D; it is A that has the higher mean rank, though the actual values and the actual size of the difference vary:
+
+```{r}
+ranksAB<-rank(r[c(1:100,101:200)])
+t.test(ranksAB[1:100], ranksAB[101:200])
+
+ranksABC<-rank(r[c(1:100,101:200,201:300)])
+t.test(ranksABC[1:100], ranksABC[101:200])
+	
+ranksABD<-rank(r[c(1:100,101:200,301:400)])
+t.test(ranksABD[1:100], ranksABD[101:200])
+```
+
+With all four groups in the comparison, B has the higher mean rank:
+
+```{r}
+ranksABCD<-rank(r)
+t.test(ranksABCD[1:100], ranksABCD[101:200])
+```
+
+### Ok, what about with reasonable distributions?
+
+In fact, I don't need to try anywhere near that hard to get weird behaviour.  Suppose you have three groups, all with Normal distributions. Group A is 100 observations from $N(0,1)$. Group B is 100 observations from $N(0.25, 1.5)$. We're interested in whether the population mean rank is higher for group A or for group B -- and with just those two groups the (sample and population) mean rank is higher for group B.
+
+Now we consider a third group. Group C is $n$  observations from $N(\mu, \sigma^2)$.   By choosing $n$, $\mu$, and $\sigma$ appropriately, you can make the (sample and population) mean rank for group A higher than than for group B. 
+
+Here, you try it: adjust the mean and standard deviation and sample size. The first tab shows the data for groups A and B, with a line for the mean of group C. The second tab shows the empirical CDF for groups A and B, again with a line for the mean of group C. The third tab shows the ranks for groups A and B
+
+```{r echo=FALSE}
+knitr:::include_app("https://tslumley.shinyapps.io/meanrank/", height="1000px")
+```
+
+Additional groups, by taking up space in the uniform distribution of ranks, will stretch the distributions of ranks for groups A and B. If the CDFs of groups A and B cross, this stretching can create outliers that have a substantial impact on comparison of mean ranks (as you can see in the third panel)
+
+Most of the time, if you set the mean of group C to a value a little below where the CDFs of A and B cross, and make the sample size $n$ large, the mean rank comparison for A and B will reverse. If it doesn't reverse for one example, hit the "New Data!" button for another random sample. 
+
+To emphasize, there's nothing weird going on here. The three group-specific distributions are all Normal; you don't need to try very hard to find mean-rank comparisons that reverse like this.  It's even easier if you don't restrict to symmetric unimodal location-scale families.
+
+Expected mean rank is not just a property of a single group, it's a joint property of all the groups. This is *why* it has transitivity problems, and it's *why* it has independence-of-irrelevant-alternatives problems. If you have a test for a one-sample summary statistic such as the mean or median, it will necessarily order samples in a self-consistent way.  Under mild conditions (eg enough for a Glivenko-Cantelli theorem) it will order large enough populations in the same way as the samples. Conversely, if you have a self-consistent ordering over all possible sample distributions, you can (perhaps with some difficulty) extract a one-sample summary statistic that agrees with it, and produce a test for it^[technical maths caveat: it's possible that the ordering is topologically *too big*, so that the one-sample summary statistic isn't real-valued and you can't get a consistent test]. 
+
+
+
+### Does it matter?
+
+Not *necessarily*. There are two questions here: is population mean rank well-defined *as a value*, and if not, is it at least well-defined *as a directional comparison?*
+
+Population mean rank (or differences in it) will be well-defined as a value essentially only when we fix the groups being compared (subpopulations or experimental conditions) and the relative sample sizes. That's basically not possible when the groups are experimental conditions.  It could be possible when they are subpopulations, but only if we're willing to rule out any selection  -- at data collection, or in data analysis -- of some of the subpopulations, and if the relative sizes of the subpopulations are always the same.
+
+There's more potential for the difference in expected rank to have a well-defined direction.  Clearly, though uninterestingly, this will be true for location families such as $N(\mu, 1)$ or for one-parameter exponential families. Note that two Normal distributions can only be stochastically ordered if they have the same variance -- which is why the interactive example above works -- but they will be close to being stochastically ordered if the difference in means is relatively large compared to the difference in standard deviations. 
+
+
+One useful setting where there isn't a problem is when the distributions of the groups are stochastically ordered; the population cumulative distribution functions do not cross. A sufficient (but not necessary) condition for this in an experiment is that that a treatment which makes  some values go up does not make any values go down.  Stochastic ordering is reasonable in some situations, and it's the basis of some useful ordinal models. It's still quite a strong assumption -- as we saw above, it's not satisfied by Normal distributions unless the variances are the same.
+
+
+### Teaching
+
+I'm not convinced that these rank test should be a high priority in introductory statistics. Where they are taught, I'd like to see the assumption of stochastic ordering made a bit more explicit, rather than saying rank tests have no assumptions and the t-test has **~A~L~L~ ~T~H~E~ ~A~SS~U~M~P~T~I~O~N~S**. 
+
+In more advanced statistics, students will eventually have to learn about rank tests, but by then they should be able to appreciate the pathological ways rank tests can somtimes behave.  The rank tests *aren't* tests for a summary statistic in the same relatively straightforward way that mean and median tests are, and it can matter.  
+
+Also, though, models and estimation are likely to be more interesting than just tests. If you're going to start with tests, it will help if they're looking for differences on the same scale that your summaries and models are going to estimate. If you care about population mean ranks, that would motivate the Wilcoxon test, but the way population mean rank behaves with multiple groups argues that it's not usually the summary that you really care about.  
