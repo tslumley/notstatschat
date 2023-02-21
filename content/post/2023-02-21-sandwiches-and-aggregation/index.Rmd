@@ -115,10 +115,10 @@ And now variances
 
 ```{r}
 binomsandwich<-function(model){
-  variability<-scorebinom(fit)
+  variability<-scorebinom(model)
   sensitivity<-vcov(model)
   sensitivity%*%variability%*%sensitivity
-}
+} 
 binomsandwich(fit)
 binomsandwich(offset_fit)
 ```

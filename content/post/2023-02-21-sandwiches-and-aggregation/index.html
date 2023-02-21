@@ -134,10 +134,10 @@ scorebinom(offset_fit)</code></pre>
 ## gd               729.88     366.45  0.00    0 729.9</code></pre>
 <p>And now variances</p>
 <pre class="r"><code>binomsandwich&lt;-function(model){
-  variability&lt;-scorebinom(fit)
+  variability&lt;-scorebinom(model)
   sensitivity&lt;-vcov(model)
   sensitivity%*%variability%*%sensitivity
-}
+} 
 binomsandwich(fit)</code></pre>
 <pre><code>##             (Intercept) treatmentB         gb         gc         gd
 ## (Intercept)   0.0004657 -2.181e-04 -3.560e-04 -3.592e-04 -3.560e-04
