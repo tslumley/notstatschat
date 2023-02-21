@@ -1,0 +1,133 @@
+---
+title: Sandwiches and aggregation
+author: Thomas Lumley
+date: '2023-02-21'
+slug: sandwiches-and-aggregation
+categories: []
+tags: []
+---
+
+Demetri Pananos asked a question on Stack Overflow and then on Twitter about the behaviour of the `sandwich` package for aggregated count data, and Achim Zeileis pinged me^[we both worked on sandwich estimators when we were Very Young].  
+
+If you have a Poisson regression and you have $N_i$ observations $Y_{ij}$ that share the same covariates you can aggregate them into a single observation $Y_{i\cdot}=\sum_j Y_{ij}$ with an offset $\log N_i$, and note that
+$$\log E[Y_{ij}|X_{i}]=X_i\beta$$
+implies
+$$\log E[Y_{i\cdot}|X_{i},N_i]=X_i\beta+\log N_i.$$
+
+These were actually binary observations, not counts; Demetri was fitting a log-binomial regression (relative risk regression) using a Poisson working model to reduce the influence of outliers compared to using maximum likelihood. The only reason this matters is that if they had been straightforward counts, or binary observations in a logistic regression, he probably would have used maximum likelihood and the model-based standard error estimates. With maximum likelihood and the model-based standard error estimates, you get the same estimated standard errors for the individual-level model and the aggregate model. With the `sandwich` package `vcovHC()` estimator, you don't. 
+
+As an example, from the [StackOverflow post](https://stats.stackexchange.com/questions/606076/robust-standard-errors-for-a-poisson-regression-with-without-an-offset/)
+
+```{r}
+library("tidyverse")
+library(sandwich)
+options(digits=4)
+grouped_data <- tibble::tribble(
+  ~treatment,        ~g,    ~y,     ~N,
+  "A",      "a", 1338L, 20669L,
+  "A",      "b",   36L,  1237L,
+  "A",      "c", 2555L, 39438L,
+  "A",      "d",  402L,  5713L,
+  "B",      "a", 1281L, 19986L,
+  "B",      "b",   38L,  1224L,
+  "B",      "c", 2495L, 36749L,
+  "B",      "d",  382L,  5646L
+)
+yes_outcomes <-grouped_data %>% 
+  mutate(yy=1) %>% 
+  uncount(y)
+
+no_outcomes <-grouped_data %>% 
+  mutate(yy=0) %>% 
+  uncount(N-y)
+
+# This is equivalent to the data we had before grouping
+unit_data <- bind_rows(yes_outcomes, no_outcomes) %>% 
+  select(-y) %>% 
+  rename(y=yy)
+  
+fit <- glm(y ~ treatment + g, data = unit_data, family = poisson)
+offset_fit <- glm(y ~ treatment + g, data = grouped_data, family = poisson,
+  offset = log(N)) 
+  
+vcovHC(fit)
+vcovHC(offset_fit)
+```
+
+
+The natural response to seeing this sort of difference is to assume it's a simple coding problem, so Stack Overflow is a sensible place to try^[if you can get past the site's general reluctance to actually answer questions rather than argue about how you asked the wrong question]. However, it's not a simple coding problem.  Getting different answers is not obviously not correct, and we need to think carefully about both what the user should want and what `vcovHC` should provide. 
+
+
+### How could they possibly be different?
+
+The two sandwich estimators are estimators for different semiparametric models.  The individual-observation one is for a model where observations are all independent.  The aggregated one is for a model where groups are all independent. Those are different assumptions.  Since this is all frequentist, the standard errors describe how $\hat\beta$ would vary in replicates of the data set, and while for any *specific* data set the $\hat\beta$ is the same in the two models, the set of replicate data sets you need to consider is different.^[Yes, this problem would go away, and be replaced by completely different problems, if you were Bayesian] 
+
+If the mean model is correctly specified^[and also the observations really are independent], I think the two sandwich estimators are consistent for the same true variance.  But if the mean model isn't correctly specified, it matters whether there's really just one observation per covariate pattern or many observations per covariate pattern. In ANOVA terms, the model with aggregated data has the interaction confounded with the residual error, and the model with individual observations doesn't. 
+
+Another way of saying the same thing is to think about bootstraps.  The sandwich estimator can be seen as an approximation to the bootstrap^[I think this is in an Appendix of the Efron & Tibshirani bootstrap book?].  The sandwich estimator in the offset model is approximating a bootstrap that resamples whole groups; the one in the individual model is approximating a bootstrap that resamples individual observations. 
+
+We can verify that the grouping in the sandwich estimator is the issue, by using a clustered sandwich estimator on the individual-level data, thus assuming only cluster-level independence in both settings. The results are now the same:
+
+```{r}
+unit_data$cluster<-with(unit_data, interaction(treatment,g))
+vcovCL(fit, cluster=as.numeric(unit_data$cluster))
+vcovCL(offset_fit, cluster=NULL)
+```
+
+So the issue genuinely is about what units are independent, and it's not a coding error
+
+### Who's right?
+
+The individual-observation model is right, because it actually describes how the data were sampled. So either they are both right, or the individual-level model is right and the aggregate model is wrong. 
+
+I'm inclined to say that the aggregate model is wrong: that the hypothetical replicates it calculates the variance over are not the relevant set of hypothetical replicates, at least if the mean model is misspecified.
+
+
+### Doing better
+
+Since the point here is to fit a log-binomial model, assumed correctly specified, it might be better to estimate the middle of the sandwich estimator differently.  The middle of the sandwich is the variance of the likelihood score. In the usual sandwich estimator this is estimated just by an empirical variance, which is appropriate when you don't want to assume anything about the distribution of $Y|X$. Here, though, we know the distribution of $Y|X$; it's Bernoulli.  We also don't have any particular reservations about assuming the mean model is correctly specified, as we routinely would for actual Poisson regression or logistic regression
+
+If the $i$th element of the score in the Poisson working model is 
+$$U_i = x_i(Y_i-\hat\mu_i)$$
+the variance is 
+$$\widehat{\mathrm{var}}[U_i]= x_i^T\widehat{\mathrm{var}}[Y_i]x_i=x_i^T\hat\mu_i(1-\hat\mu_i)x_i$$
+There's a potentially issue here in that $\hat\mu$ need not be less than 1 -- that's the reason the Poisson working model approach to relative risk regression is more robust. Still, there can't be a large fraction of $\hat\mu>1$ so it may be reasonable to set their contribution to zero.
+
+This variance estimate will be the same for individual and aggregate data
+
+```{r}
+scorebinom<-function(model){
+  X<-model.matrix(model)
+  N<-1
+  logN<-model.offset(model.frame(model))
+  if (!is.null(logN)){
+      N<-exp(logN)
+  }
+  mu<-fitted(model)/N
+  v<-mu*(1-mu)*N
+  crossprod(X, v*X)
+}
+scorebinom(offset_fit)
+scorebinom(fit)
+```
+
+And now variances
+
+```{r}
+binomsandwich<-function(model){
+  variability<-scorebinom(fit)
+  sensitivity<-vcov(model)
+  sensitivity%*%variability%*%sensitivity
+}
+binomsandwich(fit)
+binomsandwich(offset_fit)
+```
+
+These are the same. They are also reassuringly close to the individual-level one from before, `vcovHC(fit)`.
+
+```{r}
+diag(binomsandwich(fit))
+diag(vcovHC(fit))
+```
+
+Further Research Is Needed -- we'd like to know how well these actually perform before recommending them. 
