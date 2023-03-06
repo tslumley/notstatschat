@@ -1,0 +1,37 @@
+---
+title: The fourth-root thing
+author: Thomas Lumley
+date: '2023-03-07'
+slug: the-fourth-root-thing
+categories: []
+tags: []
+---
+
+
+
+<p>This post is partly because I think the result is interesting and partly to see if anyone will tell me an original reference.</p>
+<hr>
+<p>Suppose we get <span class="math inline">\(\hat\beta\)</span> by solving <span class="math inline">\(U(\beta;\alpha)=0\)</span> and that <span class="math inline">\(\alpha\)</span> is a nuisance parameter we plug into the equation. Assume that for any fixed <span class="math inline">\(\alpha\)</span>,
+<span class="math display">\[E[U(\beta_0;\alpha)]=0.\]</span>
+Assume
+<span class="math display">\[U(\beta,\alpha)=\frac{1}{n}\sum_{i=1}^n U_i(\beta,\alpha)\]</span>
+and that <span class="math inline">\(U\)</span> converges pointwise (and in mean, assuming finite moments) to its expected value. Also assume enough other regularity that this leads to
+<span class="math display">\[\sqrt{n}(\hat\beta-\beta)\stackrel{d}{\to} N(0,\sigma^2(\alpha)).\]</span></p>
+<p>Examples include GEE with <span class="math inline">\(\alpha\)</span> as the working correlation parameters, and raking with <span class="math inline">\(\alpha\)</span> as the imputation model and calibration parameters, and stabilised weights with <span class="math inline">\(\alpha\)</span> as the stabilising model parameters.</p>
+<p>Now, suppose we have an estimator <span class="math inline">\(\hat\alpha\)</span> whose limit in probability exists; we’ll call it <span class="math inline">\(\alpha^*\)</span>. With enough regularity to differentiate under the expectation
+<span class="math display">\[\frac{\partial}{\partial\alpha}\left.E[U(\beta_0;\alpha)]\right|_{\alpha^*}=0 = E\left[\left. \frac{\partial}{\partial\alpha}U(\beta_0;\alpha)\right|_{\alpha^*}   \right]\]</span>
+As the derivative has zero mean, the law of large numbers says
+<span class="math display">\[\left. \frac{\partial}{\partial\alpha}U(\beta_0;\alpha)\right|_{\alpha^*}=o_p(1)\]</span>
+and the central limit theorem says
+<span class="math display">\[\left. \frac{\partial}{\partial\alpha}U(\beta_0;\alpha)\right|_{\alpha^*}=O_p(n^{-1/2})\]</span>
+On the other hand, the derivative with respect to <span class="math inline">\(\beta\)</span> does not have mean zero, so it is <span class="math inline">\(O_p(1)\)</span>. In a parametric model it would be the average per-observation observed Fisher information.</p>
+<p>A Taylor series expansion about <span class="math inline">\((\beta_0,\alpha^*)\)</span> gives
+<span class="math display">\[\begin{align}U(\hat\beta,\hat\alpha)=U(\beta_0,\alpha^*)=&amp;U(\beta_0,\alpha^*)+ (\hat\alpha-\alpha^*)\frac{\partial}{\partial\alpha}U(\beta_0;\alpha^*)\\&amp;+(\hat\beta-\beta_0)\frac{\partial}{\partial\beta}U(\beta_0;\alpha^*)\\&amp;+O_p(\|\hat\alpha-\alpha^*\|^2_2)+O_p(\|\hat\beta-\beta_0\|^2_2)\end{align}\]</span>
+If <span class="math inline">\(\hat\alpha-\alpha^*=o_p(n^{-1/4})\)</span> then the second, fourth, and fifth terms are <span class="math inline">\(o_p(n^{-1/2})\)</span> so
+<span class="math display">\[U(\hat\beta,\hat\alpha)=U(\beta_0,\alpha^*)=U(\beta_0,\alpha^*)+ (\hat\beta-\beta_0)\frac{\partial}{\partial\beta}U(\beta_0;\alpha^*)+o_p(n^{-1/2})\]</span>
+Under the standard smoothness/moment assumptions we can rearrange to
+<span class="math display">\[\hat\beta-\beta_0= \left[\frac{\partial}{\partial\beta}U(\beta_0;\alpha^*)  \right]^{-1}U(\beta_0,\alpha^*)+o_p(n^{-1/2})\]</span>
+so the distribution of <span class="math inline">\(\hat\beta\)</span> depends on <span class="math inline">\(\hat\alpha\)</span> only through <span class="math inline">\(\alpha^*\)</span>. ◼️</p>
+<p>For most purposes the fourth-root condition doesn’t really matter: if you have a fixed finite-dimensional parameter that you can estimate at all, you can probably estimate it at root-<span class="math inline">\(n\)</span> rate, and if your parameters are infinite-dimensional or growing in size with <span class="math inline">\(n\)</span> you need to worry about more than just powers of <span class="math inline">\(n\)</span> in remainders. However, if you <em>needed</em> root-<span class="math inline">\(n\)</span> convergence you’d worry that low efficiency would be a problem in sub-asymptotic settings, which is less of a worry now.</p>
+<p>I worked this argument out for the GEE case, back when I was a PhD student, but I certainly wasn’t the first person to do so. I have been told that the first person to come up with the fourth-root part of it was Whitney Newey, which would make sense, but I don’t have a reference. If you know that reference or any early (mid 90s or earlier) reference, I’d like to hear about it.</p>
+<p>The <a href="https://www.jstor.org/stable/2336267"><em>Biometrika</em> GEE paper</a> in 1986 has the essential idea that <span class="math inline">\(\partial_\alpha E[U(\beta_0,\alpha)]=0\)</span>, but it assumes <span class="math inline">\(n^{1/2}\)</span> consistency for <span class="math inline">\(\alpha\)</span>. Also, some people at the time (and since) have been confused by its using ‘consistency’ both for the assumption that <span class="math inline">\(\hat\beta\)</span> converges <em>to its true value <span class="math inline">\(\beta_0\)</span></em> and the assumption that <span class="math inline">\(\hat\alpha\)</span> converges <em>to something</em>.</p>

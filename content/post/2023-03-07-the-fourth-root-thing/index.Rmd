@@ -1,0 +1,44 @@
+---
+title: The fourth-root thing
+author: Thomas Lumley
+date: '2023-03-07'
+slug: the-fourth-root-thing
+categories: []
+tags: []
+---
+
+This post is partly because I think the result is interesting and partly to see if anyone will tell me an original reference.
+
+<hr>
+
+Suppose we get $\hat\beta$ by solving $U(\beta;\alpha)=0$ and that $\alpha$ is a nuisance parameter we plug into the equation.  Assume that for any fixed $\alpha$,
+$$E[U(\beta_0;\alpha)]=0.$$
+Assume 
+$$U(\beta,\alpha)=\frac{1}{n}\sum_{i=1}^n U_i(\beta,\alpha)$$
+and that $U$ converges pointwise (and in mean, assuming finite moments) to its expected value. Also assume enough other regularity  that this leads to
+$$\sqrt{n}(\hat\beta-\beta)\stackrel{d}{\to} N(0,\sigma^2(\alpha)).$$
+
+Examples include GEE with $\alpha$ as the working correlation parameters, and raking with $\alpha$ as the imputation model and calibration parameters, and stabilised weights with $\alpha$ as the stabilising model parameters. 
+
+
+Now, suppose we have an estimator $\hat\alpha$ whose limit in probability exists; we'll call it $\alpha^*$. With enough regularity to differentiate under the expectation
+$$\frac{\partial}{\partial\alpha}\left.E[U(\beta_0;\alpha)]\right|_{\alpha^*}=0 = E\left[\left. \frac{\partial}{\partial\alpha}U(\beta_0;\alpha)\right|_{\alpha^*}   \right]$$
+As the derivative has zero mean, the law of large numbers says
+$$\left. \frac{\partial}{\partial\alpha}U(\beta_0;\alpha)\right|_{\alpha^*}=o_p(1)$$
+and the central limit theorem says
+$$\left. \frac{\partial}{\partial\alpha}U(\beta_0;\alpha)\right|_{\alpha^*}=O_p(n^{-1/2})$$
+On the other hand, the derivative with respect to $\beta$ does not have mean zero, so it is $O_p(1)$. In a parametric model it would be the average per-observation observed Fisher information. 
+
+A Taylor series expansion about $(\beta_0,\alpha^*)$ gives
+$$\begin{align}U(\hat\beta,\hat\alpha)=U(\beta_0,\alpha^*)=&U(\beta_0,\alpha^*)+ (\hat\alpha-\alpha^*)\frac{\partial}{\partial\alpha}U(\beta_0;\alpha^*)\\&+(\hat\beta-\beta_0)\frac{\partial}{\partial\beta}U(\beta_0;\alpha^*)\\&+O_p(\|\hat\alpha-\alpha^*\|^2_2)+O_p(\|\hat\beta-\beta_0\|^2_2)\end{align}$$
+If $\hat\alpha-\alpha^*=o_p(n^{-1/4})$ then the second, fourth, and fifth terms are $o_p(n^{-1/2})$ so
+$$U(\hat\beta,\hat\alpha)=U(\beta_0,\alpha^*)=U(\beta_0,\alpha^*)+ (\hat\beta-\beta_0)\frac{\partial}{\partial\beta}U(\beta_0;\alpha^*)+o_p(n^{-1/2})$$
+Under the standard smoothness/moment assumptions we can rearrange to 
+$$\hat\beta-\beta_0= \left[\frac{\partial}{\partial\beta}U(\beta_0;\alpha^*)  \right]^{-1}U(\beta_0,\alpha^*)+o_p(n^{-1/2})$$
+so the distribution of $\hat\beta$ depends on $\hat\alpha$ only through $\alpha^*$. ◼️
+
+For most purposes the fourth-root condition doesn't really matter: if you have a fixed finite-dimensional parameter that you can estimate at all, you can probably estimate it at root-$n$ rate, and if your parameters are infinite-dimensional or growing in size with $n$ you need to worry about more than just powers of $n$ in remainders.  However, if you *needed* root-$n$ convergence you'd worry that low efficiency would be a problem in sub-asymptotic settings, which is less of a worry now. 
+
+I worked this argument out for the GEE case, back when I was a PhD student, but I certainly wasn't the first person to do so. I have been told that the first person to come up with the fourth-root part of it was Whitney Newey, which would make sense, but I don't have a reference.  If you know that reference or any early (mid 90s or earlier) reference, I'd like to hear about it.  
+
+The [*Biometrika* GEE paper](https://www.jstor.org/stable/2336267) in 1986 has the essential idea that $\partial_\alpha E[U(\beta_0,\alpha)]=0$, but it assumes $n^{1/2}$ consistency for $\alpha$.  Also, some people at the time (and since) have been confused by its using 'consistency' both for the assumption that $\hat\beta$ converges *to its true value $\beta_0$* and the assumption that $\hat\alpha$ converges *to something*.
