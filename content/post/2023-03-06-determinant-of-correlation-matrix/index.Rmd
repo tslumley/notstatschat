@@ -1,0 +1,18 @@
+---
+title: Determinant of correlation matrix
+author: Thomas Lumley
+date: '2023-03-06'
+slug: determinant-of-correlation-matrix
+categories: []
+tags: []
+---
+
+Last week I needed to know how big determinants of correlation matrices could get^[yes, I know, you probably learned this primary school], and I couldn't immediately find a proof on Google, so I worked one out.
+
+<hr>
+
+**Theorem**: The determinant of a correlation matrix is at most 1
+
+**Proof**:  Let $p$ be the dimension of the matrix.  The trace of the matrix is $p$, and that's the sum of the eigenvalues, so the arithmetic mean of the eigenvalues is 1. By the arithmetic:geometric mean inequality, the geometric mean is at most 1 (and *strictly less* if the eigenvalues aren't all equal).  The determinant is the $p$th power of the geometric mean of the eigenvalues, and we are done. ◼️
+
+
