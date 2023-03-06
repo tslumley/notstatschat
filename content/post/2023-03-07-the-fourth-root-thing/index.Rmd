@@ -37,7 +37,7 @@ Under the standard smoothness/moment assumptions we can rearrange to
 $$\hat\beta-\beta_0= \left[\frac{\partial}{\partial\beta}U(\beta_0;\alpha^*)  \right]^{-1}U(\beta_0,\alpha^*)+o_p(n^{-1/2})$$
 so the distribution of $\hat\beta$ depends on $\hat\alpha$ only through $\alpha^*$. ◼️
 
-For most purposes the fourth-root condition doesn't really matter: if you have a fixed finite-dimensional parameter that you can estimate at all, you can probably estimate it at root-$n$ rate, and if your parameters are infinite-dimensional or growing in size with $n$ you need to worry about more than just powers of $n$ in remainders.  However, if you *needed* root-$n$ convergence you'd worry that low efficiency would be a problem in sub-asymptotic settings, which is less of a worry now. 
+For most purposes the fourth-root condition doesn't really matter: if you have a fixed finite-dimensional parameter that you can estimate at all, you can probably estimate it at root-$n$ rate, and if your parameters are infinite-dimensional or growing in size with $n$ you need to worry about more than just powers of $n$ in remainders.  However, if you *needed* root-$n$ convergence you'd worry that low efficiency would be a problem in sub-asymptotic settings, which is less of a worry if you know fourth-root consistency is enough. 
 
 I worked this argument out for the GEE case, back when I was a PhD student, but I certainly wasn't the first person to do so. I have been told that the first person to come up with the fourth-root part of it was Whitney Newey, which would make sense, but I don't have a reference.  If you know that reference or any early (mid 90s or earlier) reference, I'd like to hear about it.  
 
