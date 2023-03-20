@@ -17,7 +17,7 @@ Another way to write this is to standardise the limit distribution. Suppose
 $$\sqrt{n}(\hat\theta-\theta)\stackrel{d}{\to}N(0,\sigma^2(C))$$
 Instead, we can do^[yes, I'm assuming something about $\sigma^2(\cdot)$]
 $$\sqrt{\frac{n}{\sigma^2(m/n)}}(\hat\theta-\theta)\stackrel{d}{\to}N(0,1).$$
-Any subsequence has a subsubsequence where $m/n\to C$, and along this subsubsequence the asymptotic distribution is $N(0,1)$. That implies the asymptotic distribution along the whole sequence is $N(0,1)$. So, again, it's not a loss of generality from a statistical point of view to assume $m/n\to C$ for the whole sequence.
+Any subsequence has a subsubsequence where $m/n\to C$, and along this subsubsequence the asymptotic distribution is $N(0,1)$. That implies the asymptotic distribution along the whole sequence is $N(0,1)$. So, again, it's not a loss of generality from a statistical point of view to assume the limit is $N(0,1)$ for the whole sequence and use $N(0,\sigma^2(m/n))$ as the asymptotic approximation.
 
 When will this break down? The standardised version indicates one potential problem. Suppose the value of $m/n$ affects the asymptotic mean as well as the asymptotic variance. For example, in perinatal data, $n$ might be the number of deliveries and $m$ the number of babies. The ratio $m/n$ tells us about the fraction of multiple births, which could easily be informative.  As another example, suppose $n$ is the number of households sampled and $m$ the number of people; $m/n$ is then the mean household size, and could matter.  In both cases it could still be that there's no problem, but more argument is needed; it's not immediate. 
 
