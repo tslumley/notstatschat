@@ -1,0 +1,24 @@
+---
+title: Which infinite sequence?
+author: Thomas Lumley
+date: '2023-03-20'
+slug: which-infinite-sequence
+categories: []
+tags: []
+---
+
+I'm at ENAR, and there are talks with asymptotic theory^[And in some cases it's relevant]. One thing that caught my attention is problems with two different sample sizes, eg, a main sample and a validation sample. Call the two sample sizes $m$ and $n$.  Theorems are then proved under the assumption that $m/n$ converges to finite non-zero constant $C$.  What is the *statistical* content of this assumption?
+
+In an application, we have one data set, with one particular value of $m$ and $n$. The assumption $m/n\to C$ is about which infinite sequence we want to think of the data as an element of^[Never use a preposition to end a sentence.] If we embedded the actual $m$ and $n$ in an infinite sequence where we used $m/n=2$ on Wednesdays and $m/n=0.5$ on Fridays, would it matter?
+
+This is where it's useful to extract subsequences.  Suppose $m/n$ is bounded above and bounded away from zero. Suppose the two samples are each iid so that $m$ and $n$ are just measuring the amount of information.  Any subsequence $(m_k,n_k)$ of our infinite sequence has a subsubsequence $(m_{k_j},n_{k_j})$that converges to some finite, non-zero $C$. We could just choose that subsubsequence as our infinite sequence and get convergence of $m/n$ for free. We'd get the same asymptotic approximation to the finite sample distribution, so the assumption $m/n\to C$ is not a loss of generality^[and so doesn't have any real content] *in statistical terms*. 
+
+Another way to write this is to standardise the limit distribution. Suppose
+$$\sqrt{n}(\hat\theta-\theta)\stackrel{d}{\to}N(0,\sigma^2(C))$$
+Instead, we can do^[yes, I'm assuming something about $\sigma^2(\cdot)$]
+$$\sqrt{\frac{n}{\sigma^2(m/n)}}(\hat\theta-\theta)\stackrel{d}{\to}N(0,1).$$
+Any subsequence has a subsubsequence where $m/n\to C$, and along this subsubsequence the asymptotic distribution is $N(0,1)$. That implies the asymptotic distribution along the whole sequence is $N(0,1)$. So, again, it's not a loss of generality from a statistical point of view to assume $m/n\to C$ for the whole sequence.
+
+When will this break down? The standardised version indicates one potential problem. Suppose the value of $m/n$ affects the asymptotic mean as well as the asymptotic variance. For example, in perinatal data, $n$ might be the number of deliveries and $m$ the number of babies. The ratio $m/n$ tells us about the fraction of multiple births, which could easily be informative.  As another example, suppose $n$ is the number of households sampled and $m$ the number of people; $m/n$ is then the mean household size, and could matter.  In both cases it could still be that there's no problem, but more argument is needed; it's not immediate. 
+
+

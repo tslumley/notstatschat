@@ -1,0 +1,29 @@
+---
+title: Which infinite sequence?
+author: Thomas Lumley
+date: '2023-03-20'
+slug: which-infinite-sequence
+categories: []
+tags: []
+---
+
+
+
+<p>I’m at ENAR, and there are talks with asymptotic theory<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>. One thing that caught my attention is problems with two different sample sizes, eg, a main sample and a validation sample. Call the two sample sizes <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span>. Theorems are then proved under the assumption that <span class="math inline">\(m/n\)</span> converges to finite non-zero constant <span class="math inline">\(C\)</span>. What is the <em>statistical</em> content of this assumption?</p>
+<p>In an application, we have one data set, with one particular value of <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span>. The assumption <span class="math inline">\(m/n\to C\)</span> is about which infinite sequence we want to think of the data as an element of<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> If we embedded the actual <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span> in an infinite sequence where we used <span class="math inline">\(m/n=2\)</span> on Wednesdays and <span class="math inline">\(m/n=0.5\)</span> on Fridays, would it matter?</p>
+<p>This is where it’s useful to extract subsequences. Suppose <span class="math inline">\(m/n\)</span> is bounded above and bounded away from zero. Suppose the two samples are each iid so that <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span> are just measuring the amount of information. Any subsequence <span class="math inline">\((m_k,n_k)\)</span> of our infinite sequence has a subsubsequence <span class="math inline">\((m_{k_j},n_{k_j})\)</span>that converges to some finite, non-zero <span class="math inline">\(C\)</span>. We could just choose that subsubsequence as our infinite sequence and get convergence of <span class="math inline">\(m/n\)</span> for free. We’d get the same asymptotic approximation to the finite sample distribution, so the assumption <span class="math inline">\(m/n\to C\)</span> is not a loss of generality<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> <em>in statistical terms</em>.</p>
+<p>Another way to write this is to standardise the limit distribution. Suppose
+<span class="math display">\[\sqrt{n}(\hat\theta-\theta)\stackrel{d}{\to}N(0,\sigma^2(C))\]</span>
+Instead, we can do<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>
+<span class="math display">\[\sqrt{\frac{n}{\sigma^2(m/n)}}(\hat\theta-\theta)\stackrel{d}{\to}N(0,1).\]</span>
+Any subsequence has a subsubsequence where <span class="math inline">\(m/n\to C\)</span>, and along this subsubsequence the asymptotic distribution is <span class="math inline">\(N(0,1)\)</span>. That implies the asymptotic distribution along the whole sequence is <span class="math inline">\(N(0,1)\)</span>. So, again, it’s not a loss of generality from a statistical point of view to assume <span class="math inline">\(m/n\to C\)</span> for the whole sequence.</p>
+<p>When will this break down? The standardised version indicates one potential problem. Suppose the value of <span class="math inline">\(m/n\)</span> affects the asymptotic mean as well as the asymptotic variance. For example, in perinatal data, <span class="math inline">\(n\)</span> might be the number of deliveries and <span class="math inline">\(m\)</span> the number of babies. The ratio <span class="math inline">\(m/n\)</span> tells us about the fraction of multiple births, which could easily be informative. As another example, suppose <span class="math inline">\(n\)</span> is the number of households sampled and <span class="math inline">\(m\)</span> the number of people; <span class="math inline">\(m/n\)</span> is then the mean household size, and could matter. In both cases it could still be that there’s no problem, but more argument is needed; it’s not immediate.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>And in some cases it’s relevant<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>Never use a preposition to end a sentence.<a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn3"><p>and so doesn’t have any real content<a href="#fnref3" class="footnote-back">↩</a></p></li>
+<li id="fn4"><p>yes, I’m assuming something about <span class="math inline">\(\sigma^2(\cdot)\)</span><a href="#fnref4" class="footnote-back">↩</a></p></li>
+</ol>
+</div>
