@@ -1,0 +1,113 @@
+---
+title: Ranks in survey data
+author: Thomas Lumley
+date: '2023-04-18'
+slug: ranks-in-survey-data
+categories: []
+tags: []
+---
+
+
+
+<p>Someone asked on CrossValidated about signed rank tests for complex sample data. They had defined a signed rank function</p>
+<pre><code>signrank&lt;-function(x) rank(abs(x))*sign(x)</code></pre>
+<p>It’s then easy to use <code>svymean</code> to estimate the mean signed rank and its standard error. If we write <span class="math inline">\(f\)</span> for the transformation from the variable to the signed rank, then this gives a valid point estimate of the population mean of <span class="math inline">\(f(X)\)</span> and its standard error. You can then get a (approximately) valid test for the null hypothesis that the mean of <span class="math inline">\(f(X)\)</span> is zero.</p>
+<p>The problem is that <span class="math inline">\(f\)</span> is <em>not</em> the signed-rank transformation in the population, only in the sample, so you aren’t testing the same null hypothesis that you would be testing in the population or in a simple random sample from the population. The transformation <span class="math inline">\(f\)</span> depends on the sampling design, not just on the population data. If the Hodges-Lehman estimator of the differences is zero in the population but you oversample observations with negative values of the difference, <span class="math inline">\(x\)</span>, then <span class="math inline">\(f(x)\)</span> will be larger for negative <span class="math inline">\(x\)</span> than if you had a simple random sample.</p>
+<p>We don’t have this problem for the sign test or the <span class="math inline">\(t\)</span>-test or for estimating geometric means because the transformations in those situations don’t depend on the sampling design. The sign test for paired observations is based on <span class="math inline">\(\Delta_i = 2(X_i&gt;Y_i)-1\)</span>, and this transformation doesn’t depend on the design. A comparison of geometric means is based on the log transformation, and this transformation oesn’t depend on the design. A standard rank transformation <em>does</em> depend on the design.</p>
+<p>One way to get a rank transformation that doesn’t depend on the sampling design is to use the population CDF to define the ranks. Under simple random sampling for a continuous variable, the ranks (divided by <span class="math inline">\(N\)</span>) are just the values of the CDF. So, a good way to define ranks under unequal-probability sampling is using the estimated population CDF. For continuous variables, you could do</p>
+<pre><code>ii &lt;- order(x)
+r[ii]&lt;- cumsum(w[ii])/sum(w[ii])</code></pre>
+<p>In general, you need some way to handle ties, and while you’re handling ties you might think about how you want to handle the weight for the current observation – this is like the issue of whether you want the left median or the right median or something in between. So, <code>svyranktest</code> for two-sample tests uses</p>
+<pre><code>ii &lt;- order(x)
+r[ii] &lt;- ave(cumsum(w[ii])-w[ii]/2, factor(y[ii]))</code></pre>
+<p>which allocates <em>half</em> the weight of the current observation to the current rank, and averages over ties.</p>
+<p>Let’s look at an example, to see if it matters. First, set up the data, where <code>x</code> is symmetric about 0.</p>
+<pre class="r"><code>library(survey)</code></pre>
+<pre><code>## Loading required package: grid</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## Loading required package: survival</code></pre>
+<pre><code>## 
+## Attaching package: &#39;survey&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:graphics&#39;:
+## 
+##     dotchart</code></pre>
+<pre class="r"><code> population&lt;-data.frame(x=rnorm(10000))
+ population$p&lt;-with(population, exp(x-3)/(1+exp(x-3)))
+ population$poprank&lt;-with(population, rank(abs(x))*sign(x))
+ population$in_sample&lt;-rbinom(10000,1,population$p)==1
+ the_sample&lt;-subset(population, in_sample)
+d&lt;-svydesign(id=~1, prob=~p, data=the_sample)</code></pre>
+<p>The sample is biased: here’s a histogram of <code>x</code> in the population, in the sample without using weights, and in the sample using weights</p>
+<pre class="r"><code>hist(population$x,breaks=30,xlim=c(-3.5,3.5))</code></pre>
+<p><img src="staticunnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code>hist(the_sample$x,breaks=30,xlim=c(-3.5,3.5))</code></pre>
+<p><img src="staticunnamed-chunk-2-2.png" width="672" /></p>
+<pre class="r"><code>svyhist(~x, d,breaks=30,xlim=c(-3.5,3.5))</code></pre>
+<p><img src="staticunnamed-chunk-2-3.png" width="672" /></p>
+<p>In the population, the mean rank is zero</p>
+<pre class="r"><code> t.test(population$poprank)</code></pre>
+<pre><code>## 
+## 	One Sample t-test
+## 
+## data:  population$poprank
+## t = -0.0041148, df = 9999, p-value = 0.9967
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  -113.4240  112.9488
+## sample estimates:
+## mean of x 
+##   -0.2376</code></pre>
+<p>In the sample, it isn’t</p>
+<pre class="r"><code> t.test(the_sample$poprank)</code></pre>
+<pre><code>## 
+## 	One Sample t-test
+## 
+## data:  the_sample$poprank
+## t = 25.532, df = 736, p-value &lt; 2.2e-16
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  4304.320 5021.395
+## sample estimates:
+## mean of x 
+##  4662.858</code></pre>
+<p>If we construct ranks just from the sample, and do an unweighted analysis, it’s very wrong</p>
+<pre class="r"><code> the_sample$samplerank&lt;-with(the_sample, rank(abs(x))*sign(x))
+ t.test(the_sample$samplerank)</code></pre>
+<pre><code>## 
+## 	One Sample t-test
+## 
+## data:  the_sample$samplerank
+## t = 25.262, df = 736, p-value &lt; 2.2e-16
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  267.7099 312.8247
+## sample estimates:
+## mean of x 
+##  290.2673</code></pre>
+<p>We can do a weighted analysis</p>
+<pre class="r"><code>d&lt;-svydesign(id=~1, prob=~p, data=the_sample)
+ svymean(~poprank, d)</code></pre>
+<pre><code>##            mean     SE
+## poprank -312.45 398.92</code></pre>
+<p>As expected the estimated population mean of the population signed rank is roughly zero.</p>
+<pre class="r"><code> svymean(~samplerank, d)</code></pre>
+<pre><code>##               mean     SE
+## samplerank -17.951 25.514</code></pre>
+<p>Somewhat disappointingly, the same is true for the estimated population mean of the sample signed rank</p>
+<p>We can define estimated population ranks</p>
+<pre class="r"><code>ii&lt;-order(abs(the_sample$x))
+rr&lt;-numeric(length(ii))
+rr[ii]&lt;-cumsum(weights(d)[ii])
+sr&lt;-rr*sign(the_sample$x)</code></pre>
+<p>These match the distribution of the population signed rank</p>
+<pre class="r"><code>qqplot(sr, the_sample$poprank); abline(0,1)</code></pre>
+<p><img src="staticunnamed-chunk-9-1.png" width="672" /></p>
+<p>and the sample rank doesn’t really match the population rank</p>
+<pre class="r"><code>qqplot(the_sample$poprank,the_sample$samplerank)</code></pre>
+<p><img src="staticunnamed-chunk-10-1.png" width="672" /></p>
+<p>And the ranks defined using weights have approximately zero mean, as they should</p>
+<pre class="r"><code>svymean(sr,d)</code></pre>
+<pre><code>##         mean    SE
+## [1,] -350.99 430.2</code></pre>
+<p>The only disappointing thing here is that defining the rank transformation without considering the weights actually does pretty well. While <em>in principle</em> I think you really do want to define the ranks so the test estimates a well-defined population parameter, it doesn’t actually seem to matter all that much (in this and some other examples).</p>
+<p>The one-sample Wilcoxon test has a big advantage of the two-sample test in that it really is based on a one-sample location parameter, and one that’s fairly strongly correlated with the mean. There’s not as much room for things to go wrong as there is with two-sample tests.</p>
