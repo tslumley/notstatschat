@@ -1,0 +1,60 @@
+---
+title: Pairwise likelihood and cluster sizes
+author: Thomas Lumley
+date: '2023-05-05'
+slug: pairwise-likelihood-and-cluster-sizes
+categories: []
+tags: []
+---
+
+So, I'm working on `svylme` again, for linear mixed models under complex sampling.  It uses pairwise likelihood, following the basic idea from [the](https://www150.statcan.gc.ca/n1/pub/12-001-x/2013002/article/11887-eng.pdf) [Canadians](https://www.jstor.org/stable/24721288), but extending it to settings where the design structure and model structure are different. 
+
+It's always hard finding examples to check against when you're doing something new.  After getting quite reasonable results from simulations, I tried [an example](https://github.com/variani/lme4qtl/blob/master/vignettes/pedigreemm.Rmd) from the `lme4qtl` package, which is a subset of a dataset on milk production by dairy cows.  It's got both an ordinary random intercept for each herd and a correlated random intercept where the correlation is the genetic relatedness of the cows.  There isn't any sampling here, so I set up a design object that had 100% sampling of everything. 
+
+```{r}
+suppressMessages(library(svylme))
+
+load("~/svylme/inst/milk.rda")
+herd_des<- svydesign(id = ~herd + id, prob = ~one + one2, 
+                     data = milk_subset)
+
+lme4qtl::relmatLmer(sdMilk ~ lact + log(dim) + (1|id) + (1|herd),
+  data = milk_subset, relmat = list(id = A_gen))
+svy2relmer(sdMilk ~ lact + log(dim) + (1|id) + (1|herd), 
+           design=herd_des, relmat = list(id = A_gen))
+```
+
+The results were not encouraging.  The random effects aren't great, but it shouldn't be possibe to mess up the fixed effects this badly; they're just weighted least squares estimators.
+
+After spending quite a bit of time trying to track down the problem, I decided to try a model without the fancy genetic stuff:
+
+```{r}
+lme4::lmer(sdMilk ~ lact + log(dim) + (1|herd), 
+           data=milk_subset)
+svy2lme(sdMilk ~ lact + log(dim) + (1|herd), 
+        design=herd_des)
+svy2lme(sdMilk ~ lact + log(dim) + (1|herd), 
+        design=herd_des, method="nested")
+```
+
+Now the contagion seemed to be spreading even to the relatively simple computations that assume the random effect clusters are the same as the sampling units. 
+
+Looking at these units:
+```{r}
+table(milk_subset$herd)
+```
+
+it seems there is quite a bit of variation in herd size. So
+```{r}
+lm(sdMilk ~ lact + log(dim),data=milk_subset,subset=herd==89)
+lm(sdMilk ~ lact + log(dim),data=milk_subset,subset=herd!=89)
+```
+
+The largest herd, with more than a third of the data, has a very different intercept from the rest of the data.  So, why is the pairwise likelihood estimator more like herd 89 and the full likelihood estimator more like the others?  That's actually pretty simple. The number of pairs for a herd of size $m$ is $m(m-1)/2$, so it goes up as $m^2$.  Herd 89 has 39% of the **observations** in the data set, but 76% of the **pairs**. 
+
+The pairwise likelihood estimator is consistent for the same value as the full likelihood if the model is correctly specified: each pair is an honest-to-Fisher likelihood, with the likelihood score having zero mean at the true values. If the model is slightly misspecified, you get small differences. But if the model is way off you can get large differences.  In this case, while we expect the means to vary between herds, the difference between the intercept of herd 89 and the intercept for the rest is more than 9, which is very large compared to the estimated herd standard deviation of roughly 0.5 in the full model. 
+
+It might  be worth introducing a rescaling of cluster weights for large clusters to reduce this effect in settings where variability just happens to end up correlated with herd size. And in the other direction, introducing single-observation components into the likelihood for observations that have no correlated pairs
+
+More generally, weights don't matter that much for linear regression if the model is within cooee of being correct, but they can make a big difference for badly misspecified models. When you're doing *exactly* the same calculation as existing software, you should expect to get exactly the same answer; when you're doing roughly the same calculation, it depends on how good an example it is. 
+

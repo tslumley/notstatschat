@@ -1,0 +1,121 @@
+---
+title: Pairwise likelihood and cluster sizes
+author: Thomas Lumley
+date: '2023-05-05'
+slug: pairwise-likelihood-and-cluster-sizes
+categories: []
+tags: []
+---
+
+
+
+<p>So, I’m working on <code>svylme</code> again, for linear mixed models under complex sampling. It uses pairwise likelihood, following the basic idea from <a href="https://www150.statcan.gc.ca/n1/pub/12-001-x/2013002/article/11887-eng.pdf">the</a> <a href="https://www.jstor.org/stable/24721288">Canadians</a>, but extending it to settings where the design structure and model structure are different.</p>
+<p>It’s always hard finding examples to check against when you’re doing something new. After getting quite reasonable results from simulations, I tried <a href="https://github.com/variani/lme4qtl/blob/master/vignettes/pedigreemm.Rmd">an example</a> from the <code>lme4qtl</code> package, which is a subset of a dataset on milk production by dairy cows. It’s got both an ordinary random intercept for each herd and a correlated random intercept where the correlation is the genetic relatedness of the cows. There isn’t any sampling here, so I set up a design object that had 100% sampling of everything.</p>
+<pre class="r"><code>suppressMessages(library(svylme))
+
+load(&quot;~/svylme/inst/milk.rda&quot;)
+herd_des&lt;- svydesign(id = ~herd + id, prob = ~one + one2, 
+                     data = milk_subset)
+
+lme4qtl::relmatLmer(sdMilk ~ lact + log(dim) + (1|id) + (1|herd),
+  data = milk_subset, relmat = list(id = A_gen))</code></pre>
+<pre><code>## Linear mixed model fit by REML [&#39;lmerMod&#39;]
+## Formula: sdMilk ~ lact + log(dim) + (1 | id) + (1 | herd)
+##    Data: milk_subset
+## REML criterion at convergence: 729.4595
+## Random effects:
+##  Groups   Name        Std.Dev.
+##  id       (Intercept) 0.5544  
+##  herd     (Intercept) 0.5563  
+##  Residual             0.5989  
+## Number of obs: 316, groups:  id, 119; herd, 21
+## Fixed Effects:
+## (Intercept)         lact     log(dim)  
+##     1.08518     -0.07821      0.83063</code></pre>
+<pre class="r"><code>svy2relmer(sdMilk ~ lact + log(dim) + (1|id) + (1|herd), 
+           design=herd_des, relmat = list(id = A_gen))</code></pre>
+<pre><code>## Linear mixed model fitted by pairwise pseudolikelihood
+## Formula: sdMilk ~ lact + log(dim) + (1 | id) + (1 | herd)
+## Random effects:
+##             Std.Dev.
+## (Intercept)   0.4699
+## (Intercept)   0.6112
+## Residual:	 0.6461
+##  Fixed effects:
+##                 beta       SE      t        p
+## (Intercept) -2.98169  2.16213 -1.379    0.168
+## lact         0.01092  0.07202  0.152    0.880
+## log(dim)     1.42422  0.32428  4.392 1.12e-05</code></pre>
+<p>The results were not encouraging. The random effects aren’t great, but it shouldn’t be possibe to mess up the fixed effects this badly; they’re just weighted least squares estimators.</p>
+<p>After spending quite a bit of time trying to track down the problem, I decided to try a model without the fancy genetic stuff:</p>
+<pre class="r"><code>lme4::lmer(sdMilk ~ lact + log(dim) + (1|herd), 
+           data=milk_subset)</code></pre>
+<pre><code>## Linear mixed model fit by REML [&#39;lmerMod&#39;]
+## Formula: sdMilk ~ lact + log(dim) + (1 | herd)
+##    Data: milk_subset
+## REML criterion at convergence: 776.7441
+## Random effects:
+##  Groups   Name        Std.Dev.
+##  herd     (Intercept) 0.5652  
+##  Residual             0.7793  
+## Number of obs: 316, groups:  herd, 21
+## Fixed Effects:
+## (Intercept)         lact     log(dim)  
+##     1.33812     -0.06235      0.78579</code></pre>
+<pre class="r"><code>svy2lme(sdMilk ~ lact + log(dim) + (1|herd), 
+        design=herd_des)</code></pre>
+<pre><code>## Linear mixed model fitted by pairwise pseudolikelihood
+## Formula: sdMilk ~ lact + log(dim) + (1 | herd)
+## Random effects:
+##             Std.Dev.
+## (Intercept)   0.4713
+## Residual:	 0.7653
+##  Fixed effects:
+##                 beta       SE      t        p
+## (Intercept) -4.60029  1.52094 -3.025  0.00249
+## lact         0.07066  0.07385  0.957  0.33864
+## log(dim)     1.63510  0.21094  7.751 9.09e-15</code></pre>
+<pre class="r"><code>svy2lme(sdMilk ~ lact + log(dim) + (1|herd), 
+        design=herd_des, method=&quot;nested&quot;)</code></pre>
+<pre><code>## Linear mixed model fitted by pairwise pseudolikelihood
+## Formula: sdMilk ~ lact + log(dim) + (1 | herd)
+## Random effects:
+##             Std.Dev.
+## (Intercept)   0.4713
+## Residual:	 0.7653
+##  Fixed effects:
+##                 beta       SE      t        p
+## (Intercept) -4.60029  1.52094 -3.025  0.00249
+## lact         0.07066  0.07385  0.957  0.33864
+## log(dim)     1.63510  0.21094  7.751 9.09e-15</code></pre>
+<p>Now the contagion seemed to be spreading even to the relatively simple computations that assume the random effect clusters are the same as the sampling units.</p>
+<p>Looking at these units:</p>
+<pre class="r"><code>table(milk_subset$herd)</code></pre>
+<pre><code>## 
+##   2   7   8  14  22  38  45  48  49  52  54  55  59  60  64  66  68  75  77  89 
+##  33   2   2   7   3   2   2   6   1   3  12   1  42   2  16   5   5  36   4 123 
+##  90 
+##   9</code></pre>
+<p>it seems there is quite a bit of variation in herd size. So</p>
+<pre class="r"><code>lm(sdMilk ~ lact + log(dim),data=milk_subset,subset=herd==89)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = sdMilk ~ lact + log(dim), data = milk_subset, subset = herd == 
+##     89)
+## 
+## Coefficients:
+## (Intercept)         lact     log(dim)  
+##     -5.2761       0.1271       1.6888</code></pre>
+<pre class="r"><code>lm(sdMilk ~ lact + log(dim),data=milk_subset,subset=herd!=89)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = sdMilk ~ lact + log(dim), data = milk_subset, subset = herd != 
+##     89)
+## 
+## Coefficients:
+## (Intercept)         lact     log(dim)  
+##      3.7460      -0.1491       0.4236</code></pre>
+<p>The largest herd, with more than a third of the data, has a very different intercept from the rest of the data. So, why is the pairwise likelihood estimator more like herd 89 and the full likelihood estimator more like the others? That’s actually pretty simple. The number of pairs for a herd of size <span class="math inline">\(m\)</span> is <span class="math inline">\(m(m-1)/2\)</span>, so it goes up as <span class="math inline">\(m^2\)</span>. Herd 89 has 39% of the <strong>observations</strong> in the data set, but 76% of the <strong>pairs</strong>.</p>
+<p>The pairwise likelihood estimator is consistent for the same value as the full likelihood if the model is correctly specified: each pair is an honest-to-Fisher likelihood, with the likelihood score having zero mean at the true values. If the model is slightly misspecified, you get small differences. But if the model is way off you can get large differences. In this case, while we expect the means to vary between herds, the difference between the intercept of herd 89 and the intercept for the rest is more than 9, which is very large compared to the estimated herd standard deviation of roughly 0.5 in the full model.</p>
+<p>It might be worth introducing a rescaling of cluster weights for large clusters to reduce this effect in settings where variability just happens to end up correlated with herd size. And in the other direction, introducing single-observation components into the likelihood for observations that have no correlated pairs</p>
+<p>More generally, weights don’t matter that much for linear regression if the model is within cooee of being correct, but they can make a big difference for badly misspecified models. When you’re doing <em>exactly</em> the same calculation as existing software, you should expect to get exactly the same answer; when you’re doing roughly the same calculation, it depends on how good an example it is.</p>
