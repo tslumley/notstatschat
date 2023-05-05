@@ -1,0 +1,17 @@
+---
+title: New in the survey package
+author: Thomas Lumley
+date: '2023-05-04'
+slug: new-in-the-survey-package
+categories: []
+tags: []
+---
+
+
+
+<p>Version 4.2-1 of the <code>survey</code> package has hit CRAN! There are three major changes.</p>
+<p>First, when you ask for influence functions for an estimate, in order to get comparisons between subpopulations or something, you get an influence function for each record in the dataset – if there are missing values, the influence function is zero (a bit like the way <code>na.exclude</code> works).</p>
+<p>Second, <code>regTermTest</code> now handles missing data better – it used to assume that the two models you were comparing were fitted to the same data, but now it checks. As with any sort of data, it’s still better for you to remove missing values in advance.</p>
+<p>Third, there are score-type tests for generalised linear models, as described <a href="http://notstatschat.rbind.io/2022/01/28/comparing-tests-for-generalised-linear-models-in-survey-data/">here</a>.</p>
+<p>Of (even?) more specialist interest, the function <code>xdesign</code> supports data with crossed clustering, as described <a href="http://notstatschat.rbind.io/2021/09/18/crossed-clustering-and-parallel-invention/">here</a>. Uses include pairwise comparison (‘dyad’) data, inter-rater comparisons, and clustering on both space and time.</p>
+<p>This will probably be the last pure-R version of the package. The goal is to add faster C++ variance estimates from Ben Schneider (which require C++) and small-area estimates from Jon Wakefield, Peter Gao, Richard Li and co-workers (which require INLA)</p>
