@@ -44,13 +44,13 @@ Looking at these units:
 table(milk_subset$herd)
 ```
 
-it seems there is quite a bit of variation in herd size. So
+it seems there is quite a bit of variation in herd size. So,let's separate out the big one and see what happens:
 ```{r}
 lm(sdMilk ~ lact + log(dim),data=milk_subset,subset=herd==89)
 lm(sdMilk ~ lact + log(dim),data=milk_subset,subset=herd!=89)
 ```
 
-The largest herd, with more than a third of the data, has a very different intercept from the rest of the data.  So, why is the pairwise likelihood estimator more like herd 89 and the full likelihood estimator more like the others?  That's actually pretty simple. The number of pairs for a herd of size $m$ is $m(m-1)/2$, so it goes up as $m^2$.  Herd 89 has 39% of the **observations** in the data set, but 76% of the **pairs**. 
+The largest herd, with more than a third of the data, has a very different intercept from the rest of the data.  So, why is the pairwise likelihood estimator more like herd 89 and the full likelihood estimator more like the others?  That's actually pretty simple. The number of pairs for a herd of size $m$ is $m(m-1)/2$, so it goes up as $m^2$.  Herd 89 has 39% of the **observations** in the data set, but 76% of the **pairs**. It has more influence in the composite likelihood than it does in the full likelihood.
 
 The pairwise likelihood estimator is consistent for the same value as the full likelihood if the model is correctly specified: each pair is an honest-to-Fisher likelihood, with the likelihood score having zero mean at the true values. If the model is slightly misspecified, you get small differences. But if the model is way off you can get large differences.  In this case, while we expect the means to vary between herds, the difference between the intercept of herd 89 and the intercept for the rest is more than 9, which is very large compared to the estimated herd standard deviation of roughly 0.5 in the full model. 
 
