@@ -1,0 +1,21 @@
+---
+title: Blank-cheque inheritance and statistical methods objects
+author: Thomas Lumley
+date: '2023-06-07'
+slug: blank-cheque-inheritance-and-statistical-objects
+categories: []
+tags: []
+---
+
+
+
+<p>One of the problems with object-oriented programming for statistical methods is that inheritance is backwards. Everything is fine for data structures, and Bioconductor has many examples of broad (often abstract) base classes for biological information or annotation that are specialised by inheritance to more detailed and useful classes. Statistical methods go the other way</p>
+<p>In base R, <code>glm</code> for generalised linear models is a generalisation of <code>lm</code> for linear models, but the <code>glm</code> class inherits from the <code>lm</code> class, not the reverse. One example of the problem is <code>plot.lm</code>, which produces plots designed for linear regression. These plots are inherited by <code>glm</code> objects, but they don’t all make sense – notably, the Normal quantile-quantile plot of residuals isn’t much use.</p>
+<p>Since <code>lm</code> and <code>glm</code> were designed at more or less the same time (they appear in the White Book), they could have been designed to inherit the other way around, but that’s not a sustainable strategy. Future packages can’t jack up the object hierarchy and stick a new ground floor underneath the previous one. Alternatively, one might have argued that the relationship between <code>lm</code> and <code>glm</code> isn’t inheritance: a <code>glm</code> object <em>has</em> an associated <code>lm</code> object from the IWLS algorithm for Fisher scoring, but we shouldn’t generally expect methods designed for <code>lm</code> objects to make sense for that associated <code>lm</code>. For example, we might want to derive diagnostics for <code>glm</code> from those for <code>lm</code>, but we still need to think about whether deviance residuals or Pearson residuals or working residuals are the appropriate way to generalise.</p>
+<p>Combining inheritance-by-generalisation with dynamic loading of packages makes things worse. Alice can write package A that defines an object, Boris can write package B that defines a method for it, and Clarice can write package C with a generalisation inheriting from the object. The generalisation in Package C will inherit the method in Package B, unless someone deliberately overrides the inheritance – but there may be no-one in a position to do so. Clarice and Boris need not know of each other’s existence; there isn’t any central register of object hierarchies even limited to CRAN packages.</p>
+<p>I don’t have a solution to this. Perhaps someone curious in category theory will invent a useful notion of co-inheritance for backwards hierarchies of generalisations. Perhaps it’s already in Haskell. But I do think it’s useful to recognise there’s a conceptual problem to work around.</p>
+<p>This post was brought to you by <code>lme4::simulate</code>, which (as far as I can tell) doesn’t work correctly on <code>pedigreemm::pedigreemm</code> objects. There’s no reason it should, but there’s also no way for it to tell that it doesn’t, and it’s not completely obvious.</p>
+<blockquote>
+<p><em>I have heard the <code>merMod</code>s calling, each to each</em><br>
+<em>I do not think that they will call for me</em></p>
+</blockquote>
