@@ -1,0 +1,121 @@
+---
+title: Quoting and requoting
+author: Thomas Lumley
+date: '2023-08-04'
+slug: quoting-and-requoting
+categories: []
+tags: []
+---
+
+Someone [asked on StackOverflow](https://stackoverflow.com/questions/76733872/using-svyrecvar-to-get-the-variance-of-a-statistic-in-the-survey-r-package) how to compute the kurtosis and its standard error using the survey package.  They were thinking of using `svyrecvar`, the variance estimation function that underlies most things in the package.  That's not actually the easiest approach: `svyrecvar` works with estimating questions, but for the kurtosis we don't have estimating functions but instead have an explicit definition in terms of totals: 
+$$\kappa = \frac{E[(X-\mu)^4]}{E[(X-\mu)^2]^2}.$$
+It's likely to be easier to work with `svycontrast` and represent $\hat\kappa$ as a function of estimated moments. 
+
+Let's set up an example
+```{r echo=FALSE}
+suppressMessages(library(survey))
+data(api)
+dstrat<-svydesign(id=~1,strata=~stype, weights=~pw, data=apistrat, fpc=~fpc)
+```
+
+One way to do this is to represent the second and fourth central moments, which go into the kurtosis formula, in terms of the first four uncentered moments. You could work this out, but it's easier to look it up:
+$$E[(X-\mu)^2]= -3E[X]^4+6E[X]^2E[X^2]-4E[X]E[X^3]+E[X^4].$$
+
+First, the raw moments
+```{r}
+moments<-svymean(~enroll+I(enroll^2)+I(enroll^3)+I(enroll^4), dstrat)
+moments
+```
+
+Now, the central moments
+```{r}
+central_moments<-svycontrast(moments, list(mu4=quote(-3*enroll^4+6*enroll^2*`I(enroll^2)`-4*enroll*`I(enroll^3)`+`I(enroll^4)`),
+sigma2=quote(`I(enroll^2)`-enroll^2)))
+central_moments
+```
+
+And finally, the kurtosis
+```
+svycontrast(central_moments, quote(mu4/(sigma2*sigma2)))
+```
+
+The standard errors are computed at each step using the delta method, and this all works as long as the transformations are ones that `deriv` knows how to differentiate. We're just using basic arithmetic operations so that's no problem. 
+
+
+### And now you have two problems
+
+The next problem is how to turn this into a function. I would normally think of using `bquote` to substitute things into expressions, but quoting things that already contain backticks gets messy. 
+
+So, the first solution I thought of: rename the user's variable to something I can control, so I can write explicit formulas.  I could rename it to `enroll` and use the code I already have, but that would be silly; the user might have a variable called `enroll`. Instead, let's use a variable they probably don't have:
+
+```{r}
+svykurt<-function(formula, design){
+    var_name <- formula[[2]]
+    if (".x." %in% colnames(design)) stop("🙄")
+    design<-eval(bquote(update(design, .x.=.(var_name))))
+    moments<-svymean(~.x.+I(.x.^2)+I(.x.^3)+I(.x.^4), design)
+    central_moments<-svycontrast(moments, 
+        list(mu4=quote(-3*.x.^4+6*.x.^2*`I(.x.^2)`-4*.x.*`I(.x.^3)`+`I(.x.^4)`),
+             sigma2=quote(`I(.x.^2)`-`.x.`^2)
+    ))
+    svycontrast(central_moments, quote(mu4/(sigma2*sigma2)))    
+}
+
+svykurt(~enroll, dstrat)
+```
+
+This works, but it's a bit icky. The user *might* have a variable called `.x.`, and while you could argue people like that deserve everything they get, the variable might have been converted automatically from a name on some other system that isn't legal in R. 
+
+A second approach is to rename the elements of `moments`, so you don't have to do all the messy backtick stuff in the computation of `central_moments`:
+
+```{r}
+svykurt1<-function(formula, design){
+    var_name <- as.character(formula[[2]])
+    moments_formula <- as.formula(paste0("~",var_name," + I(",var_name,"^2) + I(",
+    var_name,"^3) + I(", var_name,"^4)"))
+  
+    moments<-svymean(moments_formula, design)
+    attr(moments,"names")<-c("one","two","three","four")
+    dimnames(attr(moments,"var"))<-list(c("one","two","three","four"),c("one","two","three","four"))
+    central_moments<-svycontrast(moments, 
+        list(mu4=quote(-3*one^4+6*one^2*two-4*one*three+four),
+             sigma2=quote(two-one^2)
+    ))
+    svycontrast(central_moments, quote(mu4/(sigma2*sigma2)))    
+}
+
+svykurt1(~enroll, dstrat)
+```
+
+Gaze in awe/horror at the doubly-nested complex assignment that changes the names on the variance matrix!  
+
+This is much better, but it relies on knowing the internal structure of the `svystat` object returned by `svycontrast`, and so is in a state of sin. 
+
+### It's already dead
+
+Another option for substitution is to use strings rather than quoted names. Character strings are already dead and so don't need to be quoted. That's usually a disadvantage, but it's helpful here.
+
+```{r}
+svykurt2<-function(formula, design){
+    var_name <- as.character(formula[[2]])
+    moments_char<-paste0("I(",var_name,"^",1:4,")")
+    moments_formula <- make.formula(moments_char)
+    moments<-svymean(moments_formula, design)
+    mu4expr<-substitute(-3*one^4+6*one^2*two-4*one*three+four, 
+            list(one=as.name(moments_char[1]),two=as.name(moments_char[2]),
+            three=as.name(moments_char[3]),four=as.name(moments_char[4])))
+    sigma2expr<-substitute(two-one^2, 
+            list(one=as.name(moments_char[1]),two=as.name(moments_char[2])))
+    central_moments<-svycontrast(moments, 
+        list(mu4=mu4expr,
+             sigma2=sigma2expr
+    ))
+    svycontrast(central_moments, quote(mu4/(sigma2*sigma2)))    
+}
+
+svykurt2(~enroll, dstrat)
+```
+
+The substitution could be done with `bquote` but it's a bit unnatural --  the variables `one`, `two`, `three`, `four` have no reason to be littering the local environment. It makes more sense to keep them in a list,  use `substitute` to put them into the expressions, and use ordinary evaluation to pass the expressions to `svycontrast`.
+
+
