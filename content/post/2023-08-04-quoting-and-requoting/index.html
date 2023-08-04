@@ -9,12 +9,12 @@ tags: []
 
 
 
-<p>Someone <a href="https://stackoverflow.com/questions/76733872/using-svyrecvar-to-get-the-variance-of-a-statistic-in-the-survey-r-package">asked on StackOverflow</a> how to compute the kurtosis and its standard error using the survey package. They were thinking of using <code>svyrecvar</code>, the variance estimation function that underlies most things in the package. That’s not actually the easiest approach: <code>svyrecvar</code> works with estimating questions, but for the kurtosis we don’t have estimating functions but instead have an explicit definition in terms of totals:
+<p>Someone <a href="https://stackoverflow.com/questions/76733872/using-svyrecvar-to-get-the-variance-of-a-statistic-in-the-survey-r-package">asked on StackOverflow</a> how to compute the kurtosis and its standard error using the survey package. They were thinking of using <code>svyrecvar</code>, the variance estimation function that underlies most things in the package. That’s not actually the easiest approach: <code>svyrecvar</code> works with estimating questions, but for the kurtosis we don’t have estimating functions and instead have an explicit definition in terms of totals:
 <span class="math display">\[\kappa = \frac{E[(X-\mu)^4]}{E[(X-\mu)^2]^2}.\]</span>
 It’s likely to be easier to work with <code>svycontrast</code> and represent <span class="math inline">\(\hat\kappa\)</span> as a function of estimated moments.</p>
 <p>Let’s set up an example</p>
 <p>One way to do this is to represent the second and fourth central moments, which go into the kurtosis formula, in terms of the first four uncentered moments. You could work this out, but it’s easier to look it up:
-<span class="math display">\[E[(X-\mu)^2]= -3E[X]^4+6E[X]^2E[X^2]-4E[X]E[X^3]+E[X^4].\]</span></p>
+<span class="math display">\[E[(X-\mu)^4]= -3E[X]^4+6E[X]^2E[X^2]-4E[X]E[X^3]+E[X^4].\]</span></p>
 <p>First, the raw moments</p>
 <pre class="r"><code>moments&lt;-svymean(~enroll+I(enroll^2)+I(enroll^3)+I(enroll^4), dstrat)
 moments</code></pre>
@@ -31,7 +31,9 @@ central_moments</code></pre>
 ## mu4    3.3618e+11 1.0458e+11
 ## sigma2 1.9459e+05 2.3116e+04</code></pre>
 <p>And finally, the kurtosis</p>
-<pre><code>svycontrast(central_moments, quote(mu4/(sigma2*sigma2)))</code></pre>
+<pre class="r"><code>svycontrast(central_moments, quote(mu4/(sigma2*sigma2)))</code></pre>
+<pre><code>##           nlcon     SE
+## contrast 8.8783 1.5678</code></pre>
 <p>The standard errors are computed at each step using the delta method, and this all works as long as the transformations are ones that <code>deriv</code> knows how to differentiate. We’re just using basic arithmetic operations so that’s no problem.</p>
 <div id="and-now-you-have-two-problems" class="section level3">
 <h3>And now you have two problems</h3>

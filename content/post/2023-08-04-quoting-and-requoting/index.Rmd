@@ -7,7 +7,7 @@ categories: []
 tags: []
 ---
 
-Someone [asked on StackOverflow](https://stackoverflow.com/questions/76733872/using-svyrecvar-to-get-the-variance-of-a-statistic-in-the-survey-r-package) how to compute the kurtosis and its standard error using the survey package.  They were thinking of using `svyrecvar`, the variance estimation function that underlies most things in the package.  That's not actually the easiest approach: `svyrecvar` works with estimating questions, but for the kurtosis we don't have estimating functions but instead have an explicit definition in terms of totals: 
+Someone [asked on StackOverflow](https://stackoverflow.com/questions/76733872/using-svyrecvar-to-get-the-variance-of-a-statistic-in-the-survey-r-package) how to compute the kurtosis and its standard error using the survey package.  They were thinking of using `svyrecvar`, the variance estimation function that underlies most things in the package.  That's not actually the easiest approach: `svyrecvar` works with estimating questions, but for the kurtosis we don't have estimating functions and instead have an explicit definition in terms of totals: 
 $$\kappa = \frac{E[(X-\mu)^4]}{E[(X-\mu)^2]^2}.$$
 It's likely to be easier to work with `svycontrast` and represent $\hat\kappa$ as a function of estimated moments. 
 
@@ -19,7 +19,7 @@ dstrat<-svydesign(id=~1,strata=~stype, weights=~pw, data=apistrat, fpc=~fpc)
 ```
 
 One way to do this is to represent the second and fourth central moments, which go into the kurtosis formula, in terms of the first four uncentered moments. You could work this out, but it's easier to look it up:
-$$E[(X-\mu)^2]= -3E[X]^4+6E[X]^2E[X^2]-4E[X]E[X^3]+E[X^4].$$
+$$E[(X-\mu)^4]= -3E[X]^4+6E[X]^2E[X^2]-4E[X]E[X^3]+E[X^4].$$
 
 First, the raw moments
 ```{r}
@@ -35,7 +35,7 @@ central_moments
 ```
 
 And finally, the kurtosis
-```
+```{r}
 svycontrast(central_moments, quote(mu4/(sigma2*sigma2)))
 ```
 
