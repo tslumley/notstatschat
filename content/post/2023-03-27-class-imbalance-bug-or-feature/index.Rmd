@@ -1,0 +1,12 @@
+---
+title: 'Class imbalance: bug or feature?'
+author: Thomas Lumley
+date: '2023-03-27'
+slug: class-imbalance-bug-or-feature
+categories: []
+tags: []
+---
+
+Medical training, of necessity, over-represents unusual medical conditions. There are lots of unusual medical conditions, and trainees need to see at least a reasonable sampling of them. It is proverbial that new doctors tend to over-classify in favour of unusual medical conditions: in the 1940's [a medical professor](https://en.wikipedia.org/wiki/Zebra_(medicine)) said *"When you hear hoofbeats behind you, don't expect to see a zebra."*
+
+In machine learning, there is a lot of concern about class imbalance. If

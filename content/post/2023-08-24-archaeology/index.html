@@ -1,0 +1,72 @@
+---
+title: Benchmark Archaeology
+author: Thomas Lumley
+date: '2023-08-24'
+slug: archaeology
+categories: []
+tags: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>Thanks to Luis Apiolaza on Mastodon, I was looking at some old R mailing list messages. I <a href="https://stat.ethz.ch/pipermail/r-devel/1997-November/017745.html">found one</a> comparing the speed of R and S (and S compiled<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> to C) for a loop-intensive program</p>
+<pre><code>LMS &lt;- function(M, N)
+{
+  ### Pre-allocate result and filter. ###
+  R &lt;- matrix(0,nrow=M, ncol=5)
+  W &lt;- rep(0,5)
+  for (i in 1:M) {
+    ### Simulate MA(1) ###
+    Z &lt;- rnorm(N+1)
+    X &lt;- Z[2:(N+1)] + 0.5 * Z[1:N]
+    ### Perform LMS ###
+    for (j in 5:N) {
+      U &lt;- X[j:(j-4)]
+      E &lt;- Z[j+1] - sum(W * U)
+      W &lt;- W + 0.1* E * U
+     }
+    ### Save final result ###
+    R[i,] &lt;- W
+  }
+  return(R)
+}</code></pre>
+<p>This program was an example for the compiler, so it was chosen to be inefficient when interpreted. Speed comparisons for a Sparc Ultra 1 (expensive) and a Linux computer with a Pentium Pro 150 (relatively cheap) were (for <code>N=100</code>)</p>
+<pre><code>    Ultra             Intel
+M     R     C    S      R      C
+100  7.24  2.08  11    6.38   0.79
+200 14.19  4.06  25.8  12.36  1.56
+300 21.59  6.3   56.8  18.89  2.31
+400 28.76  8.37  89    24.97  3.09
+800 57.62 16.42 295    50.33  6.16</code></pre>
+<p>Let’s have a look at these in a graph</p>
+<pre class="r"><code>d&lt;-read.table(text=&quot;M     R_Sun     C_Sun    S_Sun      R_Intel      C_Intel
+100  7.24  2.08  11    6.38   0.79
+200 14.19  4.06  25.8  12.36  1.56
+300 21.59  6.3   56.8  18.89  2.31
+400 28.76  8.37  89    24.97  3.09
+800 57.62 16.42 295    50.33  6.16
+&quot;, header=TRUE)
+matplot(d[,1],d[,-1],type=&quot;l&quot;, lwd=2,col=c(1:3,1:2),
+        lty=c(1,1,1,2,2),xlab=&quot;M&quot;,ylab=&quot;Time (s)&quot;
+      )
+legend(&quot;topleft&quot;,lty=c(1,1,1,2,2),col=c(1:3,1:2),lwd=2,bty=&quot;n&quot;,
+       legend=c(&quot;R Sun&quot;,&quot;C Sun&quot;,&quot;S Sun&quot;,&quot;R Intel&quot;,&quot;C Intel&quot;),ncol=2)</code></pre>
+<p><img src="staticunnamed-chunk-1-1.png" width="672" /></p>
+<p>At the time, it was interesting that the Linux system slightly outperformed the much more expensive Sun workstation. More interesting, though, was the performance of S, which is slower-than-linear and potentially quadratic in <code>M</code>. This is part of the reason people think loops are slow in R<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
+<p>Today, in R on an Apple M1, I get (medians from <code>microbenchmark</code>)</p>
+<pre><code>M time
+100  0.004
+200  0.009
+300  0.013
+400  0.017
+800  0.035
+8000 0.352</code></pre>
+<p>That’s impressive, but it’s actually <em>less</em> improvement than you’d expect from 26 years of Moore’s Law (13 doublings in speed, so a factor of 1/8192). Part of this is that R is still very single-threaded, and part is that hardware performance has fallen behind Moore’s Law projections recently. The code may also not be making the best use of caches on modern computers.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Matt Calder wrote a compiler to C for a subset of S<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>the speed advantage of the apply functions is legendary, ie, partly history and partly myth<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
