@@ -1,0 +1,87 @@
+---
+title: Linear mixed models with pairwise likelihood
+author: Thomas Lumley
+date: '2023-11-21'
+slug: linear-mixed-models-with-pairwise-likelihood
+categories: []
+tags: []
+---
+
+The most important part of this post
+
+```{r}
+library(svylme)
+```
+
+It exists!
+
+Currently you have to get it from github
+
+```
+remotes::install_github("tslumley/svylme")
+```
+
+Let's look at an example.  This is data from the New Zealand component of the PISA educational survey
+
+```{r}
+data(nzmaths)
+```
+
+There is only one school in one of the strata, so we'll combine two strata:
+
+```{r}
+nzmaths$cSTRATUM<- nzmaths$STRATUM
+nzmaths$cSTRATUM[nzmaths$cSTRATUM=="NZL0102"]<-"NZL0202"
+```
+
+We have weights both for the student and the school; the `condwt` variable is the implied weights for the student stage of sampling.  We get a two-stage design with weights at both stages.  We need weights at both stages in order to work out the pairwise weights
+
+```{r}
+des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~cSTRATUM, nest=TRUE,
+	weights=~W_FSCHWT+condwt, data=nzmaths)
+```
+
+The variable `PCGIRLS` is percentage of girls at the school, and it's nearly 0, nearly 100%, or roughly in the middle, so I will centre it.  We're also going to want jackknife weights later, so we can make them now
+
+
+```{r}
+des<-update(des, centPCGIRLS=PCGIRLS-0.5)
+jkdes<-as.svrepdesign(des)
+```
+
+And finally, a model
+```{r}
+m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(centPCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des, return.devfun=TRUE)
+m1
+```
+
+The model has student gender, proportion of girls at the school, their interaction, student/teacher ratio in mathematics, and the two attitude scores.  The scores measure openness to problem solving ('I can solve problems') and mathematics self-efficacy ('I can learn maths'). 
+
+The interpretation of the individual/school gender interaction may not be immediately obvious: it says that both boys and girls had higher average scores at single-sex than coeducational schools. We should be cautious about interpreting this causally, as single-sex schools in New Zealand differ from coeducational schools in so many other ways as well. 
+
+
+To get standard errors for the variance parameters we need to use the jackknife or bootstrap. This is a bit slow (there's a progress bar for interactive use, which I will turn off). Using a faster-than-default BLAS for linear algebra will help.
+
+```{r}
+m1var<-boot2lme(m1,jkdes,verbose=FALSE)
+SE(m1var,"beta")
+SE(m1var, "theta")
+```
+
+The jackknife SEs for $\beta$ are slightly larger than the sandwich ones, which shouldn't surprise anyone.  The SEs for $\theta$ are a bit hard to interpret, because $\theta$ are a bit hard to interpret -- they are components of the Cholesky square root of the relative variance matrix.
+
+More usefully, here are the standard errors for the random-effect standard deviations
+
+```{r}
+SE(m1var,"SD")
+```
+
+### Issues?
+
+What if you don't have weights at each stage? The answer is currently unclear.  More research is needed on ways to approximate the pairwise probabilities when they are not known
+
+How does this compare to using `-gllamm-` and its successors, like sensible people do? It's pretty similar, but this approach can handle a much wider range of designs and models -- you don't need the model clusters and design clusters to be the same.  More systematic comparisons [here](https://arxiv.org/abs/2307.04944): there's some loss of efficiency with pairwise likelihood, but the estimates stay reasonable under more extreme sampling designs.
+
+What about generalised linear mixed models? That sounds like a good PhD project!
+
+
