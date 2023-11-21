@@ -9,7 +9,7 @@ tags: []
 
 The most important part of this post
 
-```{r}
+```{r, message=FALSE}
 library(svylme)
 ```
 
@@ -78,10 +78,10 @@ SE(m1var,"SD")
 
 ### Issues?
 
-What if you don't have weights at each stage? The answer is currently unclear.  More research is needed on ways to approximate the pairwise probabilities when they are not known
+**What if you don't have weights at each stage?** The answer is currently unclear.  More research is needed on ways to approximate the pairwise probabilities when they are not known
 
-How does this compare to using `-gllamm-` and its successors, like sensible people do? It's pretty similar, but this approach can handle a much wider range of designs and models -- you don't need the model clusters and design clusters to be the same.  More systematic comparisons [here](https://arxiv.org/abs/2307.04944): there's some loss of efficiency with pairwise likelihood, but the estimates stay reasonable under more extreme sampling designs.
+**How does this compare to using `-gllamm-` and its successors, like sensible people do?** It's pretty similar, but this approach can handle a much wider range of designs and models -- you don't need the model clusters and design clusters to be the same.  More systematic comparisons [here](https://arxiv.org/abs/2307.04944): there's some loss of efficiency with pairwise likelihood, but the estimates stay reasonable under more extreme sampling designs.
 
-What about generalised linear mixed models? That sounds like a good PhD project!
+**What about generalised linear mixed models?** That sounds like a good PhD project!
 
 

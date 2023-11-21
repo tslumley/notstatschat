@@ -7,7 +7,6 @@ categories: []
 tags: []
 ---
 
-<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
 
 
 <p>Thanks to Luis Apiolaza on Mastodon, I was looking at some old R mailing list messages. I <a href="https://stat.ethz.ch/pipermail/r-devel/1997-November/017745.html">found one</a> comparing the speed of R and S (and S compiled<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> to C) for a loop-intensive program</p>
@@ -32,7 +31,7 @@ tags: []
   return(R)
 }</code></pre>
 <p>This program was an example for the compiler, so it was chosen to be inefficient when interpreted. Speed comparisons for a Sparc Ultra 1 (expensive) and a Linux computer with a Pentium Pro 150 (relatively cheap) were (for <code>N=100</code>)</p>
-<pre><code>    Ultra             Intel
+<pre><code>	Ultra             Intel
 M     R     C    S      R      C
 100  7.24  2.08  11    6.38   0.79
 200 14.19  4.06  25.8  12.36  1.56
