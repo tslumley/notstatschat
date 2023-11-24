@@ -1,0 +1,136 @@
+---
+title: 'svy2lme: the preprint'
+author: Thomas Lumley
+date: '2023-11-24'
+slug: svy2lme-the-preprint
+categories: []
+tags: []
+---
+
+
+
+<div id="the-announcement" class="section level3">
+<h3>The announcement</h3>
+<p>There’s now a <a href="https://arxiv.org/abs/2311.13048">preprint</a> describing the <code>svylme</code> <a href="https://github.com/tslumley/svylme">package</a> and <code>svylme::svy2lme</code> function for fitting linear mixed models to complex samples.</p>
+<p>The models are of the form
+<span class="math display">\[Y =X\beta+Zb+\epsilon\]</span>
+where <span class="math inline">\(\mathrm{var}[\epsilon]=\sigma^2\)</span> and <span class="math inline">\(\mathrm{var}[b]=\sigma^2 V(\nu)\)</span> for parameters <span class="math inline">\(\theta=(\beta,\sigma^2,\nu)\)</span>. The package allows <span class="math inline">\(V\)</span> to be a linear combination of known matrices. You can have random intercepts and random slopes where any two <span class="math inline">\(b\)</span>s are either independent or identical. You can also have terms like <span class="math display">\[V=\tau^2_e I_e+\tau^2_a G_a+\tau^2_dG_d\]</span>, where <span class="math inline">\(I_e\)</span> is a block diagonal indicator of shared environment, and <span class="math inline">\(G_a\)</span> and <span class="math inline">\(G_d\)</span> give the correlation of additive and dominant genetic effects. At the moment, you can’t have non-linear correlation parameters such as autoregression. This is basically the same class of models as <code>lme4::lmer</code> plus most of the models in <code>lme4qtl::relmatLmer</code>.</p>
+<p>The designs are handled as in the <code>survey</code> package, except that you need to specify sampling probabilities for each stage of sampling, which are needed to compute pairwise probabilities. I don’t know yet how much it’s possible to fake this.</p>
+</div>
+<div id="the-basic-idea" class="section level3">
+<h3>The basic idea</h3>
+<p>A problem with design-based inference for linear mixed models is that the objective function (the Gaussian log-likelihood) is not a sum, so we can’t use the standard trick of turning sums into weighted sums.</p>
+<p>However, we can write down the loglikelihood for a pair of observations <span class="math inline">\((i,j)\)</span>, as
+<span class="math display">\[\ell_{ij}(\theta)=-\frac{1}{2}\log |\Xi| -\frac{1}{2}(y-\mu)\Xi^{-1}(y-\mu)\]</span>
+where <span class="math inline">\(\Xi=\sigma^2(I+Z^TVZ)\)</span> is the marginal variance matrix of <span class="math inline">\(Y\)</span> for the two observations. This is an honest-to-Fisher loglikelihood, so in particular, <span class="math inline">\(E[\ell_{ij}(\theta)]\)</span> is maximised at the true <span class="math inline">\(\theta\)</span> and the score equations are unbiased for <span class="math inline">\(\theta\)</span>.</p>
+<p>Write <span class="math inline">\(\tilde \ell(\theta)\)</span> for the census pairwise loglikelihood, the sum over pairs in the population
+<span class="math display">\[\tilde\ell(\theta)=\sum_{i,j=1}^N \ell_{ij}(\theta).\]</span>
+The census pairwise loglikelihood is a sensible objective function: its expectation is maximised at the truth and its score equations are unbiased for <span class="math inline">\(\theta\)</span>. <strong>This</strong> is a sum.</p>
+<p>The corresponding <strong>sample</strong> weighted pairwise loglikelihood is the weighted sum
+<span class="math display">\[\tilde\ell(\theta)=\sum_{i,j=1}^N \frac{R_{ij}}{\pi_{ij}}\ell_{ij}(\theta)\]</span>
+where <span class="math inline">\(R_{ij}\)</span> is the indicator that observations <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> were both sampled and <span class="math inline">\(\pi_{ij}\)</span> is its expected value, the probability that the pair was sampled.</p>
+</div>
+<div id="misspecification" class="section level3">
+<h3>Misspecification</h3>
+<p>The data set and model is one used by Doug Bates and co-workers in <a href="https://pubmed.ncbi.nlm.nih.gov/19820058/">a paper about</a> the <code>pedigreemm</code> package. It describes 3397 observations of milk yield from 1339 Holstein cows, which are correlated because they are in 57 herds and have only 38 different sires. There’s a script in the <code>svylme</code> package, in the <code>inst/scripts</code> subdirectory.</p>
+<p>We can compare maximum likelihood using either <code>lme4qtl::relmatLmer</code> or <code>pedigreemm::pedigreemm</code> to maximum pairwise likelihood using <code>svylme::svy2lme</code></p>
+<p>The calls look like</p>
+<pre><code>m0&lt;-pedigreemm(sdMilk~lact+log(dim)+(1|id)+(1|herd), 
+    data=milk, pedigree=list(id=pedCowsR), REML=FALSE)
+m1&lt;-relmatLmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),
+    data=milk, relmat=list(id=A_gen))
+m2&lt;-svy2relmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),
+    design=milk_des, relmat=list(id=A_gen))</code></pre>
+<p>where <code>pedCowsR</code> is a pedigree description and <code>A_gen</code> is the implied genetic correlation matrix based on number of alleles shared identical-by-descent.</p>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="14%" />
+<col width="19%" />
+<col width="12%" />
+<col width="11%" />
+<col width="15%" />
+<col width="12%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Estimator</th>
+<th>Intercept</th>
+<th>Lactation no.</th>
+<th>log days</th>
+<th>herd SD</th>
+<th>genetic SD</th>
+<th>resid SD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>MLE</td>
+<td>1.7</td>
+<td>-0.11</td>
+<td>0.74</td>
+<td>0.53</td>
+<td>0.46</td>
+<td>0.70</td>
+</tr>
+<tr class="even">
+<td>pairwise</td>
+<td>0.9</td>
+<td>-0.05</td>
+<td>0.85</td>
+<td>0.27</td>
+<td>0.40</td>
+<td>0.82</td>
+</tr>
+</tbody>
+</table>
+<p>That’s not very good agreement.</p>
+<p>Since the pairwise loglikelihood is a different objective function from the full loglikelihood, they will disagree about <span class="math inline">\(\theta\)</span> when the model is misspecified. We can verify that model misspecification is the problem by repeating the analysis with data simulated from the maximum-likelihood fitted model.</p>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="14%" />
+<col width="19%" />
+<col width="12%" />
+<col width="11%" />
+<col width="15%" />
+<col width="12%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Estimator</th>
+<th>Intercept</th>
+<th>Lactation no.</th>
+<th>log days</th>
+<th>herd SD</th>
+<th>genetic SD</th>
+<th>resid SD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>MLE</td>
+<td>1.1</td>
+<td>-0.09</td>
+<td>0.84</td>
+<td>0.67</td>
+<td>0.66</td>
+<td>0.82</td>
+</tr>
+<tr class="even">
+<td>pairwise</td>
+<td>1.0</td>
+<td>-0.10</td>
+<td>0.81</td>
+<td>0.65</td>
+<td>0.67</td>
+<td>0.85</td>
+</tr>
+</tbody>
+</table>
+<p>Much better.</p>
+</div>
+<div id="reml" class="section level3">
+<h3>REML?</h3>
+<p>The <code>pedigreemm</code> call has <code>REML=FALSE</code> because the default in that package is to use REML. The survey implementation doesn’t support REML at the moment. It’s easy enough to modify the profile deviance objective function to get things that look like REML estimates, but it’s not clear that it makes sense. The idea of REML, crudely, is to allow for the degrees of freedom used up by the fixed effects when estimating the variance components; it’s most useful when the number of fixed-effect parameters is large, growing with the sample size. If the number of fixed-effect parameters grows with the sample size, fitting the model to a small subsample of the population doesn’t make a lot of sense. Many of the parameters are likely not to be estimable in the subsample. For that reason, I don’t want to implement REML before I have more idea of what it should look like in subsamples.</p>
+</div>

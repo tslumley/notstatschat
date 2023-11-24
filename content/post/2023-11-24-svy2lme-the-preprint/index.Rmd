@@ -1,0 +1,75 @@
+---
+title: 'svy2lme: the preprint'
+author: Thomas Lumley
+date: '2023-11-24'
+slug: svy2lme-the-preprint
+categories: []
+tags: []
+---
+
+### The announcement
+
+There's now a [preprint](https://arxiv.org/abs/2311.13048) describing the `svylme` [package](https://github.com/tslumley/svylme) and `svylme::svy2lme` function for fitting linear mixed models to complex samples. 
+
+The models are of the form 
+$$Y =X\beta+Zb+\epsilon$$
+where $\mathrm{var}[\epsilon]=\sigma^2$ and $\mathrm{var}[b]=\sigma^2 V(\nu)$ for parameters $\theta=(\beta,\sigma^2,\nu)$.  The package allows $V$ to be a linear combination of known matrices. You can have random intercepts and random slopes where any two $b$s are either independent or identical. You can also have terms like $$V=\tau^2_e I_e+\tau^2_a G_a+\tau^2_dG_d$$, where $I_e$ is a block diagonal indicator of shared environment, and $G_a$ and $G_d$ give the correlation of additive and dominant genetic effects. At the moment, you can't have non-linear correlation parameters such as autoregression.  This is basically the same class of models as `lme4::lmer` plus most of the models in `lme4qtl::relmatLmer`.
+
+The designs are handled as in the `survey` package, except that you need to specify sampling probabilities for each stage of sampling, which are needed to compute pairwise probabilities.  I don't know yet how much it's possible to fake this. 
+
+### The basic idea
+
+A problem with design-based inference for linear mixed models is that the objective function (the Gaussian log-likelihood) is not a sum, so we can't use the standard trick of turning sums into weighted sums.
+
+However, we can write down the loglikelihood for a pair of observations $(i,j)$, as
+$$\ell_{ij}(\theta)=-\frac{1}{2}\log |\Xi| -\frac{1}{2}(y-\mu)\Xi^{-1}(y-\mu)$$
+where $\Xi=\sigma^2(I+Z^TVZ)$ is the marginal variance matrix of $Y$ for the two observations. This is an honest-to-Fisher loglikelihood, so in particular, $E[\ell_{ij}(\theta)]$ is maximised at the true $\theta$ and the score equations are unbiased for $\theta$. 
+
+Write $\tilde \ell(\theta)$ for the census pairwise loglikelihood, the sum over pairs in the population
+$$\tilde\ell(\theta)=\sum_{i,j=1}^N \ell_{ij}(\theta).$$
+The census pairwise loglikelihood is a sensible objective function: its expectation is maximised at the truth and its score equations are unbiased for $\theta$. **This** is a sum.
+
+The corresponding **sample** weighted pairwise loglikelihood is the weighted sum
+$$\tilde\ell(\theta)=\sum_{i,j=1}^N \frac{R_{ij}}{\pi_{ij}}\ell_{ij}(\theta)$$
+where $R_{ij}$ is the indicator that observations $i$ and $j$ were both sampled and $\pi_{ij}$ is its expected value, the probability that the pair was sampled. 
+
+### Misspecification
+
+The data set and model is one used by Doug Bates and co-workers in [a paper about](https://pubmed.ncbi.nlm.nih.gov/19820058/) the `pedigreemm` package. It describes 3397 observations of milk yield from 1339 Holstein cows, which are correlated because they are in 57 herds and have only 38 different sires. There's a script in the `svylme` package, in the `inst/scripts` subdirectory.
+
+We can compare maximum likelihood using either `lme4qtl::relmatLmer` or `pedigreemm::pedigreemm` to maximum pairwise likelihood using `svylme::svy2lme`
+
+The calls look like
+```
+m0<-pedigreemm(sdMilk~lact+log(dim)+(1|id)+(1|herd), 
+    data=milk, pedigree=list(id=pedCowsR), REML=FALSE)
+m1<-relmatLmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),
+    data=milk, relmat=list(id=A_gen))
+m2<-svy2relmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),
+    design=milk_des, relmat=list(id=A_gen))
+```
+where `pedCowsR` is a pedigree description and `A_gen` is the implied genetic correlation matrix based on number of alleles shared identical-by-descent. 
+
+
+| Estimator | Intercept | Lactation no. | log days | herd SD | genetic SD | resid SD |
+|-----------|-----------|---------------|----------|---------|------------|----------|
+| MLE       | 1.7       | -0.11         | 0.74     | 0.53    | 0.46       | 0.70     |
+| pairwise  | 0.9       | -0.05         | 0.85     | 0.27    | 0.40       | 0.82     |
+
+
+That's not very good agreement.  
+
+Since the pairwise loglikelihood is a different objective function from the full loglikelihood, they will disagree about $\theta$ when the model is misspecified.  We can verify that model misspecification is the problem by repeating the analysis with data simulated from the maximum-likelihood fitted model.
+
+
+| Estimator | Intercept | Lactation no. | log days | herd SD | genetic SD | resid SD |
+|-----------|-----------|---------------|----------|---------|------------|----------|
+| MLE       | 1.1       | -0.09         | 0.84     | 0.67    | 0.66       | 0.82     |
+| pairwise  | 1.0       | -0.10         | 0.81     | 0.65    | 0.67       | 0.85     |
+
+
+Much better. 
+
+### REML?
+
+The `pedigreemm` call has `REML=FALSE` because the default in that package is to use REML.  The survey implementation doesn't support REML at the moment.  It's easy enough to modify the profile deviance objective function to get things that look like REML estimates, but it's not clear that it makes sense.  The idea of REML, crudely, is to allow for the degrees of freedom used up by the fixed effects when estimating the variance components; it's most useful when the number of fixed-effect parameters is large, growing with the sample size.  If the number of fixed-effect parameters grows with the sample size, fitting the model to a small subsample of the population doesn't make a lot of sense.  Many of the parameters are likely not to be estimable in the subsample.  For that reason, I don't want to implement REML before I have more idea of what it should look like in subsamples.
