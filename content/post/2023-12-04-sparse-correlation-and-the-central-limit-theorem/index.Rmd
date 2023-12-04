@@ -1,0 +1,50 @@
+---
+title: Sparse correlation and the Central Limit Theorem
+author: Thomas Lumley
+date: '2023-12-04'
+slug: sparse-correlation-and-the-central-limit-theorem
+categories: []
+tags: []
+---
+
+Back when I was a PhD student working on generalisations of GEE, I was interested in 'sparse' correlations, defined by 'most' small sets of observations being independent.  One way to get this structure is from crossed clustering variables; another is for the basic units in your analysis to be pairs (or larger tuples) of observations. If you drew a graph with the variables as vertices, and connected correlated variables, then two subsets of the variables would be independent of each other if  there was no edge between them.
+
+To see what this implies in large samples, consider a balanced incomplete multi-rater experiment with $K$ raters and $D$ objects to be rated, in which each rater rates $1<d\leq D$ of the objects and each object is rated by $1<k\leq K$ of the raters.  The number of ratings is $n=Kd=kD$.  Two ratings are connected by an edge in the dependence graph if they share a rating or share a rating. The maximal degree of the graph is $M=k+d-1$.  We are interested in the case where $K$ and $D$ are both large. 
+
+Consider a simple parametric random-effects model for the rating $Y_{ij}$ by rater $i$ of object $j$
+$$Y_{ij}=\mu+a_i+b_j+\epsilon_{ij}$$
+where $\mu$ is a fixed constant, $a_i\sim N(0,\sigma^2_a)$, $b_j\sim N(0,\sigma^2_b)$, and $\epsilon_{ij}\sim N(0,\sigma^2_\epsilon)$.  The variance of $S_n=\sum_{ij} Y_{ij}$ is 
+$$\sigma^2_n=n\sigma^2_\epsilon+Kd^2\sigma^2_a+k^2D\sigma^2_b=n\sigma^2_\epsilon+nd\sigma^2_a+nk\sigma^2_b.$$
+
+
+The ratio $\sigma^2_n/Mn$ will be bounded above and bounded away from zero if $\sigma^2_a$ and $\sigma^2_b$ are both non-zero, and we will have  $S_n/n=\bar X_n\stackrel{p}{\to}\mu$ as long as $K,D\to\infty$.
+
+Now, let's look at a scaled version of $\bar X_n-\mu$. We can't just scale it by $\sqrt{n}$ as in the independent setting, because the variance of $\bar X_n$ is $O(M/n)$ rather than $O(1/n)$. We can still hope for
+$$\sqrt{\frac{n}{\sigma^2_n}}\left(\bar X_n-\mu\right)\stackrel{d}{\to}N(0,1),$$
+since at least it's the right size. In the simple multi-rater case it certainly works.
+
+Encouragingly, we get the same sort of limit if we have $M$ identical copies of each of $m$ independent items, as another way to get sparse correlation. 
+
+### Proving it?
+
+The first thing I tried was to see if the moments of $\bar X_n$ did anything helpful. I thought I had a proof, in fact, but it was wrong. The idea does work if you do it with cumulants; Svente Janson did it correctly, ten years earlier, and [published it](https://projecteuclid.org/journals/annals-of-probability/volume-16/issue-1/Normal-Convergence-by-Higher-Semiinvariants-with-Applications-to-Sums-of/10.1214/aop/1176991903.full) under the title *Normal Convergence by Higher Semiinvariants with Applications to Sums of Dependent Random Variables and Random Graphs*.  I hadn't found it in searching, and no-one I talked to at the time had heard of it. 
+
+The second thing I tried was to adapt a Central Limit Theorem for random fields by [Xavier Guyon](https://books.google.com.au/books?id=EYO0MNrIT8YC&dq=guyon+book+random+fields&lr=&source=gbs_navlinks_s), which I'd already used in my thesis. The proof uses something called Stein's Method, and involves a counting bound on 'close' pairs of pairs of observations and a long-range weak dependence bound on 'distant' pairs of pairs.  I could just dump the 'distant' part of the proof and make it work for sparse correlation.  Success!!
+
+Nicole Mayer-Hamblett and I had a paper about asymptotics for sparsely-correlated generalised linear models, with some nice examples, and we got revision requests from a journal and then neither of us had time to do the revision.  Then I worked out how to prove an exponential tail bound for sparse correlation and sent it off to a probability journal.  They thought it was ok, but that I needed to look up something called graph-structured dependence in the probability literature. It was the same Central Limit Theorem proof that I had (only a bit tidier and with an explicit error bound) and had already been published. [In 1989](https://projecteuclid.org/journals/annals-of-probability/volume-17/issue-4/On-Normal-Approximations-of-Distributions-in-Terms-of-Dependency-Graphs/10.1214/aop/1176991178.full). Sigh.
+
+
+### The Theorem
+
+Let $X_1,\dots,X_n$ be random variables such that $E[X_i^4]<\infty$, $E[X_i]=0$, $\sigma^2=\mathrm{var}[\sum_i X_i]$ and define $S=\sum_i X_i/\sigma$. Let  $M$ be the maximal degree of a dependency graph for the $X_i$. Then for $Z$ a standard Normal variable
+$$d_W(S,Z)\leq \frac{M^2}{\sigma^3}\sum_i E|X_i^3|+\frac{\sqrt{28}M^{3/2}}{\sqrt{\pi}\sigma^2}\sqrt{\sum_i E|X_i^4|}$$
+where $d_W$ is the Wasserstein distance.
+
+### Scaling
+
+The example of the parametric inter-rater experiment  suggests that $M/n\to 0$ should be enough for a central limit theorem, but the actual theorem seems to require a stronger condition.  If the $X_i$ were identically distributed and $\sigma^2$ scaled as $n$, the first term would have order $O(M^2n/n^{3/2})$ and we would need $M^2n^{-1/2}\to 0$.  However, in the setup of the inter-rater experiment, if the rater and object variance components are non-zero, we actually have $\sigma^2$ scaling as $nM$, so $\sigma^3$ scales as $M^{3/2}n^{3/2}$. The first term in the bound is $O(M^{1/2}n^{-1/2})$ and $M/n\to 0$ is indeed sufficient.
+
+Janson's result using cumulants instead of Stein's method doesn't need the extra variance components to be non-zero, but it does impose stronger conditions on the tails of the $X_i$.
+
+When working on asymptotic distributions for mixed-model parameters I'm reasonably happy to assume that true variance components are positive -- if instead they are on the boundary of the parameter space, special arguments will be needed in any case.  The variance assumptions are more of a concern when the graph-structured dependence is induced by sampling rather than by a model for the outcome.  
+
