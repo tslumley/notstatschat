@@ -1,0 +1,18 @@
+---
+title: Why not REML?
+author: Thomas Lumley
+date: '2023-12-12'
+slug: why-not-reml
+categories: []
+tags: []
+---
+
+The `svylme` package does maximum (weighted pairwise) likelihood.  Linear mixed model software tends to also provide REML, either as an option or as the default.  Why not here?
+
+I don't think it would be too hard to take the definition of the REML criterion and weight and pairwise it. The question is whether that's actually what is wanted. 
+
+REML deals with the bias in variance components caused by using up degrees of freedom on the fixed effects. It's a generalisation of using $n-p$ instead of $n-1$ or $n$ in the denominator of the residual variance.  It's most important for highly structured experimental designs where $p/n$ is not negligible.  If you have that sort of design, you wouldn't just be doing random sampling from the data. Random sampling would mess up all your painstakingly-designed orthogonalities. It might even end up with a lot of parameters being unidentifiable: if $p/n$ is not negligible, you can't hope to estimate $p$ things from a small subsample of the $n$.
+
+There might well be situations where you would  follow up a complex experimental design with measurements made on a subsample, but good design and analysis isn't going to just fall out of bolting on sampling to the end of the design.  The problem will need some combination of [two-phase experimental design](https://www.jstor.org/stable/3001770) and [two-phase sampling](https://www.jstor.org/stable/2279117).
+
+Until I have a better idea of what it might be useful for, I'm not planning to add 'REML' as an option to `svy2lme`.
