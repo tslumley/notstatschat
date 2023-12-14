@@ -1,0 +1,74 @@
+---
+title: How good is the leading eigenvalue approximation to quadratic forms?
+author: Thomas Lumley
+date: '2023-12-14'
+slug: how-good-is-the-leading-eigenvalue-approximation-to-quadratic-forms
+categories: []
+tags: []
+---
+
+
+
+<p>A quadratic form in <span class="math inline">\(n\)</span> Gaussian variables is <span class="math inline">\(Z^TAZ\)</span> where <span class="math inline">\(Z\sim N(0,B)\)</span> is a Normal <span class="math inline">\(n\)</span>-vector and <span class="math inline">\(A\)</span> is an <span class="math inline">\(n\times n\)</span> matrix. It has the distribution <span class="math inline">\(Q=\sum_i^n \lambda_i \chi^2_1\)</span> where <span class="math inline">\(\lambda_i\)</span> are the eigenvalues of <span class="math inline">\(AB\)</span> in decreasing order. If <span class="math inline">\(n\)</span> is large, this is a bit annoying to work out, so we approximate it by
+<span class="math display">\[\sum_{i=1}^k \lambda_i\chi^2_1+a_k\chi^2_{d_k}\]</span>
+with
+<span class="math display">\[a_k=\frac{\sum_{i=k+1}^n\lambda_i^2}{\sum_{i=k+1}^n\lambda_i}\]</span>
+and
+<span class="math display">\[d_k=\frac{\left(\sum_{i=k+1}^n\lambda_i\right)^2}{\sum_{i=k+1}^n\lambda_i^2}.\]</span></p>
+<p>When <span class="math inline">\(k=0\)</span> this is the traditional Satterthwaite approximation, which isn’t at all bad over the middle of the distribution but falls apart in the tails; it is exponentially too small for small tail probabilities.</p>
+<p>Importantly, the leading eigenvalue approximation doesn’t require knowing all the eigenvalues, only <span class="math inline">\(\lambda_1,\dots,\lambda_k\)</span> and the two sums for the remainder. The time complexity for computing it is the time for <span class="math inline">\(k\)</span> multiplications by <span class="math inline">\(AB\)</span> plus <span class="math inline">\(O(n^2)\)</span> for the remainder, significantly faster than the <span class="math inline">\(O(n^3)\)</span> needed either for the full eigendecomposition or for any higher moments of the eigenvalues.</p>
+<p>So, how good is it? When <a href="https://notstatschat.rbind.io/2016/09/27/large-quadratic-forms/">I studied it before</a>, we were interested in taking <span class="math inline">\(k=100\)</span> or so to speed up multi-SNP tests in genome-wide association studies<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>. We didn’t bother looking at small values of <span class="math inline">\(k\)</span> once the computations were fast enough.</p>
+<p>In fact, the approximation does really well even for very small <span class="math inline">\(k\)</span>. In contrast to the Satterthwaite approximation, it has bounded relative error even for <span class="math inline">\(k=1\)</span>, and the error improves as <span class="math inline">\(k\)</span> increases.</p>
+<p>Here’s an example</p>
+<div id="example" class="section level3">
+<h3>Example</h3>
+<p>In the package <code>bigQF</code> there’s synthetic genome sequence sequence data for 5000 individuals at 4028 positions</p>
+<p>The eigenvalues for the weighted genetic covariance matrix used in one of the popular tests look like</p>
+<pre class="r"><code>library(bigQF)
+data(sequence)
+G&lt;-sequence
+wuweights&lt;-function(maf) dbeta(maf,1,25)
+tmp&lt;-wuweights(colMeans(G)/2)*t(G)
+tildeGt&lt;-t(tmp-rowMeans(tmp))/sqrt(2)
+H&lt;-crossprod(tildeGt)
+ss&lt;-eigen(H, symmetric=TRUE, only.values=TRUE)
+plot(ss$values, pch=&quot;.&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-1-1.png" width="672" /></p>
+<p>As a ‘true’ value, we’ll use <span class="math inline">\(k=500\)</span></p>
+<pre class="r"><code>pQF(seq(1,10,length=10)*1e7, H, n=500, conv=&quot;sad&quot;)-&gt;x500</code></pre>
+<p>the <code>sad</code> argument means to use the saddlepoint approximation to do the convolutions; this is necessary if the tail probabilities are not much larger than machine epsilon.</p>
+<p>Now, compute the approximation for <span class="math inline">\(k=1,2,3,10\)</span></p>
+<pre class="r"><code>pQF(seq(1,10,length=10)*1e7, H, n=1, conv=&quot;sad&quot;)-&gt;x1
+pQF(seq(1,10,length=10)*1e7, H, n=2, conv=&quot;sad&quot;)-&gt;x2
+pQF(seq(1,10,length=10)*1e7, H, n=3, conv=&quot;sad&quot;)-&gt;x3
+pQF(seq(1,10,length=10)*1e7, H, n=10, conv=&quot;sad&quot;)-&gt;x10</code></pre>
+<p>and the Satterthwaite approximation</p>
+<pre class="r"><code>pQF(seq(1,10,length=10)*1e7, H, n=1, method=&quot;satt&quot;)-&gt;x0</code></pre>
+<p>And now plot them:</p>
+<pre class="r"><code> plot(x500,x0/x500,log=&quot;xy&quot;,type=&quot;l&quot;,ylim=range(x0/x500,x3/x500),xlab=&quot;True tail value (log scale)&quot;,ylab=&quot;est/true (log scale)&quot;)
+ lines(x500,x1/x500,col=&quot;sienna&quot;,lwd=2,type=&quot;l&quot;)
+ lines(x500,x2/x500,col=&quot;darkred&quot;,lwd=2,type=&quot;l&quot;)
+ lines(x500,x3/x500,col=&quot;orange&quot;,lwd=2,type=&quot;l&quot;)
+ lines(x500,x10/x500,col=&quot;goldenrod&quot;,lwd=2,type=&quot;l&quot;)
+ abline(h=1,lty=2)
+legend(&quot;bottomright&quot;,bty=&quot;n&quot;,lwd=2, col=c(&quot;black&quot;,&quot;sienna&quot;,&quot;darkred&quot;,&quot;orange&quot;,&quot;goldenrod&quot;),legend=c(&quot;Satterthwaite&quot;,&quot;k=1&quot;,&quot;k=2&quot;,&quot;k=3&quot;,&quot;k=10&quot;))</code></pre>
+<p><img src="staticunnamed-chunk-5-1.png" width="672" /></p>
+<p>To see better, we can drop the Satterthwaite approximation and zoom in</p>
+<pre class="r"><code> plot(x500,x10/x500,log=&quot;xy&quot;,type=&quot;l&quot;,ylim=range(x1/x500),xlab=&quot;True tail value (log scale)&quot;,ylab=&quot;est/true (log scale)&quot;,col=&quot;goldenrod&quot;)
+ lines(x500,x1/x500,col=&quot;sienna&quot;,lwd=2,type=&quot;l&quot;)
+ lines(x500,x2/x500,col=&quot;darkred&quot;,lwd=2,type=&quot;l&quot;)
+ lines(x500,x3/x500,col=&quot;orange&quot;,lwd=2,type=&quot;l&quot;)
+ abline(h=1,lty=2)
+legend(&quot;bottomright&quot;,bty=&quot;n&quot;,lwd=2, col=c(&quot;sienna&quot;,&quot;darkred&quot;,&quot;orange&quot;,&quot;goldenrod&quot;),legend=c(&quot;k=1&quot;,&quot;k=2&quot;,&quot;k=3&quot;,&quot;k=10&quot;))</code></pre>
+<p><img src="staticunnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div id="why-does-it-work" class="section level3">
+<h3>Why does it work?</h3>
+<p>Basically, the behaviour of the extreme tail is controlled by the first eigenvalue and the behaviour in the middle of the distribution is well-described by the Satterthwaite approximation. Putting them together gives reasonably good behaviour everywhere.</p>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>a setting where the null hypothesis of (essentially) zero association actually makes sense<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
