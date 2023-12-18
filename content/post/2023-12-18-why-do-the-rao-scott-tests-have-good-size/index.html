@@ -1,0 +1,26 @@
+---
+title: Why do the Rao-Scott tests have good size?
+author: Thomas Lumley
+date: '2023-12-18'
+slug: why-do-the-rao-scott-tests-have-good-size
+categories: []
+tags: []
+---
+
+
+
+<p><em>Attention Conservation Notice: this is about multiparameter hypothesis tests, which are intrinsically not very interesting</em></p>
+<p>In regression models (and contingency tables) for survey data, there are two classes of tests based on a division that’s more or less orthogonal to the score/Wald/LRT division. Consider score tests, and for notational simplicity pretend that we’re interested a test of the whole model rather than some sensible submodel.</p>
+<p>Suppose <span class="math inline">\(\check{U}(\theta)\)</span> is the weighted score vector, and <span class="math inline">\(\check{I}(\theta)\)</span> is the weighted Fisher information,
+<span class="math display">\[\check{I}(\theta)=E\left[\frac{\partial \check{U}}{\partial \theta}\right],\]</span>
+and define
+<span class="math display">\[V = \mathrm{var}\left[\sum\check{U}(\theta)\right].\]</span>
+We can define a test statistic in the usual way
+<span class="math display">\[Q_w = \check{U}(\theta)V^{-1}\check{U}(\theta),\]</span>
+which will have a null <span class="math inline">\(\chi^2_p\)</span> distribution if <span class="math inline">\(\theta\)</span> is <span class="math inline">\(p\)</span>-dimensional. This test statistic weights different directions of departure from the null in a way that depends on the sampling design.</p>
+<p>We can also define a test statistic
+<span class="math display">\[Q_{RS}= \check{U}(\theta)\check{I}^{-1}\check{U}(\theta)\]</span>
+This estimates a <em>population</em> test statistic, and weights different directions in the way they would be weighted in the population or in a simple random sample. <span class="math inline">\(Q_{RS}\)</span> will not have a null <span class="math inline">\(\chi^2_p\)</span> distribution. Rao and Scott wrote about these tests in the 1980s, with the initial aim of working out an approximation to the null distribution so that people who (naively) computed these test statistics could get approximately valid inference from them. I would call these <em>working score</em> (<em>working Wald</em>, <em>working likelihood ratio</em>) tests; but the survey community uses the log-linear model versions of these extensively and calls them Rao-Scott tests.</p>
+<p>It turns out that the Rao-Scott test statistics have, broadly speaking and with a degree of hand-waving, better control of level than the test statistics with <span class="math inline">\(\chi^2\)</span> reference distributions. This has been seen for tests in contingency tables, for generalised linear models, and for the Cox proportional hazards model. The usual explanation is that <span class="math inline">\(V\)</span> is poorly estimated in many large in-person surveys, which tend to have small numbers of large clusters, so that <span class="math inline">\(V^{-1}\)</span> is unstable.</p>
+<p>That explanation is fine as far as it goes: the tests where <span class="math inline">\(V^{-1}\)</span> is part of the test statistic will have poor behaviour when <span class="math inline">\(V\)</span> is not well estimated. However, it doesn’t explain why the Rao-Scott tests have good behaviour, since the eigenvalues of the estimated <span class="math inline">\(\check{I}^{-1}V\)</span> are still needed to compute the reference distribution.</p>
+<p>It’s helpful to look at how the eigenvalues are used. The largest eigenvalue of <span class="math inline">\(V^{-1}\)</span> is the reciprocal of the smallest eigenvalue of <span class="math inline">\(V\)</span>, so it will be sensitive to uncertainty in <span class="math inline">\(V\)</span> especially when the smallest eigenvalue of <span class="math inline">\(V\)</span> is uncertain. That’s exactly what happens in large surveys with small design degrees of freedom; the estimated variance matrix is often closer to being singular than the true variance matrix. The main body of the reference distribution of <span class="math inline">\(Q_{RS}\)</span> is fairly well approximated by the Satterthwaite approximation, which depends on the sum and sum of squares of the eigenvalues. The right tail of the reference distribution is sensitive to the <em>largest</em> eigenvalue of <span class="math inline">\(I^{-1}V\)</span>, rather than the reciprocal of the smallest. In particular, if <span class="math inline">\(V\)</span> becomes singular, the Rao-Scott test does not blow up, but the other test does. So, while the <span class="math inline">\(p\)</span>-value for <span class="math inline">\(Q_{RS}\)</span> does still depend on <span class="math inline">\(V\)</span>, it depends on <span class="math inline">\(V\)</span> in a smoother way than the <span class="math inline">\(p\)</span>-value for the test with <span class="math inline">\(V^{-1}\)</span> in the test statistic.</p>

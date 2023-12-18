@@ -1,0 +1,30 @@
+---
+title: Why do the Rao-Scott tests have good size?
+author: Thomas Lumley
+date: '2023-12-18'
+slug: why-do-the-rao-scott-tests-have-good-size
+categories: []
+tags: []
+---
+
+*Attention Conservation Notice: this is about multiparameter hypothesis tests, which are intrinsically not very interesting*
+
+In regression models (and contingency tables) for survey data, there are two classes of tests based on a division that's more or less orthogonal to the score/Wald/LRT division.  Consider score tests, and for notational simplicity pretend that we're interested a test of the whole model rather than some sensible submodel. 
+
+Suppose $\check{U}(\theta)$ is the weighted score vector, and $\check{I}(\theta)$ is the weighted Fisher information, 
+$$\check{I}(\theta)=E\left[\frac{\partial \check{U}}{\partial \theta}\right],$$
+and define 
+$$V = \mathrm{var}\left[\sum\check{U}(\theta)\right].$$
+We can define a test statistic in the usual way
+$$Q_w = \check{U}(\theta)V^{-1}\check{U}(\theta),$$
+which will have a null $\chi^2_p$ distribution if $\theta$ is $p$-dimensional. This test statistic weights different directions of departure from the null in a way that depends on the sampling design. 
+
+We can also define a test statistic 
+$$Q_{RS}= \check{U}(\theta)\check{I}^{-1}\check{U}(\theta)$$
+This estimates a *population* test statistic, and weights different directions in the way they would be weighted in the population or in a simple random sample.  $Q_{RS}$ will not have a null $\chi^2_p$ distribution.  Rao and Scott wrote about these tests in the 1980s, with the initial aim of working out an approximation to the null distribution so that people who (naively) computed these test statistics could get approximately valid inference from them.   I would call these *working score* (*working Wald*, *working likelihood ratio*) tests; but the survey community uses the log-linear model versions of these extensively and calls them Rao-Scott tests. 
+
+It turns out that the Rao-Scott test statistics have, broadly speaking and with a degree of hand-waving, better control of level than the test statistics with $\chi^2$ reference distributions. This has been seen for tests in contingency tables, for generalised linear models, and for the Cox proportional hazards model.  The usual explanation is that $V$ is poorly estimated in many large in-person surveys, which tend to have small numbers of large clusters, so that $V^{-1}$ is unstable.
+
+That explanation is fine as far as it goes: the tests where $V^{-1}$ is part of the test statistic will have poor behaviour when $V$ is not well estimated.  However, it doesn't explain why the Rao-Scott tests have good behaviour, since the eigenvalues of the estimated $\check{I}^{-1}V$ are still needed to compute the reference distribution. 
+
+It's helpful to look at how the eigenvalues are used.  The largest eigenvalue of $V^{-1}$ is the reciprocal of the smallest eigenvalue of $V$, so it will be sensitive to uncertainty in $V$ especially when the smallest eigenvalue of $V$ is uncertain. That's exactly what happens in large surveys with small design degrees of freedom; the estimated variance matrix is often closer to being singular than the true variance matrix.  The main body of the reference distribution of $Q_{RS}$ is fairly well approximated by the Satterthwaite approximation, which depends on the sum and sum of squares of the eigenvalues. The right tail of the reference distribution is sensitive to the *largest* eigenvalue of $I^{-1}V$, rather than the reciprocal of the smallest.    In particular, if $V$ becomes singular, the Rao-Scott test does not blow up, but the other test does. So, while the $p$-value for $Q_{RS}$ does still depend on $V$, it depends on $V$ in a smoother way than the $p$-value for the test with $V^{-1}$ in the test statistic.
