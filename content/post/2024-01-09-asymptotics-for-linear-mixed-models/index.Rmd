@@ -1,0 +1,30 @@
+---
+title: Asymptotics for linear mixed models
+author: Thomas Lumley
+date: '2024-01-09'
+slug: asymptotics-for-linear-mixed-models
+categories: []
+tags: []
+---
+
+*Attention Conservation Notice: I haven't seen this anywhere, but it's probably well known in some circles*
+
+Suppose you have a (parametric, Normal) linear mixed model
+$$Y=X\beta+Zb+\epsilon$$
+where $\epsilon$ are iid $N(0,\sigma^2)$ and $b$ are $N(0, \sigma^2V(\theta))$.  Write $\Xi$ for the marginal covariance matrix of $Y$
+$$\Xi = \mathrm{cov}[Y]=\sigma^2(I+Z^TVZ)$$
+
+The loglikelihood can be written
+$$\ell=-\frac{1}{2}\log\left|\Xi\right|-\frac{1}{2}\sum_{i,j} (Y_i-X_i\beta)^T\Xi^{-1}(Y_j-X_j\beta).$$
+
+We might want to treat this as a $M$-estimation problem and use the asymptotic behaviour of $\ell(\beta,\sigma^2,\theta)$ plus the smoothness of $\ell$ to deduce the asymptotic behaviour of the parameter estimates.   A complication is that the loglikelihood isn't a sum and most of our limit theorems are about sums.
+
+The loglikelihood is, however, a quadratic form in Gaussian variables. This has a known distribution: it's a linear combination of $n$ non-central $\chi^2_1$ variables, where the coefficients of the linear combination are the eigenvalues of $$J(\beta,\sigma^2,\theta)=\Xi^{-1}(\beta,\sigma,\theta)\Xi(\beta_0,\sigma_0,\theta_0).$$ Here the first $\Xi$ is the matrix in the middle of the quadratic form (evaluated at the **current** parameters) and the second is the actual covariance matrix of $Y-X\beta$ (evaluated at the **true** parameters).
+
+Since $\ell$ is a sum of independent non-central $\chi^2$, it is asymptotically Normal as long as the coefficients and non-centrality parameters satisfy a Lindeberg condition. This condition will certainly be satisfied if the parameter values are close enough to the true values; at the true values $J$ is the identity matrix. 
+
+If $\ell$ is asymptotically Normally distributed and the true values of the parameters aren't at the boundary of the parameter space, we can hope to use the smoothness of $\ell$ to derive asymptotic Normality of the parameter estimates in the usual sort of way.
+
+The assumption that the model is correctly specified isn't really needed; if the data come from a mixed model different from the one being fitted, the loglikelihood will still be a quadratic form in $Y-\mu$. We'll need to worry more about the Lindeberg condition on the non-centrality parameters and eigenvalues since the matrix $J$ need not be all that close to the identity. We'll also have the usual issues about what even do the parameters mean if the model is misspecified. 
+
+Interestingly, the Normality assumption seems much more important.  It's hard to say anything about quadratic forms in non-Normal variables, because decorrelating non-Normal variables need not leave them even approximately independent. More theoretical machinery seems to be needed to tackle non-Normal $\epsilon$ and $b$.  
