@@ -21,7 +21,7 @@ We might want to treat this as a $M$-estimation problem and use the asymptotic b
 
 The loglikelihood is, however, a quadratic form in Gaussian variables. This has a known distribution: it's a linear combination of $n$ non-central $\chi^2_1$ variables, where the coefficients of the linear combination are the eigenvalues of $$J(\beta,\sigma^2,\theta)=\Xi^{-1}(\beta,\sigma,\theta)\Xi(\beta_0,\sigma_0,\theta_0).$$ Here the first $\Xi$ is the matrix in the middle of the quadratic form (evaluated at the **current** parameters) and the second is the actual covariance matrix of $Y-X\beta$ (evaluated at the **true** parameters).
 
-Since $\ell$ is a sum of independent non-central $\chi^2$, it is asymptotically Normal as long as the coefficients and non-centrality parameters satisfy a Lindeberg condition. This condition will certainly be satisfied if the parameter values are close enough to the true values; at the true values $J$ is the identity matrix. 
+Since $\ell$ is a sum of independent non-central $\chi^2$, it is asymptotically Normal as long as the coefficients and non-centrality parameters satisfy a Lindeberg condition. This condition will certainly be satisfied if the parameter values are close enough to the true values; at the true values $J$ is the identity matrix and the non-centrality parameters are all zero.
 
 If $\ell$ is asymptotically Normally distributed and the true values of the parameters aren't at the boundary of the parameter space, we can hope to use the smoothness of $\ell$ to derive asymptotic Normality of the parameter estimates in the usual sort of way.
 
