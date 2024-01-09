@@ -9,10 +9,10 @@ tags: []
 
 
 
-<p><em>Attention Conservation Notice: I haven’t seen this anywhere, but it’s probably well known in some circles</em></p>
+<p><em>Attention Conservation Notice: This is probably well known in some circles</em></p>
 <p>Suppose you have a (parametric, Normal) linear mixed model
 <span class="math display">\[Y=X\beta+Zb+\epsilon\]</span>
-where <span class="math inline">\(\epsilon\)</span> are iid <span class="math inline">\(N(0,\sigma^2)\)</span> and <span class="math inline">\(b\)</span> are <span class="math inline">\(N(0, \sigma^2V(\theta))\)</span>. Write <span class="math inline">\(\Xi\)</span> for the marginal covariance matrix of <span class="math inline">\(Y\)</span>
+where <span class="math inline">\(\epsilon\)</span> are iid <span class="math inline">\(N(0,\sigma^2)\)</span> and <span class="math inline">\(b\)</span> are <span class="math inline">\(N(0, \sigma^2V(\theta))\)</span>. Write <span class="math inline">\(\Xi\)</span> for the marginal covariance matrix of <span class="math inline">\(Y\)</span>:
 <span class="math display">\[\Xi = \mathrm{cov}[Y]=\sigma^2(I+Z^TVZ)\]</span></p>
 <p>The loglikelihood can be written
 <span class="math display">\[\ell=-\frac{1}{2}\log\left|\Xi\right|-\frac{1}{2}\sum_{i,j} (Y_i-X_i\beta)^T\Xi^{-1}(Y_j-X_j\beta).\]</span></p>

@@ -7,11 +7,11 @@ categories: []
 tags: []
 ---
 
-*Attention Conservation Notice: I haven't seen this anywhere, but it's probably well known in some circles*
+*Attention Conservation Notice: This is probably well known in some circles*
 
 Suppose you have a (parametric, Normal) linear mixed model
 $$Y=X\beta+Zb+\epsilon$$
-where $\epsilon$ are iid $N(0,\sigma^2)$ and $b$ are $N(0, \sigma^2V(\theta))$.  Write $\Xi$ for the marginal covariance matrix of $Y$
+where $\epsilon$ are iid $N(0,\sigma^2)$ and $b$ are $N(0, \sigma^2V(\theta))$.  Write $\Xi$ for the marginal covariance matrix of $Y$: 
 $$\Xi = \mathrm{cov}[Y]=\sigma^2(I+Z^TVZ)$$
 
 The loglikelihood can be written
