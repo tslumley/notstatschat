@@ -1,0 +1,106 @@
+---
+title: 'Recurrent events: increased susceptibility or latent risk?'
+author: Thomas Lumley
+date: '2024-01-12'
+slug: recurrent-events-increased-susceptibility-or-latent-risk
+categories: []
+tags: []
+---
+
+
+
+<p>Suppose you find, by analysis of crime data, that a house which has been burgled once is more likely to be burgled again in the following few months. This could happen because the house just has high burglary risk, due to the neighbourhood it’s in, the availability of easy escape routes, indicators of wealth, and so on. It could also happen because burglars know to come back a few months later when you’ve bought new stuff.</p>
+<p>In the first scenario, the first burglary just reveals a latent risk factor that always existed. In the second scenario, the first burglary actually <em>causes</em> an increase in the risk of a second burglary. From a pure prediction viewpoint it doesn’t matter a lot – the risk is higher either way – but for understanding or for risk reduction we might want to differentiate. We often would like to differentiate in medical examples.</p>
+<p>Sometimes we can, from other information. For example, people who have one deep-vein leg thrombosis are more likely to have another. This could be due to residual damage from the first episode, or it could just be that they are high-risk people, eg, with genetic abnormalities in blood clotting. If the cause was residual damage, we would expect the second event to occur more often in the same leg as the first event. This doesn’t appear to be the case; if anything, the other leg is more common<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, arguing for latent risk as the explanation. The same information isn’t available for, say, heart attack, since patients have only one heart.</p>
+<p>So, can we tell statistically whether clustering of recurrent events is based on latent risk or injury?</p>
+<p>Let’s see. Here’s some data, in a matrix <code>x</code>, with records for 100 people each with up to ten events. We can generate an <code>id</code> variable for each person and an <code>N</code> variable describing their number of past events, and fit a Cox model to see how risk varies with history</p>
+<pre class="r"><code>library(survival)
+X&lt;-apply(x,1, cumsum)
+y&lt;-as.vector(X)
+ypast&lt;-as.vector(rbind(0,X)[1:10,])
+id&lt;-rep(1:100, each=10)
+event&lt;-rep(1,1000)
+N&lt;-rep(0:9,100)
+
+coxph(Surv(ypast,y,event)~N,id=id,cluster=id,timefix=FALSE)</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(ypast, y, event) ~ N, id = id, cluster = id, 
+##     timefix = FALSE)
+## 
+##      coef exp(coef) se(coef) robust se    z      p
+## N 0.24320   1.27532  0.01245   0.01465 16.6 &lt;2e-16
+## 
+## Likelihood ratio test=382.3  on 1 df, p=&lt; 2.2e-16
+## n= 1000, number of events= 1000</code></pre>
+<pre class="r"><code>coxph(Surv(ypast,y,event)~factor(N),id=id,cluster=id,timefix=FALSE)</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(ypast, y, event) ~ factor(N), id = id, cluster = id, 
+##     timefix = FALSE)
+## 
+##               coef exp(coef) se(coef) robust se      z        p
+## factor(N)1  0.5849    1.7949   0.1500    0.1436  4.074 4.63e-05
+## factor(N)2  1.0717    2.9204   0.1549    0.1592  6.733 1.66e-11
+## factor(N)3  1.2352    3.4391   0.1591    0.1595  7.744 9.63e-15
+## factor(N)4  1.7633    5.8316   0.1617    0.1562 11.288  &lt; 2e-16
+## factor(N)5  1.8364    6.2741   0.1623    0.1637 11.216  &lt; 2e-16
+## factor(N)6  2.0997    8.1637   0.1628    0.1584 13.255  &lt; 2e-16
+## factor(N)7  1.9334    6.9133   0.1645    0.1677 11.526  &lt; 2e-16
+## factor(N)8  2.3515   10.5011   0.1662    0.1803 13.039  &lt; 2e-16
+## factor(N)9  2.4735   11.8639   0.1665    0.1653 14.966  &lt; 2e-16
+## 
+## Likelihood ratio test=424  on 9 df, p=&lt; 2.2e-16
+## n= 1000, number of events= 1000</code></pre>
+<p>There’s strong evidence for a higher hazard with more past events, with the rate increasing progressively with the number of events. These data come from a counting process that’s a Poisson process whose rate for each individual is an unobserved <span class="math inline">\(G\sim\Gamma(1,1)\)</span> random variable. It’s a latent-risk model, where the intensity of events if we knew <span class="math inline">\(G\)</span> is just the constant <span class="math inline">\(G\)</span>.</p>
+<p>We can compare this to an model with an actual increase in hazard after an event. These data come from Weibull models where the hazard rate at time <span class="math inline">\(t\)</span> is decreasing with <span class="math inline">\(t\)</span>, proportional to <span class="math inline">\(t^{0.2-1}=t^{-0.8}\)</span>. Time is reset after each event, so if there is an event at time <span class="math inline">\(t=s\)</span> the hazard goes from its previous value of <span class="math inline">\(Cs^{-0.8}\)</span> back to its starting value. This is an injury model.</p>
+<pre class="r"><code>x&lt;-matrix(rweibull(1000,shape=0.2),ncol=10)
+X&lt;-apply(x,1, cumsum)
+y&lt;-as.vector(X)
+ypast&lt;-as.vector(rbind(0,X)[1:10,])
+id&lt;-rep(1:100, each=10)
+event&lt;-rep(1,1000)
+N&lt;-rep(1:10,100)
+coxph(Surv(ypast,y,event)~N,id=id,cluster=id,timefix=FALSE)</code></pre>
+<pre><code>## Warning in Surv(ypast, y, event): Stop time must be &gt; start time, NA created</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(ypast, y, event) ~ N, id = id, cluster = id, 
+##     timefix = FALSE)
+## 
+##      coef exp(coef) se(coef) robust se     z        p
+## N 0.20036   1.22184  0.01219   0.03046 6.579 4.74e-11
+## 
+## Likelihood ratio test=273.7  on 1 df, p=&lt; 2.2e-16
+## n= 999, number of events= 999 
+##    (1 observation deleted due to missingness)</code></pre>
+<pre class="r"><code>coxph(Surv(ypast,y,event)~factor(N),id=id,cluster=id,timefix=FALSE)</code></pre>
+<pre><code>## Warning in Surv(ypast, y, event): Stop time must be &gt; start time, NA created</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(ypast, y, event) ~ factor(N), id = id, cluster = id, 
+##     timefix = FALSE)
+## 
+##               coef exp(coef) se(coef) robust se     z        p
+## factor(N)2  0.7040    2.0219   0.1477    0.2074 3.394 0.000688
+## factor(N)3  0.9118    2.4887   0.1554    0.2405 3.791 0.000150
+## factor(N)4  1.5506    4.7145   0.1564    0.2664 5.820 5.88e-09
+## factor(N)5  1.4074    4.0851   0.1596    0.2713 5.188 2.12e-07
+## factor(N)6  1.9561    7.0720   0.1604    0.3030 6.457 1.07e-10
+## factor(N)7  1.8578    6.4099   0.1622    0.3371 5.512 3.55e-08
+## factor(N)8  2.2136    9.1485   0.1601    0.3152 7.024 2.16e-12
+## factor(N)9  2.1273    8.3920   0.1635    0.3290 6.466 1.01e-10
+## factor(N)10 1.8401    6.2969   0.1681    0.4064 4.528 5.95e-06
+## 
+## Likelihood ratio test=359  on 9 df, p=&lt; 2.2e-16
+## n= 999, number of events= 999 
+##    (1 observation deleted due to missingness)</code></pre>
+<p>They don’t look very different.</p>
+<p>We can see some of this analytically. Consider that first model, a Poisson process whose rate is an unobserved <span class="math inline">\(G\sim\Gamma(1,1)\)</span> random variable. The intensity of events if we knew the latent <span class="math inline">\(G\)</span> is just the constant <span class="math inline">\(G\)</span>. We can ask for this model what the intensity of events looks like based on the observable history</p>
+<p>Write <span class="math inline">\(N(t-)\)</span> for the number of events we’ve seen just before time <span class="math inline">\(t\)</span>. Based on the conjugacy of Gamma and Poisson distributions, the intensity of events at time <span class="math inline">\(t\)</span> with respect to the history of the process is
+<span class="math display">\[\lambda(t)=\frac{N(t-)+1}{t+1},\]</span>
+that is, the compensator of the counting process with respect to the history is <span class="math inline">\(\Lambda(t)=\int_0^t\lambda(t)\,dt\)</span> rather than<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> <span class="math inline">\(\Lambda(t)=t\)</span> or <span class="math inline">\(\Lambda(t)=Gt\)</span>. The intensity <span class="math inline">\(\lambda(t)\)</span> has a jump whenever there’s an observed event, and then slowly decreases. That’s also the sort of behaviour we might expect for a process where each event causes an injury that increases the risk, but you recover from the injury over time.</p>
+<p>There are differences. For example, the rate of second events after the first event under a latent risk model is higher for people whose first event was early than for people whose first event was later. For an injury model you wouldn’t expect that difference. I would still expect that in realistic settings, where there will always be some latent risk variation, it will be hard to tell how much of the clustering of recurrent events is from latent risk and how much is from injury.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>we have the lovely terms <em>ipsilateral</em> and <em>contralateral</em><a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>this sort of thing is why martingale theory runs out of steam on survival analysis when you introduce random effects<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

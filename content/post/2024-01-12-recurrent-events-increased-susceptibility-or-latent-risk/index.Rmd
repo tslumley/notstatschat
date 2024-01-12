@@ -1,0 +1,66 @@
+---
+title: 'Recurrent events: increased susceptibility or latent risk?'
+author: Thomas Lumley
+date: '2024-01-12'
+slug: recurrent-events-increased-susceptibility-or-latent-risk
+categories: []
+tags: []
+---
+
+Suppose you find, by analysis of crime data, that a house which has been burgled once is more likely to be burgled again in the following few months.  This could happen because the house just has high burglary risk, due to the neighbourhood it's in, the availability of easy escape routes, indicators of wealth, and so on.  It could also happen because burglars know to come back a few months later when you've bought new stuff. 
+
+In the first scenario, the first burglary just reveals a latent risk factor that always existed. In the second scenario, the first burglary actually *causes* an increase in the risk of a second burglary.  From a pure prediction viewpoint it doesn't matter a lot -- the risk is higher either way -- but for understanding or for risk reduction we might want to differentiate. We often would like to differentiate in medical examples.
+
+Sometimes we can, from other information.  For example, people who have one deep-vein leg thrombosis are more likely to have another.  This could be due to residual damage from the first episode, or it could just be that they are high-risk people, eg, with genetic abnormalities in blood clotting.  If the cause was residual damage, we would expect the second event to occur more often in the same leg as the first event. This doesn't appear to be the case; if anything, the other leg is more common^[we have the lovely terms *ipsilateral* and *contralateral*], arguing for latent risk as the explanation. The same information isn't available for, say, heart attack, since patients have only one heart. 
+
+So, can we tell statistically whether clustering of recurrent events is based on latent risk or injury? 
+
+
+```{r echo=FALSE}
+G<-rgamma(100,1,1)
+x<-matrix(rexp(1000,rate=G),ncol=10)
+```
+
+Let's see. Here's some data, in a matrix `x`, with records for 100 people each with up to ten events. We can generate an `id` variable for each person and an `N` variable describing their number of past events, and fit a Cox model to see how risk varies with history
+
+
+```{r}
+library(survival)
+X<-apply(x,1, cumsum)
+y<-as.vector(X)
+ypast<-as.vector(rbind(0,X)[1:10,])
+id<-rep(1:100, each=10)
+event<-rep(1,1000)
+N<-rep(0:9,100)
+
+coxph(Surv(ypast,y,event)~N,id=id,cluster=id,timefix=FALSE)
+coxph(Surv(ypast,y,event)~factor(N),id=id,cluster=id,timefix=FALSE)
+```
+
+There's strong evidence for a higher hazard with more past events, with the rate increasing progressively with the number of events.  These data come from a counting process that's a Poisson process whose rate for each individual is an unobserved $G\sim\Gamma(1,1)$ random variable. It's a latent-risk model, where the intensity of events if we knew $G$ is just the constant $G$.
+
+We can compare this to an model with an actual increase in hazard after an event. These data come from Weibull models where the hazard rate at time $t$ is decreasing with $t$, proportional to $t^{0.2-1}=t^{-0.8}$. Time is reset after each event, so if there is an event at time $t=s$ the hazard goes from its previous value of $Cs^{-0.8}$ back to its starting value.  This is an injury model.
+
+```{r}
+x<-matrix(rweibull(1000,shape=0.2),ncol=10)
+X<-apply(x,1, cumsum)
+y<-as.vector(X)
+ypast<-as.vector(rbind(0,X)[1:10,])
+id<-rep(1:100, each=10)
+event<-rep(1,1000)
+N<-rep(1:10,100)
+coxph(Surv(ypast,y,event)~N,id=id,cluster=id,timefix=FALSE)
+coxph(Surv(ypast,y,event)~factor(N),id=id,cluster=id,timefix=FALSE)
+```
+
+
+They don't look very different. 
+
+
+We can see some of this analytically. Consider that first model,  a Poisson process whose rate is an unobserved $G\sim\Gamma(1,1)$ random variable.  The intensity of events if we knew the latent $G$ is just the constant $G$. We can ask for this model what the intensity of events looks like based on the observable history
+
+Write $N(t-)$ for the number of events we've seen just before time $t$.  Based on the conjugacy of Gamma and Poisson distributions, the intensity of events at time $t$ with respect to the history of the process is 
+$$\lambda(t)=\frac{N(t-)+1}{t+1},$$
+that is, the compensator of the counting process with respect to the history is $\Lambda(t)=\int_0^t\lambda(t)\,dt$ rather than^[this sort of thing is why martingale theory runs out of steam on survival analysis when you introduce random effects] $\Lambda(t)=t$ or $\Lambda(t)=Gt$. The intensity $\lambda(t)$ has a jump whenever there's an observed event, and then slowly decreases. That's also the sort of behaviour we might expect for a process where each event causes an injury that increases the risk, but you recover from the injury over time. 
+
+There are differences. For example, the  rate of second events after the first event under a latent risk model is higher for people whose first event was early than for people whose first event was later.  For an injury model you wouldn't expect that difference.  I would still expect that in realistic settings, where there will always be some latent risk variation, it will be hard to tell how much of the clustering of recurrent events is from latent risk and how much is from injury. 
