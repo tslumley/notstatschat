@@ -1,0 +1,20 @@
+---
+title: 'Ordinal outcomes: the LOCT DOOR'
+author: Thomas Lumley
+date: '2024-01-25'
+slug: ordinal-outcomes-the-loct-door
+categories: []
+tags: []
+---
+
+The DOOR outcome strategy -- "Desirability Of Outcome Ranking" -- is a relatively new approach to composite outcomes in clinical trials.  Rather than collapsing multiple outcomes -- death, heart attack, new-onset angina, bad hair day -- into a single binary 'bad thing', the idea is to rank the trial participants by how bad their outcome is.  DOOR is obviously attractive: these bad events are not all equally bad, so we would like to use an analysis that treats worse events as actually worse. 
+
+DOOR also has the benefit of not using any assessment of tradeoffs.  Researchers don't need to say anything about how much death is worse than non-fatal outcomes, just that it *is* worse. There's no need to assign any quantitative numbers to the ordered outcomes; quantification happens automatically by ranking. 
+
+If you've read this blog before, you should have been getting suspicious by now. 
+
+The problem, which I've written about from various points of view, is that an ordering on outcomes for individuals doesn't imply an ordering on distributions of outcomes for groups. Tradeoffs *matter*, and they need to be assessed by people.  We can get consensus that one death is worse than one non-fatal myocardial infarction which is worse than one angioplasty; the individual outcomes genuinely are ordered. This doesn't tell us is whether one death is worse than **two** non-fatal myocardial infarctions or **two** angioplasties. Comparing two **groups** of people requires us to make both sorts of decision. 
+
+There won't always be a problem.  If the treatment has similar effects (in a proportional odds sense) on all the outcome components, then the scale will behave well for a proportional-odds analysis (including a Wilcoxon/Mann-Whitney test as a special case).  If the treatment has effects in a consistent direction on the components, but not of comparable magnitudes, the overall effect estimate will at least be in that direction.  The problem comes when the effect on different components of the outcome is in different directions, with the same treatment having both greater benefit and greater harm. 
+
+That is, there are two quite different reasons to use composite outcomes.  The first is that you expect the outcomes to behave the same way so that putting them together will increase the power of the study.  The second reason is that you are concerned they may behave in different ways, and while putting them together will lower the power  of the study,  it will let you evaluate the tradeoffs.  The DOOR strategy seems like an excellent way to handle ordered outcome components in the first setting, but a problematic way in the second setting.  When there are effects in different directions, the DOOR risks Loss of Ordering due to Complicated Tradeoffs. 
