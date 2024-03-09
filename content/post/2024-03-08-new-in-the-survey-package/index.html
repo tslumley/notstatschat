@@ -1,0 +1,16 @@
+---
+title: New in the survey package
+author: Thomas Lumley
+date: '2024-03-08'
+slug: new-in-the-survey-package
+categories: []
+tags: []
+---
+
+
+
+<p>Version 4.4-1 of the <code>survey</code> package for R is percolating through CRAN. There are some important additions, visible and invisible</p>
+<p>The main invisible addition is from Ben Schneider, who has written a set of C++ routines that do the multistage stratified variance calculations previously done by <code>svyrecvar</code>. The compiled versions are the default; use <code>options(survey.use_rcpp=FALSE)</code> to disable them. The C++ code is faster; perhaps more important is that it gives the same answers independently and so is a check on the central routine of the package.</p>
+<p>The most important visible addition is the functions <code>svysmoothUnit</code> and <code>svysmoothArea</code> for <a href="https://cran.r-project.org/web/packages/survey/vignettes/survey-sae.html">small-area estimation</a>. These are just an interface to the <code>SUMMER</code> package, but they make a wider range of analyses available. I’ll write a separate post about <code>svysmoothArea</code>, which fits Bayesian versions of the Fay-Herriot model to smooth the direct survey estimates for small areas. The <code>svysmoothUnit</code> function doesn’t use sampling weights; it assumes that sampling is ignorable given a set of unit-level covariates and fits generalised linear models with area random effects. There’s more background <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9451141/">here</a>.</p>
+<p>If you want to use the small-area estimation functions you need to install the <code>SUMMER</code> package (which is suggested by <code>survey</code>) and also install <code>INLA</code> (which is needed for the SUMMER models). The small-area estimation vignette describes how to do this. The <code>INLA</code> system isn’t an explicit dependency of <code>survey</code> because many users won’t need it and the fact that it doesn’t live on CRAN might make some institutions more reluctant to install it.</p>
+<p>There are also other changes: it’s now possible to have arbitrary designs at phase two of a <code>twophase</code> object by specifying a matrix of pairwise sampling probabilities or sampling covariances. The primary motivation for this was to allow Poisson sampling at phase two as a model for non-response, but it will have other uses. There are also some fixes to standard error estimation for some raked two-phase design objects. And there’s a miscellany of smaller bug fixes: for example, <code>confint</code> would sometimes fail to find a profile confidence interval for generalised linear model objects with replicate weights because it was using bad values for the search limits.</p>
