@@ -1,0 +1,24 @@
+---
+title: Small-area estimates by smoothing direct estimates
+author: Thomas Lumley
+date: '2024-03-09'
+slug: small-area-estimates-by-smoothing-direct-estimates
+categories: []
+tags: []
+---
+
+If we have a *domain* or *subpopulation* ${\cal D}$ and want to estimate the mean of a variable $Y$ in that domain, the usual survey estimator is
+$$\hat \mu_{\cal D}=\frac{\sum_{R_i=1} w_i Y_i I(i\in {\cal D})}{\sum_{R_i=1} w_i I(i\in {\cal D})}.$$
+That is, it's the estimated population total in the domain divided by the estimated population count in the domain.  We'll call this a *direct* estimator; it depends only on data in the domain and is (approximately, depending on weight details) unbiased for the true mean.
+
+A *small* domain is one where the direct estimator isn't good enough: it's too variable. If you want estimates for a small domain, you need some sort of borrowing information across different domains; that's what makes it a small domain. 
+
+One simple approach is to say we want some sort of weighted average of $\hat \mu_{\cal D}$ and the population mean $\hat \mu$. A weighted average $a\hat \mu_{\cal D}+(1-a)\hat\mu$ will be biased as an estimate of $\mu_{\cal D}$, but will have smaller variance, and we know ways of optimising that sort of tradeoff.  The ideal multiplier $a$ on $\hat \mu_{\cal D}$ will be larger when different domains tend to be more different (so that bias is important) and larger if ${\cal D}$ is larger (so that variance is less important).  
+
+If we knew the variances of $\hat \mu_{\cal D}$ and $\hat  \mu$ and the variability between domains, we could work out the value of $a$ that minimised the mean squared error of the estimator and gave a biased but more precise estimator.  In the standard linear mixed model setting these are called the best linear unbiased estimators. They aren't unbiased for the true $\mu_{\cal D}$, of course, but the name is there for other reasons. 
+
+Fitting linear mixed models to survey data is not straightforward, but in this context we have a work-around.  We compute the *direct* estimates for a set of small domains and fit a linear mixed model to those direct estimates (or to some transformed version of them).  We can also add in other domain-level covariates that might help with prediction by explaining some of the between-domain variability.  This gives (basically) the Fay-Herriot model for small-domain estimation. 
+
+The estimates produced by `svysmoothArea` in the `survey` package go further than this in two ways. First, they are designed for the setting where the small domains are geographical areas and they allow for a spatial component to the modelling. Rather than taking a weighted average of the direct estimate for a domain and the whole-population estimate, they can take a weighted average of the direct estimate for an area and estimates for nearby areas.  Second, the whole thing is done with Bayesian machinery that should do a better job of capturing the impact of the uncertainty in the variance estimates. 
+
+In principle, this approach should work for small domains that aren't geographical areas.  The main obstacle to using the code that way is that it's not clear the best way to define 'neighbours' with domains that aren't geographical, and something quite different from the current spatial smoothing model might be needed.  However, it's certainly possible to use `svysmoothArea` without the spatial component on small domains that aren't small areas. 
