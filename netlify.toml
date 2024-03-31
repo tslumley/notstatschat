@@ -1,8 +1,9 @@
 [build]
-command = "hugo"
+command = "hugo -F"
 publish = "public"
 [build.environment]
 HUGO_VERSION = "0.55.6"
+TZ = 'Pacific/Auckland'
 
 [context]
 [context.branch-deploy]
