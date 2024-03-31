@@ -1,0 +1,23 @@
+---
+title: Symbolically nested
+author: Thomas Lumley
+date: '2024-04-01'
+slug: symbolically-nested
+categories: []
+tags: []
+---
+
+'Symbolically nested' is a phrase I invented to distinguish two different types of nested model when writing my book about survey analysis. There has been at least one [question on Stack Overflow](https://stats.stackexchange.com/questions/435893/what-is-a-symbolically-nested-model) about the phrase, so I think it's worth explaining in a bit more detail.
+
+Often, in math-stat discussions of nested models, you see the smaller model written with predictors $X$ and coefficients $\beta_X$ and the larger model written with predictors $(X,Z)$ and coefficients $(\gamma_X, \gamma_Z)$. The smaller model then corresponds to the restriction $\gamma_Z=0$. Sometimes, people will use this setup and say there is no loss of generality, because any nested model can be rewritten in this form with some simple linear algebra. People who say that sort of thing tend to assume someone else will do the 'simple linear algebra'.
+
+If your model is already written so that the smaller model is obtained by setting some of the coefficients, $\gamma_Z$, to zero, the computations are simpler. The simplification is perhaps most obvious for the Wald test. If we write $V$ for the variance matrix of the parameter estimates, the Wald test simply involves the coefficient subvector $\hat\gamma_Z$ and its variance matrix $V_{ZZ}$.  When the submodel doesn't arise by just setting some $\gamma$s to zero, we need to work out a suitable contrast matrix. 
+
+From an implementation viewpoint, we need slightly more than having the submodel defined by setting some $\gamma$s to zero. We also need to **know** that the submodel is defined by setting some $\gamma$s to zero (and which ones).  Two models are **symbolically nested** when you can do that without looking at the design matrices. 
+
+
+More precisely, assume we have representations of the two models in Wilkinson/Rogers notation^[or, I suppose in some other notation of similar power]. The models are symbolically nested if we can determine **from the representations** that the models are nested and which coefficients need to be set to zero to obtain the submodel.  
+
+There are various reasons why nested models might fail to be symbolically nested. A simple one is that the variables have different names: if you have one observation per day, then `day` and `date` are the same variable.  Another is transformations that lose information: a model with `day_of_the_week` and a model with an indicator variable `weekend` are nested. Another is variable expansion: a linear term in a numeric variable and a regression spline are nested. 
+
+In ordinary model-based inference, symbolically nested models are helpful for the Wald and score tests. They don't matter for the likelihood ratio test, whose computation (as well as its value) doesn't depend on the parametrisation.  Unfortunately, when analysing complex surveys, the computations for Rao-Scott working likelihood ratio test do depend on the parametrisation of the model and it does help if the models are symbolically nested.
