@@ -1,0 +1,39 @@
+---
+title: Assumptions
+author: Thomas Lumley
+date: '2024-04-14'
+slug: assumptions
+categories: []
+tags: []
+---
+
+One problem in teaching statistics and communicating statistics and so on is "assumptions".
+In fact, there's at least two problems:
+
+## Necessary vs sufficient
+
+The first problem is in maths communication. In maths you write down some assumptions and show they imply a conclusion. It's usual in statistics for the assumptions to be sufficient for the conclusion, but pretty unusual for them to be necessary.  People are bad at explaining the distinction to statisticians. 
+
+For example, if $Y|X\stackrel{iid}{\sim} N(X\beta,\sigma^2)$ the ordinary least squares estimator is unbiased and Normally distribution for $\beta$.  The proof that this is true assumes that the conditional distributions of $Y$ given $X$ are Normal. It's an assumption of the **theorem**.  It's not, however, an assumption of the **estimator**.
+
+If $(X,Y)$ is a set of independent draws from some joint distribution with enough finite moments, the ordinary least squares estimator is consistent (and asymptotically unbiased) for the best-fitted straight line to the joint distribution, as is asymptotically Normal. That, too, is a theorem, with different assumptions. 
+
+As intermediate cases, you might have $E[Y\mid X=x]=x\beta$ but have equal-variance errors that aren't necessarily Normal, or mean zero errors that aren't necessarily equal-variance or other things.  Or you might not have independence between observations but have some sort of approximate independence. These also lead to theorems, with different assumptions
+
+These regressions are not all equal. The parametric linear model lets you get confidence intervals for $E[Y|X=x]$ and prediction intervals for $Y$, and lets you prove $\hat\beta$ is the best estimator of the true $\beta$. The completely non-parametric version doesn't let you get confidence intervals for $E[Y]$ or prediction intervals for $Y$ and it doesn't even make sense to ask if $\hat\beta$ is optimal because there isn't any true $\beta$. In general, the more you assume, the more conclusions you can draw. 
+
+So, one reason for unhelpful discussion about assumptions is that people don't distinguish necessary from sufficient conditions, and don't think about which parts of the properties of an estimator they care about. People talk about "the assumptions" of least-squares regression as if that meant something. 
+
+A particular problem with the "necessary vs sufficient" issue is that when you're teaching **proofs** it makes sense to lead with the simplest proofs, which often have the strongest assumptions.  When you're not teaching proofs, though, it makes no sense to impose unnecessary assumptions that would make proofs easier for hypothetical people who aren't your students.  
+
+## Assumptions vs choices
+
+Consider the assumption that the errors have mean zero in a linear regression model. What is the *statistical* content of this assumption? How could it be wrong? What would that mean about data definition and collection?
+
+Most of the time, there's no assumption of mean-zero errors; it's just a choice. The mean of the residuals and the intercept of the fitted linear relationship are not separately identifiable. We **choose** to say the mean of the errors is zero, so that the line goes through the mean of the the conditional distributions and the intercept is $E[Y|X=0]$
+
+Occasionally there might be implications. The lung function measure $FEV_1$ is the amount of air you can blow into a tube in 1 second. Because you can use  a spirometer incorrectly,   the true value is [*defined*](https://www.ncbi.nlm.nih.gov/books/NBK540970/) as the maximum value an individual can generate.  If that's the definition, the *measurement* error in $FEV_1$ does not have mean zero; it's necessarily positive  It still could be that the error $Y-X\beta$ has mean zero, but now there might be an assumption lurking there. 
+
+Choices also figure in regression functional form: if you want to estimate the effect of smoking on heart attack incidence then you will have a smoking variable $X$ and a set of confounders $Z$ and it's a genuine assumption that $Z$ is correctly modelled and sufficient to block all the confounding paths from $X$ to heart attack.  It's a *choice* whether you model smoking as binary yes/no, or three-level current/former/never, or as a detailed lifetime history of tobacco use. Comparing smokers to non-smokers doesn't *assume* that all smokers are the same (though if they aren't, the precise answer you get will, of course, depend on which smokers you have).
+
+
