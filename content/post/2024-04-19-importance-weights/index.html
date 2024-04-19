@@ -1,0 +1,27 @@
+---
+title: Importance weights
+author: Thomas Lumley
+date: '2024-04-19'
+slug: importance-weights
+categories: []
+tags: []
+---
+
+
+
+<p>When I <a href="https://notstatschat.rbind.io/2020/08/04/weights-in-statistics/">wrote about weights</a> I mentioned that there was in some senses a fourth type of weights after sampling weights, precision weights, and frequency weights. The idea is that sometimes you have weights that you want to apply to an estimating function, but that they don’t have the same ontological commitments that any of the the three sets of weights come with. I’m working on dual-frame (and maybe multiple-frame) estimators for the survey package, and they are an example.</p>
+<p>The idea of dual-frame surveys is that you have two (often independent) samples that are proper probability samples but from different sampling frames and one or both frames is smaller than the entire population. You might have telephone samples from mobile phones and from landlines, where the two sampling frames overlap (some people have both) but neither is complete (some people have only one). You might have one sample from the full population and another from an incomplete list that’s enriched from a subpopulation of interest – for example, a New Zealand health survey enriched its population sample with samples of people on the Māori electoral roll and people with family names that appeared to be from Pacific island countries. The population sample means that everyone has a known, non-zero, probability of being included; the supplementary samples increased the probability for some people.</p>
+<p>The idea in analysing dual-frame surveys is that the population falls into three groups: people who are only in frame A, people who are only in frame B, and people who are in both. If you just estimate totals for each frame and add them up, you will double-count the fraction of the population that’s in both. You need to apply additional weights to any person in the overlap so their frame A and frame B selves add up to just one person. For example, you might just divide the sampling weight by two for anyone in the overlap<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
+<p>Suppose you write <span class="math inline">\(w_i^A\)</span> for the sampling weight of person <span class="math inline">\(i\)</span> if sampled in frame <span class="math inline">\(A\)</span>, and <span class="math inline">\(R_i^A\)</span> for the indicator of that, and write <span class="math inline">\(w_i^B\)</span> for the sampling weight of person <span class="math inline">\(i\)</span> if sampled in frame <span class="math inline">\(B\)</span>, and <span class="math inline">\(R_i^B\)</span> for the indicator of <em>that</em>. When you come to estimate the total, rather than
+<span class="math display">\[\sum_{i\in\text{frame A}} R^A_i w^A_iX_i+\sum_{i\in\text{frame B}} R^B_i w^B_iX_i,\]</span>
+which double-counts anyone in the overlap, you use
+<span class="math display">\[\sum_{i\in\text{frame A only}} R^A_i  w^A_iX_i+\sum_{i\in\text{both, sampled in A}} R^A_i \frac{1}{2} w^A_iX_i+\sum_{i\in\text{both, sampled in B}} R^B_i \frac{1}{2} w^B_iX_i+\sum_{i\in\text{frame B only}} R^B_i w^B_iX_i.\]</span></p>
+<p>The weights <span class="math inline">\(w_i/2\)</span> are <strong>not</strong> sampling weights any more. Treating them as sampling weights might work reasonably well, but it’s not correct; you’d get the correct point estimates but the wrong variance. Instead, you have sampling weights <span class="math inline">\(w_i\)</span> and you also have weights that are <span class="math inline">\(1\)</span> or <span class="math inline">\(1/2\)</span> for each observation.</p>
+<p>These aren’t precision weights, either. They aren’t really even frequency weights, though that’s closer, because numbers less than one aren’t frequencies. They are a computational gadget to get the right estimator. It’s helpful to have a name for <em>weights like this</em> that aren’t any of the usual sorts (as well as for case weights in machine learning for point prediction, which could be any of the usual sorts and we don’t care).</p>
+<p>These are the things that Stata calls <em>importance weights</em>, which is a reasonable name apart from its clash with importance sampling. I might have preferred to call them <em>analytic weights</em>, but Stata is using that name for precision weights.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>you wouldn’t do it this way because it would make you look as if you didn’t know what you were doing, so there are lots of supposedly better ways, mostly attributed to people whose names begin with “H”<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

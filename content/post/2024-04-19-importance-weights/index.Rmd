@@ -1,0 +1,25 @@
+---
+title: Importance weights
+author: Thomas Lumley
+date: '2024-04-19'
+slug: importance-weights
+categories: []
+tags: []
+---
+
+When I [wrote about weights](https://notstatschat.rbind.io/2020/08/04/weights-in-statistics/) I mentioned that there was in some senses a fourth type of weights after sampling weights, precision weights, and frequency weights.  The idea is that sometimes you have weights that you want to apply to an estimating function, but that they don't have the same ontological commitments that any of the the three sets of weights come with.  I'm working on dual-frame (and maybe multiple-frame) estimators for the survey package, and they are an example. 
+
+The idea of dual-frame surveys is that you have two (often independent) samples that are proper probability samples but from different sampling frames and one or both frames is smaller than the entire population. You might have telephone samples from mobile phones and from landlines, where the two sampling frames overlap (some people have both) but neither is complete (some people have only one).  You might have one sample from the full population and another from an incomplete list that's enriched from a subpopulation of interest -- for example, a New Zealand health survey enriched its population sample with samples of people on the Māori electoral roll and people with family names that appeared to be from Pacific island countries.  The population sample means that everyone has a known, non-zero, probability of being included; the supplementary samples increased the probability for some people. 
+
+The idea in analysing dual-frame surveys is that the population falls into three groups: people who are only in frame A, people who are only in frame B, and people who are in both.  If you just estimate totals for each frame and add them up, you will double-count the fraction of the population that's in both.  You need to apply additional weights to any person in the overlap so their frame A and frame B selves add up to just one person.  For example, you might just divide the sampling weight by two for anyone in the overlap^[you wouldn't do it this way because it would make you look as if you didn't know what you were doing, so there are lots of supposedly better ways, mostly attributed to people whose names begin with "H"]. 
+
+Suppose you write $w_i^A$ for the sampling weight of person $i$ if sampled in frame $A$, and $R_i^A$ for the indicator of that, and write $w_i^B$ for the sampling weight of person $i$ if sampled in frame $B$, and $R_i^B$ for the indicator of *that*. When you come to estimate the total, rather than
+$$\sum_{i\in\text{frame A}} R^A_i w^A_iX_i+\sum_{i\in\text{frame B}} R^B_i w^B_iX_i,$$
+which double-counts anyone in the overlap, you use
+$$\sum_{i\in\text{frame A only}} R^A_i  w^A_iX_i+\sum_{i\in\text{both, sampled in A}} R^A_i \frac{1}{2} w^A_iX_i+\sum_{i\in\text{both, sampled in B}} R^B_i \frac{1}{2} w^B_iX_i+\sum_{i\in\text{frame B only}} R^B_i w^B_iX_i.$$
+
+The weights $w_i/2$ are **not** sampling weights any more.  Treating them as sampling weights might work reasonably well, but it's not correct; you'd get the correct point estimates but the wrong variance. Instead, you have sampling weights $w_i$ and you also have weights that are $1$ or $1/2$ for each observation.
+
+These aren't precision weights, either. They aren't really even frequency weights, though that's closer, because numbers less than one aren't frequencies. They are a computational gadget to get the right estimator. It's helpful to have a name for *weights like this* that aren't any of the usual sorts (as well as for case weights in machine learning for point prediction, which could be any of the usual sorts and we don't care). 
+
+These are the things that Stata calls *importance weights*, which is a reasonable name apart from its clash with importance sampling.   I might have preferred to call them *analytic weights*, but Stata is using that name for precision weights.
