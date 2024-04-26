@@ -56,7 +56,7 @@ The <span class="math inline">\(\theta\)</span>s do go into the products, but th
 <h2>A simplification</h2>
 <p>In general, as we saw above, the distinction between the frame weights <span class="math inline">\(\theta_i\)</span> and the design weights <span class="math inline">\(\pi_i^{-1}\)</span> matters for variance estimation. One setting where it doesn’t matter, though, is the very common analysis of surveys as if they were single-stage cluster sampling with replacement. In that setting the variance just comes from the empirical variance of cluster totals in the same stratum and the distinction between the population weights <span class="math inline">\(\theta_i\)</span> and the sampling weights <span class="math inline">\(\pi_i^{-1}\)</span> doesn’t matter. Patricia Metcalf and Alastair Scott wrote a nice <a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.3566">paper about this in 2009</a>.</p>
 <p>Using the single-stage with-replacement approximation, you just stack the two (or more) data sets and create weights <span class="math inline">\(d_i= \theta_i\pi_i^{-1}\)</span> for each record. You need to ensure that the computer thinks the strata in the frames are different – you might paste <code>L</code> on to the stratum labels in the landline frame and <code>M</code> on to the labels in the mobile-phone frame.</p>
-<p>Metcalf and Scott were actually interested in the <em>other</em> common sort of multiframe survey, where extra frames are used for enrichment of rare populations. An Auckland health survey wanted to oversample Māori and Pacific people. We don’t keep complete sampling frames by ethnicity, but Māori can opt to be on the Māori electoral roll. A bit under half the Māori population do this, giving a sampling frame that is incomplete but very highly enriched for Māori. For Pacific peoples, an incomplete but highly enriched list can be obtained sampling on family name. So, there were three frames: a whole-population one that ensured everyone was represented and two enrichment frames to increase representation in important minority populations. Using a multiple-frame sampling approach ensures that the estimated statistics out of the analysis still estimate the actual population totals – apart, of course, from the ever-present problem of non-response.</p>
+<p>Metcalf and Scott were actually interested in the <em>other</em> common sort of multiframe survey, where extra frames are used for enrichment of rare populations. An Auckland health survey wanted to oversample Māori and Pacific people. We don’t keep complete sampling frames by ethnicity, but Māori can opt to be on the Māori electoral roll. A bit under half the Māori population do this,<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> giving a sampling frame that is incomplete but very highly enriched for Māori. For Pacific peoples, an incomplete but highly enriched list can be obtained sampling on family name. So, there were three frames: a whole-population one that ensured everyone was represented and two enrichment frames to increase representation in important minority populations. Using a multiple-frame sampling approach ensures that the estimated statistics out of the analysis still estimate the actual population totals – apart, of course, from the ever-present problem of non-response.</p>
 </div>
 <div id="examples" class="section level2">
 <h2>Examples</h2>
@@ -86,7 +86,7 @@ head(DatA)</code></pre>
 ## 4     ba 297.53 29.67 17.82 2523.98 133.89 154.18    3 0.02063274 0.1133501
 ## 5      b 298.69 21.37 20.19    0.00   0.00 140.58    2 0.00000000 0.1133501
 ## 6      b 267.65 27.50 10.11    0.00   0.00  90.39    2 0.00000000 0.1133501</code></pre>
-<p>We need to know which of the people we sampled by mobile phone also have a landline, and <em>vice versa</em><a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a></p>
+<p>We need to know which of the people we sampled by mobile phone also have a landline, and <em>vice versa</em><a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a></p>
 <pre class="r"><code>A_in_frames&lt;-cbind(1, DatA$Domain==&quot;ab&quot;)
 B_in_frames&lt;-cbind(DatB$Domain==&quot;ba&quot;,1)</code></pre>
 <p>The Metcalf &amp; Scott approach with <span class="math inline">\(\theta=1/2\)</span></p>
@@ -125,7 +125,7 @@ svytotal(~Lei+Feed, MSdesign_opt)</code></pre>
 <pre><code>##         mean     SE
 ## Lei   22.488 0.3772
 ## Feed 246.857 4.9332</code></pre>
-<p>Using the full design specified by pairwise sampling probability matrices we don’t get hugely different results<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a></p>
+<p>Using the full design specified by pairwise sampling probability matrices we don’t get hugely different results<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a></p>
 <pre class="r"><code>Bdes_pps&lt;-svydesign(id=~1, fpc=~ProbB, data=DatB,pps=ppsmat(PiklB))
 Ades_pps &lt;-svydesign(id=~1, fpc=~ProbA,data=DatA,pps=ppsmat(PiklA))
 mf_hartley&lt;-multiframe(list(Ades_pps,Bdes_pps),list(A_in_frames,B_in_frames),theta=0.7417399) 
@@ -154,7 +154,7 @@ svytotal(~Lei+Feed, mf_exp)</code></pre>
 <p>The totals here agree with the results from the <code>Frames2</code> package. The means don’t, for two reasons. First, the <code>Frames2</code> package uses a different optimal <span class="math inline">\(\theta\)</span> to estimate the denominator of the mean from the one it uses for the numerator of the mean, and I’m not going that far. Second, the <code>Frames2</code> package doesn’t take into account the correlation between the numerator and denominator of the mean when estimating the variance, and I do.</p>
 <div id="what-is-available-and-planned" class="section level3">
 <h3>What is available and planned</h3>
-<p>The package now supports only two frames, and only the two forms of <span class="math inline">\(\theta_i\)</span> that I have mentioned. It provides means, totals, and generalised linear models.<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a></p>
+<p>The package now supports only two frames, and only the two forms of <span class="math inline">\(\theta_i\)</span> that I have mentioned. It provides means, totals, and generalised linear models.<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a></p>
 <p>The next addition will be some way to optimise <span class="math inline">\(\theta\)</span>. Metcalf and Scott argued that one should probably use the same <span class="math inline">\(\theta\)</span> for different analyses. I wouldn’t go that far, since optimising weights for different analyses can be worthwhile when data are expensive. We definitely want the <em>option</em> of using the same weights, though. If you’re fitting a series of regression models with the same outcome and exposure and different confounders, you want the same weights to make meaningful comparisons. And you probably want the same weights for “Table 1” as for the main analysis.</p>
 <p>So, the plan is a <code>reweight</code> function that takes some set of expressions and shows how the estimated variance of these estimators change with <span class="math inline">\(\theta\)</span>. You could then automatically choose the <span class="math inline">\(\theta\)</span> that was best for one analysis, or choose a compromise.</p>
 <p>With more than two frames, things get a bit more complicated since <span class="math inline">\(\theta\)</span> is higher-dimensional. It will probably be necessary to specify a more limited set to optimise over.</p>
@@ -166,8 +166,9 @@ svytotal(~Lei+Feed, mf_exp)</code></pre>
 <ol>
 <li id="fn1"><p>there are <span class="math inline">\(M\)</span>s and <span class="math inline">\(L\)</span>s on everything except the <span class="math inline">\(X\)</span>s, because we assume you give the same answer <span class="math inline">\(X\)</span> whether we sample you by mobile or landline<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
 <li id="fn2"><p>I’m assuming sampling is independent in the two frames so there are no <span class="math inline">\(\mathrm{cov}[R^L,R^M]\)</span> terms to worry about<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
-<li id="fn3"><p>yes, this is a weak point<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
-<li id="fn4"><p>we just feel better about them<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
-<li id="fn5"><p>You might ask: why generalised linear models, since the number of people who care can be counted on the fingers of one thumb. First: actually people do care in health research. More importantly for order of implementation: regression models give means in subpopulations and so are very useful for testing that subpopulation estimation is correct<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>more than 50% of those who enroll to vote at all, but not everyone enrolls to vote<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>yes, this is a weak point<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p>we just feel better about them<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
+<li id="fn6"><p>You might ask: why generalised linear models, since the number of people who care can be counted on the fingers of one thumb. First: actually people do care in health research. More importantly for order of implementation: regression models give means in subpopulations and so are very useful for testing that subpopulation estimation is correct<a href="#fnref6" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
