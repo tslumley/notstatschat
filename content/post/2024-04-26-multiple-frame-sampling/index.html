@@ -49,7 +49,7 @@ The <span class="math inline">\(\theta\)</span>s do go into the products, but th
 <h3>Beyond totals</h3>
 <p>If we want to estimate (almost) anything else, we can use the weights <span class="math inline">\(\theta_i\pi^{-1}\)</span> for each frame in the same way we always do, to weight an estimating function or objective function. We can then use the weights the same way we always do, to weight the influence functions and calculate the variances.</p>
 <p>For example, if we want to calculate a mean, whose estimating function is <span class="math inline">\(X_i-\mu\)</span>, we weight up these estimating functions with the appropriate <span class="math inline">\(\theta_i\pi^{-1}_i\)</span> and solve the equation to get <span class="math inline">\(\hat \mu\)</span>. We then apply the formula for variance of totals to the influence functions
-<span class="math inline">\(h_i= (X_i-\mu)\theta_i\pi^{-1}_i\)</span>. Doing it this way keeps down the amount of redundant code – we have just one variance formula function <code>multiframevar</code> – and also means we can automatically handle the correlation between the numerator and denominator of the mean.</p>
+<span class="math inline">\(h_i= \hat N^{-1}(X_i-\mu)\theta_i\pi^{-1}_i\)</span>. Doing it this way keeps down the amount of redundant code – we have just one variance formula function <code>multiframevar</code> – and also means we can automatically handle the correlation between the numerator and denominator of the mean.</p>
 </div>
 </div>
 <div id="a-simplification" class="section level2">

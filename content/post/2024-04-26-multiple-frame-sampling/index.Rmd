@@ -58,7 +58,7 @@ The $\theta$s do go into the products, but they don't go into the $\mathrm{cov}[
 If we want to estimate (almost) anything else, we can use the weights $\theta_i\pi^{-1}$ for each frame in the same way we always do, to weight an estimating function or objective function. We can then use the weights the same way we always do, to weight the influence functions and calculate the variances.  
 
 For example, if we want to calculate a mean, whose estimating function is $X_i-\mu$, we weight up these estimating functions with the appropriate $\theta_i\pi^{-1}_i$ and solve the equation to get $\hat \mu$.  We then apply the formula for variance of totals to the influence functions
-$h_i= (X_i-\mu)\theta_i\pi^{-1}_i$.  Doing it this way keeps down the amount of redundant code -- we have just one variance formula function `multiframevar` -- and also means we can automatically handle the correlation between the numerator and denominator of the mean. 
+$h_i= \hat N^{-1}(X_i-\mu)\theta_i\pi^{-1}_i$.  Doing it this way keeps down the amount of redundant code -- we have just one variance formula function `multiframevar` -- and also means we can automatically handle the correlation between the numerator and denominator of the mean. 
 
 
 ## A simplification
