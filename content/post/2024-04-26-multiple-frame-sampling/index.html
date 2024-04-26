@@ -9,7 +9,8 @@ tags: []
 
 
 
-<p>I’m writing code for multiple-frame surveys in the <code>survey</code> package now, and it’s at the stage where the basic stuff works (Revision 336 from <a href="https://r-forge.r-project.org/R/?group_id=1788">r-forge</a>) though there’s quite a bit more to implement. The canonical references are the <a href="https://www.jstor.org/stable/2669544">papers</a> <a href="https://www.jstor.org/stable/2669544">by</a> Lohr and Rao. This post is just me thinking about it.</p>
+<p><em>[Updated: ran it with the right version of the code]</em></p>
+<p>I’m writing code for multiple-frame surveys in the <code>survey</code> package now, and it’s at the stage where the basic stuff works (Revision 337 from <a href="https://r-forge.r-project.org/R/?group_id=1788">r-forge</a>) though there’s quite a bit more to implement. The canonical references are the <a href="https://www.jstor.org/stable/2669544">papers</a> <a href="https://www.jstor.org/stable/2669544">by</a> Lohr and Rao. This post is just me thinking about it.</p>
 <p>If I had actual artistic talent or an ethically-trained AI I’d illustrate this post with friendly monsters in the style of <a href="https://allisonhorst.com/other-r-fun">Alison Horst</a>, but you’ll just have to imagine them.</p>
 <blockquote>
 <p><em>Imagine a large collection of round fuzzy monsters in purple, green, or orange. Some of them are carrying smartphones almost as big as themselves. Others are sitting on old black Bakelite landline phones. Some have both the mobile phone and the landline phone.</em></p>
@@ -135,8 +136,8 @@ svytotal(~Lei+Feed, mf_hartley)</code></pre>
 ## Feed 584644 15721.2</code></pre>
 <pre class="r"><code>svymean(~Lei+Feed, mf_hartley)</code></pre>
 <pre><code>##         mean     SE
-## Lei   22.488 10.565
-## Feed 246.857 11.355</code></pre>
+## Lei   22.488 0.3653
+## Feed 246.857 4.7817</code></pre>
 <p>We can also use an estimator where the weight for a given person is the same whichever frame they are sampled from. This estimator requires us to know not only whether someone we sampled by mobile phone has a landline, but also what their landline sampling weight would have been. The resulting weight for person <span class="math inline">\(i\)</span> is the reciprocal of the expected <em>number of times</em> that person <span class="math inline">\(i\)</span> is sampled.</p>
 <pre class="r"><code>Awts&lt;-cbind(1/DatA$ProbA, ifelse(DatA$ProbB==0,0,1/DatA$ProbB))
 Bwts&lt;-cbind(ifelse(DatB$ProbA==0,0,1/DatB$ProbA),1/DatB$ProbB )
@@ -148,8 +149,8 @@ svytotal(~Lei+Feed, mf_exp)</code></pre>
 ## Feed 566434 23989</code></pre>
 <pre class="r"><code>svymean(~Lei+Feed, mf_exp)</code></pre>
 <pre><code>##         mean     SE
-## Lei   22.298 10.877
-## Feed 247.885 11.109</code></pre>
+## Lei   22.298 0.3166
+## Feed 247.885 4.7354</code></pre>
 <p>The totals here agree with the results from the <code>Frames2</code> package. The means don’t, for two reasons. First, the <code>Frames2</code> package uses a different optimal <span class="math inline">\(\theta\)</span> to estimate the denominator of the mean from the one it uses for the numerator of the mean, and I’m not going that far. Second, the <code>Frames2</code> package doesn’t take into account the correlation between the numerator and denominator of the mean when estimating the variance, and I do.</p>
 <div id="what-is-available-and-planned" class="section level3">
 <h3>What is available and planned</h3>

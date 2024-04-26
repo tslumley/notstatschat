@@ -7,7 +7,9 @@ categories: []
 tags: []
 ---
 
-I'm writing code for multiple-frame surveys in the `survey` package now, and it's at the stage where the basic stuff works (Revision 336 from [r-forge](https://r-forge.r-project.org/R/?group_id=1788)) though there's quite a bit more to implement.  The canonical references are the [papers](https://www.jstor.org/stable/2669544) [by](https://www.jstor.org/stable/2669544) Lohr and Rao. This post is just me thinking about it. 
+*[Updated: ran it with the right version of the code]*
+
+I'm writing code for multiple-frame surveys in the `survey` package now, and it's at the stage where the basic stuff works (Revision 337 from [r-forge](https://r-forge.r-project.org/R/?group_id=1788)) though there's quite a bit more to implement.  The canonical references are the [papers](https://www.jstor.org/stable/2669544) [by](https://www.jstor.org/stable/2669544) Lohr and Rao. This post is just me thinking about it. 
 
 If I had actual artistic talent or an ethically-trained AI I'd illustrate this post with friendly monsters in the style of [Alison Horst](https://allisonhorst.com/other-r-fun), but you'll just have to imagine them.
 
