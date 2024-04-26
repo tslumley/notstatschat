@@ -23,7 +23,7 @@ The people in both frames are a problem: there are two ways we could sample them
 
 > *The monsters with two phones now are slightly fainter in colour and one of their phones is grayed out*
 
-One way to do this would be to assign a weight of 1/2 to each of the two fractional people, but that's unlikely to be optimal. You might expect that people have tried a lot of ways to optimise the weighting, and you be correct. I'll write $\theta^M_i$ and $\theta^L_i=1-\theta^C_i$ for the mobile-phone and landline weights for person $i$.  In order for everyone to have both $\theta$ values, I'll also define $\theta^M=1$ and $\theta^L=0$ for someone who has only a mobile phone, and *vice versa*.
+One way to do this would be to assign a weight of 1/2 to each of the two fractional people, but that's unlikely to be optimal. You might expect that people have tried a lot of ways to optimise the weighting, and you be correct. I'll write $\theta^M_i$ and $\theta^L_i=1-\theta^M_i$ for the mobile-phone and landline weights for person $i$.  In order for everyone to have both $\theta$ values, I'll also define $\theta^M=1$ and $\theta^L=0$ for someone who has only a mobile phone, and *vice versa*.
 
 
 ## Estimating totals
@@ -159,4 +159,4 @@ So, the plan is a `reweight` function that takes some set of expressions and sho
 
 With more than two frames, things get a bit more complicated since $\theta$ is higher-dimensional. It will probably be necessary to specify a more limited set to optimise over. 
 
-In the longer term, all the same analyses will be available for multiframe surveys as for single-frame ones -- this isn't difficult, it's just work. As usual, priority will be given to analyses that someone wants and to analyses that have published examples I can replicate for testing.  
+In the longer term, all the same analyses will be available for multiframe surveys as for single-frame ones -- this isn't difficult, it's just work. As usual, priority will be given to analyses that someone wants and to analyses that have published examples I can replicate for testing.  And if you want something completely different for multiple-frame analysis, now is a good time to tell me. 
