@@ -1,0 +1,160 @@
+---
+title: Multiple frame sampling
+author: Thomas Lumley
+date: '2024-04-26'
+slug: multiple-frame-sampling
+categories: []
+tags: []
+---
+
+I'm writing code for multiple-frame surveys in the `survey` package now, and it's at the stage where the basic stuff works (Revision 336 from [r-forge](https://r-forge.r-project.org/R/?group_id=1788)) though there's quite a bit more to implement.  The canonical references are the [papers](https://www.jstor.org/stable/2669544) [by](https://www.jstor.org/stable/2669544) Lohr and Rao. This post is just me thinking about it. 
+
+If I had actual artistic talent or an ethically-trained AI I'd illustrate this post with friendly monsters in the style of [Alison Horst](https://allisonhorst.com/other-r-fun), but you'll just have to imagine them.
+
+> *Imagine a large collection of round fuzzy monsters in purple, green, or orange. Some of them are carrying smartphones almost as big as themselves. Others are sitting on old black Bakelite landline phones. Some have both the mobile phone and the landline phone.*
+
+Suppose we are in some survey utopia where people actually answer their phones, and we take a probability sample of mobile phones and a probability sample of landline phones.  Some people are in the sampling frame for just mobile phones, some just for landline phones, and some for both.
+
+> *We have a sample of maybe ten monsters. Again, some have just one phone type and some have both*
+
+The people in both frames are a problem: there are two ways we could sample them, they appear twice in the statistical target population, and so they are over-represented. We effectively have a sample of *phones*, not of *people*. One thing we could do is to split each them into two fractional people with only one phone each
+
+> *The monsters with two phones now are slightly fainter in colour and one of their phones is grayed out*
+
+One way to do this would be to assign a weight of 1/2 to each of the two fractional people, but that's unlikely to be optimal. You might expect that people have tried a lot of ways to optimise the weighting, and you be correct. I'll write $\theta^M_i$ and $\theta^L_i=1-\theta^C_i$ for the mobile-phone and landline weights for person $i$.  In order for everyone to have both $\theta$ values, I'll also define $\theta^M=1$ and $\theta^L=0$ for someone who has only a mobile phone, and *vice versa*.
+
+
+## Estimating totals
+
+Suppose we want to estimate the total for a variable $X$. If we had just one frame we'd have sampling probabilities $\pi_i$ for person $i$. The estimator would be
+$$\hat T_x = \sum_{i\in{\text{sample}}} d_iX_i$$
+or
+$$\hat T_x = \sum_i R_i\pi^{-1}_iX_i$$
+where $R_i$ is the sampling indicator and the sum is over the whole population (this turns out to be convenient). 
+The variance of $\hat T_x$ is
+$$\mathrm{var}[\hat T_X]=\sum_{i,j} \mathrm{cov}[R_i,R_j]\pi^{-1}_i\pi^{-1}_jX_iX_j$$
+or 
+$$\mathrm{var}[\hat T_X]=\sum_{i,j} \mathrm{cov}[R_i,R_j]\check{X}_i\check{X}_j$$
+where the haceks indicate weighted version. That's the true variance, not an estimator, but we can estimate it by 
+$$\widehat{\mathrm{var}}[\hat T_X]=\sum_{i,j}\frac{R_iR_i}{\pi_{ij}} \mathrm{cov}[R_i,R_j]\check{X}_i\check{X}_j$$
+where $\pi_{ij}$ is the probability that both $i$ and $j$ are sampled. 
+
+
+With multiple frames our total over all the fractional people is
+$$T_X=\sum_i (\theta^M_iX_i)+\sum_i (\theta^L_iX_i)$$
+
+and our estimator of the total is^[there are $M$s and $L$s on everything except the $X$s, because we assume you give the same answer $X$ whether we sample you by mobile or landline]
+$$\hat T_X=\sum_i R^M_i\pi_i^{(M)^{-1}}(\theta^M_iX_i)+\sum_i R^L_i\pi^{(L)^{-1}}(\theta^L_iX_i)$$
+
+
+We have two sorts of weights here: $\theta$s that are part of the population total and $\pi^{-1}$ that are just part of the probability-based estimation. The two types play the same role in estimating the total, but not in estimating the variance, because the variance is
+$$\mathrm{var}[\hat T_X]=\sum_{i,j} \mathrm{cov}[R^M_i,R^M_j]\theta^M_i\theta^M_j\check{X}_i\check{X}_j+\sum_{i,j} \mathrm{cov}[R^L_i,R^L_j]\theta^L_i\theta^L_j\check{X}_i\check{X}_j.$$
+The $\theta$s do go into the products, but they don't go into the $\mathrm{cov}[R_i,R_j]$ calculations.^[I'm assuming sampling is independent in the two frames so there are no $\mathrm{cov}[R^L,R^M]$ terms to worry about]
+
+### Beyond totals
+
+If we want to estimate (almost) anything else, we can use the weights $\theta_i\pi^{-1}$ for each frame in the same way we always do, to weight an estimating function or objective function. We can then use the weights the same way we always do, to weight the influence functions and calculate the variances.  
+
+For example, if we want to calculate a mean, whose estimating function is $X_i-\mu$, we weight up these estimating functions with the appropriate $\theta_i\pi^{-1}_i$ and solve the equation to get $\hat \mu$.  We then apply the formula for variance of totals to the influence functions
+$h_i= (X_i-\mu)\theta_i\pi^{-1}_i$.  Doing it this way keeps down the amount of redundant code -- we have just one variance formula function `multiframevar` -- and also means we can automatically handle the correlation between the numerator and denominator of the mean. 
+
+
+## A simplification
+
+In general, as we saw above, the distinction between the frame weights $\theta_i$ and the design weights $\pi_i^{-1}$ matters for variance estimation. One setting where it doesn't matter, though, is the very common analysis of surveys as if they were single-stage cluster sampling with replacement. In that setting the variance just comes from the empirical variance of cluster totals in the same stratum and the distinction between the population weights $\theta_i$ and the sampling weights $\pi_i^{-1}$ doesn't matter.  Patricia Metcalf and Alastair Scott wrote a nice [paper about this in 2009](https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.3566).  
+
+Using the single-stage with-replacement approximation, you just stack the two (or more) data sets and create weights $d_i= \theta_i\pi_i^{-1}$ for each record. You need to ensure that the computer thinks the strata in the frames are different -- you might paste `L` on to the stratum labels in the landline frame and `M` on to the labels in the mobile-phone frame.
+
+Metcalf and Scott were actually interested in the *other* common sort of multiframe survey, where extra frames are used for enrichment of rare populations.  An Auckland health survey wanted to oversample Māori and Pacific people. We don't keep complete sampling frames by ethnicity, but  Māori can opt to be on the Māori electoral roll. A bit under half the Māori population do this, giving a sampling frame that is incomplete but very highly enriched for Māori.  For Pacific peoples, an incomplete but highly enriched list can be obtained sampling on family name.  So, there were three frames: a whole-population one that ensured everyone was represented and two enrichment frames to increase representation in important minority populations.  Using a multiple-frame sampling approach ensures that the estimated statistics out of the analysis still estimate the actual population totals -- apart, of course, from the ever-present problem of non-response. 
+
+
+
+## Examples
+
+These use data taken from the [`Frames2` package](https://cran.r-project.org/web/packages/Frames2/index.html). 
+
+```{r}
+suppressMessages(library(survey))
+data(phoneframes)
+head(DatA)
+head(DatB)
+```
+
+We need to know which of the people we sampled by mobile phone also have a landline, and *vice versa*^[yes, this is a weak point]
+
+```{r}
+A_in_frames<-cbind(1, DatA$Domain=="ab")
+B_in_frames<-cbind(DatB$Domain=="ba",1)
+```
+
+The Metcalf & Scott approach with $\theta=1/2$
+```{r}
+DatB$Stratum<-10
+DatB$Frame<-2
+DatA$Frame<-1
+Dat_both<-rbind(DatA,DatB)
+frame_weights<-c(0.5, 0.5)
+Dat_both$fweights<-with(Dat_both, ifelse(Frame==1, 
+   ifelse(Domain=="ab", frame_weights[1]*1/ProbA,1/ProbA),
+   ifelse(Domain=="ba", frame_weights[2]*1/ProbB, 1/ProbB)))
+
+MSdesign<-svydesign(id=~1, strata=~Stratum, weights=~fweights,data=Dat_both)
+```
+
+We have data on expenditure of various types, and we might want means or totals
+
+```{r}
+svytotal(~Lei+Feed, MSdesign)
+svymean(~Lei+Feed, MSdesign)
+```
+
+Using the `Frames2` package we can find out that the optimal constant value of $\theta^A$ for "Leisure" expenditure is 0.7417399
+```{r}
+frame_weights<-c(0.7417399,1-0.7417399)
+Dat_both$fweights<-with(Dat_both, ifelse(Frame==1, 
+   ifelse(Domain=="ab", frame_weights[1]*1/ProbA,1/ProbA),
+   ifelse(Domain=="ba", frame_weights[2]*1/ProbB, 1/ProbB)))
+
+MSdesign_opt<-svydesign(id=~1, strata=~Stratum, weights=~fweights,data=Dat_both)
+
+svytotal(~Lei+Feed, MSdesign_opt)
+svymean(~Lei+Feed, MSdesign_opt)
+```
+
+Using the full design specified by pairwise sampling probability matrices we don't get hugely different results^[we just feel better about them]
+
+```{r}
+Bdes_pps<-svydesign(id=~1, fpc=~ProbB, data=DatB,pps=ppsmat(PiklB))
+Ades_pps <-svydesign(id=~1, fpc=~ProbA,data=DatA,pps=ppsmat(PiklA))
+mf_hartley<-multiframe(list(Ades_pps,Bdes_pps),list(A_in_frames,B_in_frames),theta=0.7417399) 
+
+svytotal(~Lei+Feed, mf_hartley)
+svymean(~Lei+Feed, mf_hartley)
+```
+
+We can also use an estimator where the weight for a given person is the same whichever frame they are sampled from. This estimator requires us to know not only whether someone we sampled by mobile phone has a landline, but also what their landline sampling weight would have been. The resulting weight for person $i$ is the reciprocal of the expected *number of times* that person $i$ is sampled. 
+
+
+```{r}
+Awts<-cbind(1/DatA$ProbA, ifelse(DatA$ProbB==0,0,1/DatA$ProbB))
+Bwts<-cbind(ifelse(DatB$ProbA==0,0,1/DatB$ProbA),1/DatB$ProbB )
+mf_exp<-multiframe(list(Ades_pps,Bdes_pps),list(Awts,Bwts),estimator="expected") 
+
+svytotal(~Lei+Feed, mf_exp)
+svymean(~Lei+Feed, mf_exp)
+```
+
+
+The totals here agree with the results from the `Frames2` package. The means don't, for two reasons. First, the `Frames2` package uses a different optimal $\theta$ to estimate the denominator of the mean from the one it uses for the numerator of the mean, and I'm not going that far.  Second, the `Frames2` package doesn't take into account the correlation between the numerator and denominator of the mean when estimating the variance, and I do. 
+
+### What is available and planned
+
+The package now supports only two frames, and only the two forms of $\theta_i$ that I have mentioned.  It provides means, totals, and generalised linear models.^[You might ask: why generalised linear models, since the number of people who care can be counted on the fingers or one thumb.  First: actually people do care in health research. More importantly for order of implementation: regression models give means in subpopulations and so are very useful for testing that subpopulation estimation is correct]
+
+The next addition will be some way to optimise $\theta$.  Metcalf and Scott argued that one should probably use the same $\theta$ for different analyses.  I wouldn't go that far, since optimising weights for different analyses can be worthwhile when data are expensive.  We definitely want the *option* of using the same weights, though. If you're fitting a series of regression models with the same outcome and exposure and different confounders, you want the same weights to make meaningful comparisons. And you probably want the same weights for "Table 1" as for the main analysis. 
+
+So, the plan is a `reweight` function that takes some set of expressions and shows how the estimated variance of these estimators change with $\theta$. You could then automatically choose the $\theta$ that was best for one analysis, or choose a compromise.  
+
+With more than two frames, things get a bit more complicated since $\theta$ is higher-dimensional. It will probably be necessary to specify a more limited set to optimise over. 
+
+In the longer term, all the same analyses will be available for multiframe surveys as for single-frame ones -- this isn't difficult, it's just work. As usual, priority will be given to analyses that someone wants and to analyses that have published examples I can replicate for testing.  
