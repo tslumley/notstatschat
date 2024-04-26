@@ -149,7 +149,7 @@ The totals here agree with the results from the `Frames2` package. The means don
 
 ### What is available and planned
 
-The package now supports only two frames, and only the two forms of $\theta_i$ that I have mentioned.  It provides means, totals, and generalised linear models.^[You might ask: why generalised linear models, since the number of people who care can be counted on the fingers or one thumb.  First: actually people do care in health research. More importantly for order of implementation: regression models give means in subpopulations and so are very useful for testing that subpopulation estimation is correct]
+The package now supports only two frames, and only the two forms of $\theta_i$ that I have mentioned.  It provides means, totals, and generalised linear models.^[You might ask: why generalised linear models, since the number of people who care can be counted on the fingers of one thumb.  First: actually people do care in health research. More importantly for order of implementation: regression models give means in subpopulations and so are very useful for testing that subpopulation estimation is correct]
 
 The next addition will be some way to optimise $\theta$.  Metcalf and Scott argued that one should probably use the same $\theta$ for different analyses.  I wouldn't go that far, since optimising weights for different analyses can be worthwhile when data are expensive.  We definitely want the *option* of using the same weights, though. If you're fitting a series of regression models with the same outcome and exposure and different confounders, you want the same weights to make meaningful comparisons. And you probably want the same weights for "Table 1" as for the main analysis. 
 
