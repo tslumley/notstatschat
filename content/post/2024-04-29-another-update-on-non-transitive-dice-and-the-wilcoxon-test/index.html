@@ -1,0 +1,20 @@
+---
+title: Another update on non-transitive dice 
+author: Thomas Lumley
+date: '2024-04-29'
+slug: another-update-on-non-transitive-dice-and-the-wilcoxon-test
+categories: []
+tags: []
+---
+
+
+
+<p>I’ve mentioned <a href="https://notstatschat.rbind.io/2017/08/19/wilcoxon-and-polymath-another-update/">before</a> that mathematician Tim Gowers had run a ‘polymath’ (massively collaborative maths research) project on non-transitive dice. There’s an <a href="https://arxiv.org/abs/2211.16156">arXiv preprint</a>. There’s also a detailed <a href="https://www.quantamagazine.org/mathematicians-roll-dice-and-get-rock-paper-scissors-20230119/">write-up in Quanta</a>, which is a magazine devoted to popular explanations of maths.</p>
+<p>As I’ve said before, this is statistically interesting (as well as being just interesting) because any instance of non-transitive dice is also an instance of a non-transitive Wilcoxon/Mann-Whitney test. So what do we now know about the Wilcoxon test?</p>
+<p>The mathematicians looked at dice with <span class="math inline">\(n\)</span> faces whose values were sampled (with replacement) from <span class="math inline">\(1,\dots,n\)</span>. That is, they looked at a specific class of roughly uniform distributions. For these distributions, there were basically two cases</p>
+<ul>
+<li>if the means of three distributions were different then the dice/Wilcoxon tests were ordered the same way as the means (ie, the <span class="math inline">\(t\)</span>-test), with high probability</li>
+<li>if the means were all the same, there was almost as much non-transitivity as possible: <span class="math inline">\(A\)</span> beats <span class="math inline">\(B\)</span> and <span class="math inline">\(B\)</span> beats <span class="math inline">\(C\)</span> gave almost no information about whether <span class="math inline">\(A\)</span> beats <span class="math inline">\(C\)</span>.</li>
+</ul>
+<p>The shape of the distributions is relevant because the distribution of ranks is uniform: exactly, for a single sample, and approximately, for a set of samples from the same distribution. So, another way of phrasing the statement that the Wilcoxon test is a comparison of the mean rank is to say that the Wilcoxon test is a test of the mean if the data have the sort of roughly-uniform distribution that ranks do under the null hypothesis that all the distributions are nearly the same.</p>
+<p>The disadvantage of this formulation is that it’s less precise; the advantage is that it is in terms of single-sample summary statistics rather than summaries of the combined samples.</p>
