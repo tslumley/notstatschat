@@ -1,0 +1,54 @@
+---
+title: Choosing frame weights in dual-frame surveys
+author: Thomas Lumley
+date: '2024-05-10'
+slug: choosing-frame-weights-in-dual-frame-surveys
+categories: []
+tags: []
+---
+
+
+
+<p>In <a href="https://notstatschat.rbind.io/2024/04/26/multiple-frame-sampling/">dual-frame sampling</a> you take two samples from overlapping sampling frames and you need to downweight people who could have been chosen in either frame so the overlap of the two frames isn’t counted twice.</p>
+<p>Suppose you have some constant value <span class="math inline">\(\theta\)</span> to do the downweighting, so that people in the overlap who were sampled from frame <span class="math inline">\(A\)</span> get their weight multiplied by <span class="math inline">\(\theta\)</span> and people in the overlap who were sampled from frame <span class="math inline">\(B\)</span> get their weight multiplied by <span class="math inline">\((1-\theta)\)</span>. How do you choose <span class="math inline">\(\theta\)</span>?</p>
+<p>A traditional method when estimating totals is to work out what value of <span class="math inline">\(\theta\)</span> would minimise (your estimate of) the variance of the the estimated total. The problem is that you might want to estimate more than one total or summaries other than totals, and you will sometimes want to use the same <span class="math inline">\(\theta\)</span> for all of them – eg, maybe in Table 1 of a report, or in a a set of nested regression models.</p>
+<p>The reason for minimising the estimated variance of the total is that it’s tractably analytically. We don’t care about that so much these days. We can just try a grid of values of <span class="math inline">\(\theta\)</span> and see how the variances of our estimators of interest change.</p>
+<p>For example, here’s data from the <a href="https://cran.r-project.org/web/packages/Frames2/index.html"><code>Frames2</code> package</a> that are documented to come from landline and mobile phone surveys of some undisclosed city. They’re now in the <code>survey</code> package as well. Rather than specifying design meta-data as one usually does, the authors provided pairwise sampling probability matrices. First I’ll set up survey design objects for the two frame samples</p>
+<pre class="r"><code>suppressMessages(library(survey))
+data(phoneframes)
+
+A_in_frames&lt;-cbind(1, DatA$Domain==&quot;ab&quot;)
+B_in_frames&lt;-cbind(DatB$Domain==&quot;ba&quot;,1)
+
+Bdes_pps&lt;-svydesign(id=~1, fpc=~ProbB, data=DatB,pps=ppsmat(PiklB))
+Ades_pps &lt;-svydesign(id=~1, fpc=~ProbA,data=DatA,pps=ppsmat(PiklA))</code></pre>
+<p>Now we combine them into a dual-frame object, using <span class="math inline">\(\theta=0.5\)</span>, just to pick a number</p>
+<pre class="r"><code>mf_pps&lt;-multiframe(list(Ades_pps,Bdes_pps),
+            list(A_in_frames,B_in_frames),theta=0.5) </code></pre>
+<p>We have three main variables that were measured in both frame samples: <code>Lei</code> (leisure expenditure), <code>Feed</code> (food expenditure), and <code>Clo</code> (clothing expenditure). If we wanted to estimate population totals for these variables, what values of <span class="math inline">\(\theta\)</span> would be optimal? Is there a good compromise value or is there substantial benefit in using different values?</p>
+<pre class="r"><code>mf_opt&lt;-reweight(mf_pps, 
+        totals=list(~Feed,~Lei, ~Clo))
+plot(mf_opt)</code></pre>
+<p><img src="staticunnamed-chunk-3-1.png" width="90%" /></p>
+<p>It doesn’t matter a lot which variable we optimise for. The best value of <span class="math inline">\(\theta\)</span> is about 0.8. We can get the three minima with <code>coef</code></p>
+<pre class="r"><code>coef(mf_opt)</code></pre>
+<pre><code>## [1] 0.80 0.75 0.75</code></pre>
+<p>The default optimisation grid has only twenty points on it, but we can change that if we want</p>
+<pre class="r"><code>mf_opt&lt;-reweight(mf_pps, 
+        totals=list(~Feed,~Lei, ~Clo),
+        theta_grid=seq(0.5,1,length=200))
+plot(mf_opt, type=&quot;l&quot;, lty=1)</code></pre>
+<p><img src="staticunnamed-chunk-5-1.png" width="90%" /></p>
+<pre class="r"><code>coef(mf_opt)</code></pre>
+<pre><code>## [1] 0.8040201 0.7412060 0.7562814</code></pre>
+<p>(The <code>plot</code> method takes the graphics options of <code>matplot</code>)</p>
+<p>These are pretty good estimates of the separate minima, too: <code>Frames2::Hartley</code> gives 0.8028, 0.7417, and 0.7552.</p>
+<p>It’s not always this easy. We might also be interested in means, not just totals. Means are slightly more complicated in survey statistics than in most settings because the denominator is also random and typically correlated with the numerator. The <code>reweight</code> function lets you supply arbitrary variance targets, so we can ask for the mean and total of <code>Lei</code></p>
+<pre class="r"><code>mf_opt2&lt;-reweight(mf_pps,
+  	targets=list(quote(vcov(svymean(~Lei, design=.DESIGN))[1,1]),
+ 	             quote(vcov(svytotal(~Lei,.DESIGN))))
+)
+plot(mf_opt2)</code></pre>
+<p><img src="staticunnamed-chunk-6-1.png" width="90%" /></p>
+<p>These are very different. The variance of the mean is much less sensitive to <span class="math inline">\(\theta\)</span>, but the optimal value is around 0.2 rather than around 0.8. That’s because of the correlation between the numerator and denominator, which increases at lower values of <span class="math inline">\(\theta\)</span> in this dataset.</p>
+<p>If we want both means and totals we have to make a decision about tradeoffs: do we use different <span class="math inline">\(\theta\)</span> for the two (which is an interpretability issue), or do we optimise for one or the other, or do we try to pick a compromise value. The graphics at least make the issues clear.</p>
