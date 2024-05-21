@@ -1,0 +1,101 @@
+---
+title: Crossvalidation in complex survey data
+author: Thomas Lumley
+date: '2024-05-21'
+slug: crossvalidation-in-complex-survey-data
+categories: []
+tags: []
+---
+
+### Background
+
+The current development of the `survey` package now has an experimental implementation of cross-validation using replicate-weight decompositions of the data. This is experimental. It is liable to change, and may contain nuts. 
+
+The basic idea, as studied by [Amaia Iparraguirre](https://onlinelibrary.wiley.com/doi/full/10.1002/sta4.578) is to decompose survey data in ways that respect the structure of the sampling^[[Jerzy Wieczorek and co-workers](https://onlinelibrary.wiley.com/doi/10.1002/sta4.454) have written about a similar approach].  
+
+Complex survey data typically have *strata* and *clusters*. The strata are a partition of the population into groups that we hope are different. We fix the sample size for each stratum in advance, with the result that between-stratum differences in a variable don't contribute to the sampling uncertainty for summaries of that variable. The sample contains all the strata that are in the population.
+
+Clusters are a partition of the population into groups that we fear are different, but which are convenient to sample. For cost reasons we can only sample a small fraction of the clusters, with the result that between-cluster differences in a variable often dominate the sampling uncertainty for summaries of that variable.
+
+Suppose we have an NHANES survey dataset with, perhaps, two clusters sampled in each of 15 strata. We want to divide the data into groups for training/test validation. If we divide the data into 10 groups at random then each cluster is likely to be represented in many or all of the groups. If we then train a model on 9 groups and test it on the 10th group, the training and test errors will tend to be correlated because of sharing the clusters. You might imagine that this will have some effect on model selection, and it does -- the impact is much smaller than the impact of ignoring weights, but it is real. When there are cluster-level variables, using a cross-validation split that ignores clustering tended to choose a lasso regularisation parameter that was smaller than ideal, resulting in overfitting of the model. 
+
+We can improve on simple random division of the population into training and test sets by ensuring that whole clusters are assigned to either training or test sets. That still leaves the question of how to assign clusters, but this question has already been addressed in the context of variance estimation.  Replicate weight variance estimation is a class of resampling approaches to variance estimation, extensions of the jackknife and bootstrap to survey data.  Replicate weights are designed by setting the weights of observations in some clusters to nearly zero and other clusters to nearly their sampling weights. In a jackknife, one cluster will have zero weight and the others will have weight close to their sampling weight; in a bootstrap, about 37% of clusters will have zero weight and 63% will have weight close to 1 or 2 or some other small multiple of their sampling weight. There are also split-half replicates where half the clusters have zero weight and the other half have double weight. 
+
+The advantage of replicate weights as an approach to training/test division is that they have already been studied for a long time. Some surveys come equipped with replicate weights (eg, the American Community Survey or the California Health Interview Survey or New Zealand's Te Kupenga). For surveys that don't have built-in replicate weights the survey package already has algorithms to construct them.
+
+### Implementation
+
+The development version can be downloaded [from R-forge](https://r-forge.r-project.org/R/?group_id=1788).^[except that R-forge Windows builder seems to need a good kick -- it can't find `g++` (or for some other packages, `gcc`)] For replicate-weight designs there is a new function `withCrossval` that accepts a description of variables to use, a model training function, and a model testing function.
+
+For example, here is a survey sample with jackknife replicate weights
+
+```{r}
+suppressMessages(library(survey))
+ data(api)
+rclus1<-as.svrepdesign(svydesign(id=~dnum, weights=~pw, data=apiclus1,
+fpc=~fpc))
+rclus1
+```
+
+
+We want to fit a lasso model
+The training function takes a (training-set) design matrix $X$, a response $y$, weights $w$, and a tuning parameter that specifies how many variables we want in the model. It fits with `glmnet` and returns the model and the value of the regularisation parameter $\lambda$ that gives the requested number of parameters
+
+```{r}
+  library(glmnet)
+  ftrain=function(X,y,w,tuning) {
+   	m<-glmnet(X,y,weights=w)
+   	lambda<-m$lambda[min(which(m$df>=tuning))]
+ 	list(m,lambda)
+  }
+```
+
+The test function takes the test-set design matrix and the output from the training function, and returns predictions from the fitted model at the value of $\lambda$ we chose in training
+```{r}  
+   ftest=function(X, trainfit, tuning){
+   	predict(trainfit[[1]], newx=X, s=trainfit[[2]])
+   }
+```
+
+
+The cross-validation function takes a survey design object (providing data and weights), a model formula specifying which variables to use,  the training and test functions, and the range of tuning parameters to try. It splits the data up into training and test sets, trains, tests, and repeats this for each training/test split and each value of the tuning parameter
+
+```{r}
+  withCrossval(rclus1, api00~api99+ell+stype+mobility+enroll,
+    trainfun=ftrain,
+    testfun=ftest,
+    intercept=FALSE,loss="MSE",
+    tuning=0:3)
+```
+
+The cross-validation mean squared error goes down a lot with the first and second variables added, but changes little with the third variable. 
+
+Or we could try a binary model. The training function specifies logistic regression. The test function specifies `type="response"` because the default prediction is on the log-odds scale. The call to `withCrossval` specifies entropy as the loss function.
+
+```{r}
+ bin_ftrain=function(X,y,w,tuning) {
+   	m<-glmnet(X,y,weights=w,family="binomial")
+   	lambda<-m$lambda[min(which(m$df>=tuning))]
+ 	list(m,lambda)
+   	}
+ bin_ftest=function(X, trainfit, tuning){
+   	predict(trainfit[[1]], newx=X, s=trainfit[[2]],type="response")
+   }
+
+
+withCrossval(rclus1, I(comp.imp=="Yes")~api99+api00+ell+stype+mobility+enroll,
+    trainfun=bin_ftrain,
+    testfun=bin_ftest,
+    intercept=FALSE,loss="entropy",
+    tuning=0:6)    
+```    
+
+This time there isn't much reduction in error until we get to 5 and 6 variables in the model.
+
+### Future changes
+
+There's one obvious improvement needed.  The current approach is inefficient for functions such as `glmnet` that can compute a whole regularisation approach at once. We should be able to get the results for all the tuning parameters for a single split in one fit.  It would also be nice to have an uncertainty estimate for the loss, to help decide whether the last model is actually better than the second-last one in these examples. 
+
+For surveys with many sets of replicate weights we might want some aggregation. If you have 200 clusters and 200 sets of jackknife replicate weights each leaving out one cluster, you might want to combine replicates so that you leave out, say, 10 clusters in each of 20 replicates. 
+
+It might also be worth factoring cross-validation out into a separate package so it can depend on packages such as `glmnet` without those becoming dependencies of `survey`. 
