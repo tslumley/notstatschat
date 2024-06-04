@@ -1,0 +1,82 @@
+---
+title: S3 method dispatch on other arguments
+author: Thomas Lumley
+date: '2024-06-04'
+slug: s3-method-dispatch-on-other-arguments
+categories: []
+tags: []
+---
+
+
+
+<p>The S3 method system only lets you dispatch methods on one argument of the generic. Most people use the first argument, and it’s not unheard of for people to claim that only the first argument is allowed. Actually, other arguments can be used! What’s more, if you write functions using the old-school formula/data structure, there’s a genuine reason to dispatch on the second argument.</p>
+<p>Let’s look at the <code>survey</code> package and the simplest estimation function of all, <code>svytotal</code></p>
+<pre class="r"><code>suppressMessages(library(survey))
+svytotal</code></pre>
+<pre><code>## function (x, design, na.rm = FALSE, ...) 
+## {
+##     .svycheck(design)
+##     UseMethod(&quot;svytotal&quot;, design)
+## }
+## &lt;bytecode: 0x128067f88&gt;
+## &lt;environment: namespace:survey&gt;</code></pre>
+<p>The function <code>svytotal</code> is an S3 generic. The call to <code>UseMethod</code> specifies the name of the generic (<code>"svytotal"</code>) and the <strong>second</strong> argument to the function<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<pre class="r"><code>methods(&quot;svytotal&quot;)</code></pre>
+<pre><code>## [1] svytotal.DBIsvydesign*   svytotal.multiframe*     svytotal.pps*           
+## [4] svytotal.survey.design*  svytotal.survey.design2* svytotal.svyrep.design* 
+## [7] svytotal.twophase*       svytotal.twophase2*      svytotal.xdesign*       
+## see &#39;?methods&#39; for accessing help and source code</code></pre>
+<p>The methods for <code>svydesign</code> are chosen based on the class of <code>design</code> methods for types of data object. At the time of writing:</p>
+<ul>
+<li><code>DBIsvydesign</code>: a database-backed object</li>
+<li><code>multiframe</code>: samples taken from overlapping population lists</li>
+<li><code>pps</code>: samples with unequal-probability sampling without replacement</li>
+<li><code>survey.design</code>: the original data class</li>
+<li><code>survey.design2</code>: allowing for multi-stage cluster sampling</li>
+<li><code>svyrep.design</code>: surveys with resampling instead of design meta-data</li>
+<li><code>twophase</code>, <code>twophase2</code>: subsampling from existing cohorts</li>
+<li><code>xdesign</code>: crossed clustering</li>
+</ul>
+<p>There is much more interesting variation in the <code>design</code> class than in the class of <code>x</code>, so it makes sense to dispatch on the <code>design</code> argument. I learned about this from <em>S Programming</em> by Venables and Ripley; not many other sources make it clear that dispatch on arguments other than the first is supported.</p>
+<p>Here are a couple of the shortest methods</p>
+<pre class="r"><code>survey:::svytotal.DBIsvydesign</code></pre>
+<pre><code>## function (x, design, na.rm = FALSE, ...) 
+## {
+##     design$variables &lt;- getvars(x, design$db$connection, design$db$tablename, 
+##         updates = design$updates, subset = design$subset)
+##     NextMethod(&quot;svytotal&quot;, design)
+## }
+## &lt;bytecode: 0x12fc34430&gt;
+## &lt;environment: namespace:survey&gt;</code></pre>
+<pre class="r"><code>survey:::svytotal.multiframe</code></pre>
+<pre><code>## function (x, design, na.rm = FALSE, ...) 
+## {
+##     if (inherits(x, &quot;formula&quot;)) 
+##         x &lt;- multiframe_getdata(x, design$designs)
+##     else x &lt;- as.matrix(x)
+##     if (na.rm) {
+##         x[is.na(x)] &lt;- 0
+##         design$weights[!complete.cases(x)] &lt;- 0
+##     }
+##     total &lt;- colSums(x * design$frame_weights * design$design_weights)
+##     V &lt;- multiframevar(x * design$frame_weights * design$design_weights, 
+##         design$dchecks)
+##     attr(total, &quot;var&quot;) &lt;- V
+##     class(total) &lt;- &quot;svystat&quot;
+##     attr(total, &quot;statistic&quot;) &lt;- &quot;total&quot;
+##     total
+## }
+## &lt;bytecode: 0x12fbd7d90&gt;
+## &lt;environment: namespace:survey&gt;</code></pre>
+<p>These look just like any S3 methods. There’s a technical distinction in that whichever argument you use for dispatch has to be evaluated in the generic and so has already been evaluated when you get to the method, but that will rarely matter</p>
+<p>In fact you can go further: the second argument to <code>UseMethod</code> is used only for its class and doesn’t have to actually be an argument to the generic. I’m not entirely convinced of the utility of this extension<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
+<p>Another way of doing essentially the same thing would be to reverse the order of the arguments so that the data came first and the selection of variables was second. That’s what the tidyverse did – for example, to have <code>dplyr</code> work with tibbles in similar ways to how <code>dbplyr</code> works with database connections – but it did require changing the basic layout of function arguments. The approach in <code>survey</code> was to keep the traditional layout but still dispatch on the data type.</p>
+<p>It would be convenient if functions such as <code>lm</code> and <code>glm</code> dispatched on their data argument, but unfortunately the S versions already used the first argument and missed the opportunity. It’s not possible to have <code>data</code> be a database or a time series or a longitudinal-data object or anything like that.</p>
+<p>If you’re curious, you can see what the <code>survey</code> package might have been like with the tidyverse argument ordering by looking at the <code>srvyr</code> package. Since the tidyverse didn’t exist at the time, that’s not a realistic counterfactual – I don’t know what the <code>survey</code> package would have looked like if dispatch on the second argument wasn’t possible. There might well have been big ugly <code>switch</code> statements to give the effect of method dispatch.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>you can ignore the first line of the function, which checks for legacy versions of survey design objects.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>to put it more precisely: <strong>Do Not Want</strong><a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

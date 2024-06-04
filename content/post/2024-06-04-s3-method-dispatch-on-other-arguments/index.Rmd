@@ -1,0 +1,53 @@
+---
+title: S3 method dispatch on other arguments
+author: Thomas Lumley
+date: '2024-06-04'
+slug: s3-method-dispatch-on-other-arguments
+categories: []
+tags: []
+---
+
+The S3 method system only lets you dispatch methods on one argument of the generic.  Most people use the first argument, and it's not unheard of for people to claim that only the first argument is allowed. Actually, other arguments can be used! What's more, if you write functions using the old-school formula/data structure, there's a genuine reason to dispatch on the second argument.
+
+Let's look at the `survey` package and the simplest estimation function of all, `svytotal`
+
+```{r}
+suppressMessages(library(survey))
+svytotal
+```
+
+The function `svytotal` is an S3 generic. The call to `UseMethod` specifies the name of the generic (`"svytotal"`) and the **second** argument to the function^[you can ignore the first line of the function, which checks for legacy versions of survey design objects.] 
+
+```{r}
+methods("svytotal")
+```
+
+The methods for `svydesign` are chosen based on the class of `design` methods for types of data object. At the time of writing:
+
+* `DBIsvydesign`: a database-backed object
+* `multiframe`: samples taken from overlapping population lists
+* `pps`: samples with unequal-probability sampling without replacement
+* `survey.design`: the original data class
+* `survey.design2`: allowing for multi-stage cluster sampling
+* `svyrep.design`: surveys with resampling instead of design meta-data
+* `twophase`, `twophase2`: subsampling from existing cohorts
+* `xdesign`: crossed clustering
+
+There is much more interesting variation in the `design` class than in the class of `x`, so it makes sense to dispatch on the `design` argument.  I learned about this from *S Programming* by Venables and Ripley; not many other sources make it clear that dispatch on arguments other than the first is supported. 
+
+Here are a couple of the shortest methods
+
+```{r}
+survey:::svytotal.DBIsvydesign
+survey:::svytotal.multiframe
+```
+
+These look just like any S3 methods. There's a technical distinction in that whichever argument you use for dispatch has to be evaluated in the generic and so has already been evaluated when you get to the method, but that will rarely matter
+
+In fact you can go further: the second argument to `UseMethod` is used only for its class and doesn't have to actually be an argument to the generic. I'm not entirely convinced of the utility of this extension^[to put it more precisely: **Do Not Want**]
+
+Another way of doing essentially the same thing would be to reverse the order of the arguments so that the data came first and the selection of variables was second. That's what the tidyverse did -- for example, to have `dplyr` work with tibbles in similar ways to how `dbplyr` works with database connections -- but it did require changing the basic layout of function arguments. The approach in `survey` was to keep the traditional layout but still dispatch on the data type. 
+
+It would be convenient if functions such as `lm` and `glm` dispatched on their data argument, but unfortunately the S versions already used the first argument and missed the opportunity. It's not possible to have `data` be a database or a time series or a longitudinal-data object or anything like that. 
+
+If you're curious, you can see what the `survey` package might have been like with the tidyverse argument ordering by looking at the `srvyr` package. Since the tidyverse didn't exist at the time, that's not a realistic counterfactual -- I don't know what the `survey` package would have looked like if dispatch on the second argument wasn't possible. There might well have been big ugly `switch` statements to give the effect of method dispatch. 
