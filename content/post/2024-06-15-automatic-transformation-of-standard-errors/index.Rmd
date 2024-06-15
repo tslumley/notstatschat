@@ -1,0 +1,124 @@
+---
+title: Automatic transformation of standard errors?
+author: Thomas Lumley
+date: '2024-06-15'
+slug: automatic-transformation-of-standard-errors
+categories: []
+tags: []
+---
+
+
+The `survey` package returns many results as `svystat` objects, which are numeric vectors with variance matrix as an attribute (and other optional attributes).  Because they're not made of magic, if you transform the point estimate the variance matrix doesn't transform and is no longer appropriate.  But what if they were made of magic? We have `svycontrast` to do delta-method transformations and we have the `Math` and `Ops` group generic functions, so it should be possible to just have the variances transform.
+
+Rather than mess with the `svystat` objects, I'll use a simpler example, with a class `deltatest`. I will still use `survey:::nlcon`, which is the guts of `svycontrast` for non-linear contrasts. It takes a list of input parameters, a list of expressions, and a variance matrix for the input parameters, and does all the delta-method stuff:
+
+```
+> survey:::nlcon
+function (exprlist, datalist, varmat, influence = NULL) 
+{
+    if (!is.list(exprlist)) 
+        exprlist <- list(contrast = exprlist)
+    dexprlist <- lapply(exprlist, function(expr) deriv(expr, 
+        names(datalist))[[1]])
+    values <- lapply(dexprlist, function(dexpr) eval(do.call(substitute, 
+        list(dexpr, datalist))))
+    if (is.null(varmat)) 
+        return(do.call(c, values))
+    jac <- do.call(rbind, lapply(values, function(value) attr(value, 
+        "gradient")))
+    var <- jac %*% varmat %*% t(jac)
+    values <- do.call(c, values)
+    dimnames(var) <- list(names(values), names(values))
+    attr(values, "var") <- var
+    if (!is.null(influence)) {
+        attr(values, "influence") <- influence %*% t(jac)
+    }
+    values
+}
+```
+
+Ok, now to implement the group generics.
+
+First, `Math`.  There are some generics here that don't have useful delta-method transformations, so I'll just dump the variance attribute.  I've postponed `cumsum` and `cumprod`, which make sense but will be more work. All the others are ok: if you check `?deriv` and `?Math`, the other functions with `Math` generics are all handled by R's symbolic derivatives.
+
+This is oversimplified in that it assumes `x` is a scalar, but that's fixable; `nlcon` is happy with vector `x`
+```{r}
+Math.deltatest<-function(x, ...){
+  if (.Generic %in% c("abs", "sign","floor", 
+                      "ceiling", "trunc","round", 
+                      "signif","cummax","cummin")){
+    x<-as.vector(x)
+    NextMethod
+  } else if (.Generic %in% c("cumsum", "cumprod")){
+    warning(paste(.Generic,"not yet implemented for deltatest"))
+  } else{
+    value<-as.numeric(x)
+    expr<-bquote(.(as.name(.Generic))(value))
+    delta<-survey:::nlcon(list(delta=expr),list(value=as.numeric(x)),attr(x,"var"))
+    class(delta)<-"deltatest"
+    delta
+  }
+}
+```
+
+```{r}
+x<-c(value=1)
+attr(x,"var")<-matrix(0.5,1,1)
+class(x)<-"deltatest"
+
+print.deltatest<-function(x,...){
+  print(cbind(value=x, SE=sqrt(diag(attr(x,"var")))))
+}
+
+x
+
+log(x)
+sin(x)
+sqrt(x)
+exp(log(x))
+```
+
+Now for `Ops`. This is a lot more annoying because there are two operands for each expression and S3 really doesn't handle that case neatly.
+
+```{r}
+Ops.deltatest<-function(e1,e2,...){
+   ok <- switch(.Generic, `+` = TRUE, `-` = TRUE, `*` = TRUE, 
+        `/` = TRUE, FALSE)
+    if (!ok) 
+        stop(paste(.Generic," not meaningful here"))
+    if (.Generic %in% c("+","-")) return(NextMethod())
+    if (sum(nzchar(.Method))!=1) stop("needs exactly one `deltatest` object")
+    ee1<-as.numeric(e1)
+    ee2<-as.numeric(e2)
+    if (.Generic=="*"){
+      delta<-ee1*ee2
+      if (nzchar(.Method[1])){
+        attr(delta,"var")<-attr(e1,"var")*ee2*ee2
+      } else {
+        attr(delta,"var")<-attr(e2,"var")*ee1*ee1
+      }
+    }else{
+        delta<-ee1/ee2
+       if (nzchar(.Method[1])){
+        attr(delta,"var")<-attr(e1,"var")/ee2/ee2
+      } else {
+        attr(delta,"var")<-ee1*ee1*attr(e2,"var")/ee2/ee2
+      }
+    }
+    class(delta)<-"deltatest"
+    delta
+}
+```   
+
+
+```{r}
+2*x
+exp(log(x)/2)
+sqrt(x)
+x+2
+```
+So, is this clever or too clever by half?
+
+I'm inclining to the second option: in particular, this is going to be brittle -- if you use it on a function that doesn't go to the `Math` generic, it will fail silently.  A more practical solution is to have the group generics just drop the variance matrix, and direct users to `svycontrast`.
+
+But it's a nice idea. 

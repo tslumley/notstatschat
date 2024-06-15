@@ -1,0 +1,120 @@
+---
+title: Automatic transformation of standard errors?
+author: Thomas Lumley
+date: '2024-06-15'
+slug: automatic-transformation-of-standard-errors
+categories: []
+tags: []
+---
+
+
+
+<p>The <code>survey</code> package returns many results as <code>svystat</code> objects, which are numeric vectors with variance matrix as an attribute (and other optional attributes). Because they’re not made of magic, if you transform the point estimate the variance matrix doesn’t transform and is no longer appropriate. But what if they were made of magic? We have <code>svycontrast</code> to do delta-method transformations and we have the <code>Math</code> and <code>Ops</code> group generic functions, so it should be possible to just have the variances transform.</p>
+<p>Rather than mess with the <code>svystat</code> objects, I’ll use a simpler example, with a class <code>deltatest</code>. I will still use <code>survey:::nlcon</code>, which is the guts of <code>svycontrast</code> for non-linear contrasts. It takes a list of input parameters, a list of expressions, and a variance matrix for the input parameters, and does all the delta-method stuff:</p>
+<pre><code>&gt; survey:::nlcon
+function (exprlist, datalist, varmat, influence = NULL) 
+{
+    if (!is.list(exprlist)) 
+        exprlist &lt;- list(contrast = exprlist)
+    dexprlist &lt;- lapply(exprlist, function(expr) deriv(expr, 
+        names(datalist))[[1]])
+    values &lt;- lapply(dexprlist, function(dexpr) eval(do.call(substitute, 
+        list(dexpr, datalist))))
+    if (is.null(varmat)) 
+        return(do.call(c, values))
+    jac &lt;- do.call(rbind, lapply(values, function(value) attr(value, 
+        &quot;gradient&quot;)))
+    var &lt;- jac %*% varmat %*% t(jac)
+    values &lt;- do.call(c, values)
+    dimnames(var) &lt;- list(names(values), names(values))
+    attr(values, &quot;var&quot;) &lt;- var
+    if (!is.null(influence)) {
+        attr(values, &quot;influence&quot;) &lt;- influence %*% t(jac)
+    }
+    values
+}</code></pre>
+<p>Ok, now to implement the group generics.</p>
+<p>First, <code>Math</code>. There are some generics here that don’t have useful delta-method transformations, so I’ll just dump the variance attribute. I’ve postponed <code>cumsum</code> and <code>cumprod</code>, which make sense but will be more work. All the others are ok: if you check <code>?deriv</code> and <code>?Math</code>, the other functions with <code>Math</code> generics are all handled by R’s symbolic derivatives.</p>
+<p>This is oversimplified in that it assumes <code>x</code> is a scalar, but that’s fixable; <code>nlcon</code> is happy with vector <code>x</code></p>
+<pre class="r"><code>Math.deltatest&lt;-function(x, ...){
+  if (.Generic %in% c(&quot;abs&quot;, &quot;sign&quot;,&quot;floor&quot;, 
+                      &quot;ceiling&quot;, &quot;trunc&quot;,&quot;round&quot;, 
+                      &quot;signif&quot;,&quot;cummax&quot;,&quot;cummin&quot;)){
+    x&lt;-as.vector(x)
+    NextMethod
+  } else if (.Generic %in% c(&quot;cumsum&quot;, &quot;cumprod&quot;)){
+    warning(paste(.Generic,&quot;not yet implemented for deltatest&quot;))
+  } else{
+    value&lt;-as.numeric(x)
+    expr&lt;-bquote(.(as.name(.Generic))(value))
+    delta&lt;-survey:::nlcon(list(delta=expr),list(value=as.numeric(x)),attr(x,&quot;var&quot;))
+    class(delta)&lt;-&quot;deltatest&quot;
+    delta
+  }
+}</code></pre>
+<pre class="r"><code>x&lt;-c(value=1)
+attr(x,&quot;var&quot;)&lt;-matrix(0.5,1,1)
+class(x)&lt;-&quot;deltatest&quot;
+
+print.deltatest&lt;-function(x,...){
+  print(cbind(value=x, SE=sqrt(diag(attr(x,&quot;var&quot;)))))
+}
+
+x</code></pre>
+<pre><code>##       value        SE
+## value     1 0.7071068</code></pre>
+<pre class="r"><code>log(x)</code></pre>
+<pre><code>##       value        SE
+## delta     0 0.7071068</code></pre>
+<pre class="r"><code>sin(x)</code></pre>
+<pre><code>##          value        SE
+## delta 0.841471 0.3820514</code></pre>
+<pre class="r"><code>sqrt(x)</code></pre>
+<pre><code>##       value        SE
+## delta     1 0.3535534</code></pre>
+<pre class="r"><code>exp(log(x))</code></pre>
+<pre><code>##       value        SE
+## delta     1 0.7071068</code></pre>
+<p>Now for <code>Ops</code>. This is a lot more annoying because there are two operands for each expression and S3 really doesn’t handle that case neatly.</p>
+<pre class="r"><code>Ops.deltatest&lt;-function(e1,e2,...){
+   ok &lt;- switch(.Generic, `+` = TRUE, `-` = TRUE, `*` = TRUE, 
+        `/` = TRUE, FALSE)
+    if (!ok) 
+        stop(paste(.Generic,&quot; not meaningful here&quot;))
+    if (.Generic %in% c(&quot;+&quot;,&quot;-&quot;)) return(NextMethod())
+    if (sum(nzchar(.Method))!=1) stop(&quot;needs exactly one `deltatest` object&quot;)
+    ee1&lt;-as.numeric(e1)
+    ee2&lt;-as.numeric(e2)
+    if (.Generic==&quot;*&quot;){
+      delta&lt;-ee1*ee2
+      if (nzchar(.Method[1])){
+        attr(delta,&quot;var&quot;)&lt;-attr(e1,&quot;var&quot;)*ee2*ee2
+      } else {
+        attr(delta,&quot;var&quot;)&lt;-attr(e2,&quot;var&quot;)*ee1*ee1
+      }
+    }else{
+        delta&lt;-ee1/ee2
+       if (nzchar(.Method[1])){
+        attr(delta,&quot;var&quot;)&lt;-attr(e1,&quot;var&quot;)/ee2/ee2
+      } else {
+        attr(delta,&quot;var&quot;)&lt;-ee1*ee1*attr(e2,&quot;var&quot;)/ee2/ee2
+      }
+    }
+    class(delta)&lt;-&quot;deltatest&quot;
+    delta
+}</code></pre>
+<pre class="r"><code>2*x</code></pre>
+<pre><code>##      value       SE
+## [1,]     2 1.414214</code></pre>
+<pre class="r"><code>exp(log(x)/2)</code></pre>
+<pre><code>##       value        SE
+## delta     1 0.3535534</code></pre>
+<pre class="r"><code>sqrt(x)</code></pre>
+<pre><code>##       value        SE
+## delta     1 0.3535534</code></pre>
+<pre class="r"><code>x+2</code></pre>
+<pre><code>##       value        SE
+## value     3 0.7071068</code></pre>
+<p>So, is this clever or too clever by half?</p>
+<p>I’m inclining to the second option: in particular, this is going to be brittle – if you use it on a function that doesn’t go to the <code>Math</code> generic, it will fail silently. A more practical solution is to have the group generics just drop the variance matrix, and direct users to <code>svycontrast</code>.</p>
+<p>But it’s a nice idea.</p>
