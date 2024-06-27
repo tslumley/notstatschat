@@ -1,0 +1,49 @@
+---
+title: Estimator vs estimate
+author: Thomas Lumley
+date: '2024-06-27'
+slug: estimator-vs-estimate
+categories: []
+tags: []
+---
+
+In sandwich variance estimators, the middle of the sandwich^[*meat* for people who take their metaphors too seriously, *cheese* for people who take their metaphors too seriously and are vegetarian] is the variance of the estimating function.  If we have independent observations and estimate by solving
+$$\sum_i U_i(\theta)=0$$
+we want $\mathrm{var}[\sum_i U_i(\theta)]$, which we estimate by $\sum_i U_i(\hat\theta)U_i(\hat\theta)^T$.  There are two issues here you might miss.
+
+First, some people (younger me, for example) worry that $\sum U_i(\hat\theta)$ is always zero, by construction, so that surely $\mathrm{var}\left[\sum U_i(\hat\theta)\right]$ will also be zero.  This is a nice simple mistake of confusing the random variable $\hat\theta$ with its value in a particular data set. In our data, we might have $\hat\theta=42.69$, so that 
+$$\sum_i U_i(42.69)=0.$$
+In other data sets sampled from the same distribution, $\hat\theta$ will have some other value. It should be small, but it won't be zero. When we write 
+$$\mathrm{var}\left[\sum_i U_i(\hat\theta)\right]$$
+the notation $\hat\theta$ doesn't mean the estimator as a random variable, it means the value that the estimator took in this sample. We want
+$$\mathrm{var}_{\theta=42.69}\left[\sum_i U_i(42.69)\right].$$
+
+
+
+In other data sets sampled from the same distribution we won't have $\hat\theta=42.69$, so $\mathrm{var}\left[\sum U_i(42.69)\right]$ is not zero and is a reasonable estimator of $\mathrm{var}\left[\sum U_i(\theta_0)\right]$ if 42.69 is close to $\theta_0$, which we know happens with high probability.
+
+And, in addition, (assuming independence)
+$$\mathrm{var}_{\theta=42.69}\left[\sum_i U_i(42.69)\right].$$
+is well estimated by 
+$$\sum_{i} U_i(42.69)U_i(42.69)^T.$$
+which we can evaluate without assuming a particular parametric model to compute the variances. We can prove this without a great deal of subtlety: just use Chebyshev's inequality on the iid sum. 
+
+Things get more interesting when we have dependence. We need to include some crossproduct terms $U_iU_j^T$ in the variance calculation, representing non-zero covariances of $U_i$ and $U_j$. It's still true^[yes, under some assumptions. I'm happy to assume as many finite moments as I need] that
+$$E\left[\sum_{i,j} U_i(\theta_0)U_j(\theta_0)\right]=\mathrm{var}\left[\sum_i U_i(\theta_0)\right],$$
+but it's no longer true that 
+
+$$\sum_{i,j} U_i(\hat\theta)U_j(\hat\theta)\approx\mathrm{var}\left[\sum_i U_i(\theta_0)\right].$$
+The left-hand side of this is **identically zero**, just like it wasn't for the iid case. The left-hand side evaluates to 
+$$ \left(\sum_i U_i(\hat\theta)\right)\left(\sum_i U_i(\hat\theta)\right)^T=00^T.$$
+That's actually a bit surprising. The bias^[which I called *centering* bias in my PhD thesis] ^[well, "centring bias", because Americans] from using $\hat\theta$ instead of $\theta_0$ has grown from asymptotically negligible to the whole estimator. ^[you might ask: what if we used $\theta_0$ in the estimator instead of $\hat\theta$? It still doesn't work: $\left(\sum_i U_i(\theta_0)\right)^{\otimes 2}$ is unbiased for the variance but it's not consistent]
+
+The difference between $\theta_0$ and $\hat\theta$ is $O_p(n^{-1/2})$, so the difference between $U_i^2(\theta_0)$ and $U_i^2(\hat\theta)$ is $O_p(n^{-1})$, giving a bias of size $O_p(1)$ in a variance matrix that's of order $n$. So in the iid case the bias is asymptotically negligible.  In the completely correlated case we have $n^2$ copies of the bias, so it's only $O_p(n)$. That doesn't *prove* there's a problem, since $O_p$ terms only give upper bounds, but we already knew there was a problem and it makes sense.
+
+This counting argument suggests that we need $o(n^2)$ terms in the sum to get a sandwich estimator that works. Or, given that we'd like a little margin to get a rate of convergence, maybe $O(n^{2-\delta})$ terms. That's potentially a problem -- $n\times n$ is not $O(n^{2-\delta})$^[except perhaps to ChatGPT] -- but in some settings we **know** that some of the $\mathrm{cov}[U_i,U_j]$ terms are exactly zero and we can leave them out.
+
+In longitudinal data with $m$ observations on each of $M$ units, we have $n=mM$ data points but all pairs $(i,j)$ of observations on two distinct units will have zero covariance. We can replace $U_i(\hat\theta)U_j(\hat\theta)$ for those pairs by just 0. The number of pairs we have left is $Mm^2$, so if $M\to\infty$ we have $Mm^2/n^2\to 0$ and if $M\to\infty$ and $m$ is bounded by *any* power of $M$ we have $Mm^2=O(n^{2-\delta})$. In [crossed clustering](https://notstatschat.rbind.io/2021/09/18/crossed-clustering-and-parallel-invention/) with $m$ and $M$ distinct groups of two types, again we need $m,M\to\infty$ and $m$ bounded above and below by some power of $M$. In both these cases the proofs are again just brute-forcing counting applications of Chebyshev's inequality and a suitable Taylor series expansion
+
+For time series and spatial data it's a bit more tricky since we don't ever have exact independence of $U_i$ and $U_j$. Here we need to drop  $(i,j)$ terms where $\mathrm{cov}[U_i,U_j]$ is small enough, and we need to chose the threshold for *small enough* to get stricter with increasing $n$ at a rate that lets us use Chebyshev's inequality on the non-zero terms we keep but still bound the bias from dropping terms^[I called it *truncation bias* in my thesis, which Americans don't spell weirdly] ^[If you want to make assumptions on the outcome variable that imply correlation thresholds on the estimating functions, you need to look up *mixing coefficients*]
+
+So, in conclusion, sometimes seems like it should matter that we're using $\hat\theta$ instead of $\theta_0$ in the sandwich estimator but it really doesn't, and sometimes it doesn't seem like it should matter but it really does.  
+
