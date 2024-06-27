@@ -13,7 +13,7 @@ we want $\mathrm{var}[\sum_i U_i(\theta)]$, which we estimate by $\sum_i U_i(\ha
 
 First, some people (younger me, for example) worry that $\sum U_i(\hat\theta)$ is always zero, by construction, so that surely $\mathrm{var}\left[\sum U_i(\hat\theta)\right]$ will also be zero.  This is a nice simple mistake of confusing the random variable $\hat\theta$ with its value in a particular data set. In our data, we might have $\hat\theta=42.69$, so that 
 $$\sum_i U_i(42.69)=0.$$
-In other data sets sampled from the same distribution, $\hat\theta$ will have some other value. It should be small, but it won't be zero. When we write 
+In other data sets sampled from the same distribution, $\hat\theta$ will have some other value and $\sum_i U_i(42.69)$ should be small, but it won't be zero. When we write 
 $$\mathrm{var}\left[\sum_i U_i(\hat\theta)\right]$$
 the notation $\hat\theta$ doesn't mean the estimator as a random variable, it means the value that the estimator took in this sample. We want
 $$\mathrm{var}_{\theta=42.69}\left[\sum_i U_i(42.69)\right].$$
@@ -43,7 +43,7 @@ This counting argument suggests that we need $o(n^2)$ terms in the sum to get a 
 
 In longitudinal data with $m$ observations on each of $M$ units, we have $n=mM$ data points but all pairs $(i,j)$ of observations on two distinct units will have zero covariance. We can replace $U_i(\hat\theta)U_j(\hat\theta)$ for those pairs by just 0. The number of pairs we have left is $Mm^2$, so if $M\to\infty$ we have $Mm^2/n^2\to 0$ and if $M\to\infty$ and $m$ is bounded by *any* power of $M$ we have $Mm^2=O(n^{2-\delta})$. In [crossed clustering](https://notstatschat.rbind.io/2021/09/18/crossed-clustering-and-parallel-invention/) with $m$ and $M$ distinct groups of two types, again we need $m,M\to\infty$ and $m$ bounded above and below by some power of $M$. In both these cases the proofs are again just brute-forcing counting applications of Chebyshev's inequality and a suitable Taylor series expansion
 
-For time series and spatial data it's a bit more tricky since we don't ever have exact independence of $U_i$ and $U_j$. Here we need to drop  $(i,j)$ terms where $\mathrm{cov}[U_i,U_j]$ is small enough, and we need to chose the threshold for *small enough* to get stricter with increasing $n$ at a rate that lets us use Chebyshev's inequality on the non-zero terms we keep but still bound the bias from dropping terms^[I called it *truncation bias* in my thesis, which Americans don't spell weirdly] ^[If you want to make assumptions on the outcome variable that imply correlation thresholds on the estimating functions, you need to look up *mixing coefficients*]
+For time series and spatial data it's a bit more tricky since we don't ever have exact independence of $U_i$ and $U_j$. Here we need to drop  $(i,j)$ terms where $\mathrm{cov}[U_i,U_j]$ is small enough, and we need to chose the threshold for *small enough* to get stricter with increasing $n$ at a rate that lets us use Chebyshev's inequality on the non-zero terms we keep but still bound the bias from dropping terms.^[I called it *truncation bias* in my thesis, which Americans don't spell weirdly] ^[If you want to make assumptions on the outcome variable that imply correlation thresholds on the estimating functions, you need to look up *mixing coefficients*]
 
 So, in conclusion, sometimes seems like it should matter that we're using $\hat\theta$ instead of $\theta_0$ in the sandwich estimator but it really doesn't, and sometimes it doesn't seem like it should matter but it really does.  
 
