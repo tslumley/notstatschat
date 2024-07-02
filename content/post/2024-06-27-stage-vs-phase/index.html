@@ -1,0 +1,23 @@
+---
+title: Stage vs phase
+author: Thomas Lumley
+date: '2024-06-28'
+slug: stage-vs-phase
+categories: []
+tags: []
+---
+
+
+
+<p>When two-phase study designs started being used in epidemiology and biostatistics there was a period of conflict. Survey statisticians insisted on the term “two-phase” and biostatisticians (following survey textbooks in some cases) wanted to call these “two-stage” designs. Like the correct pronounciation of ‘Scheveningen’<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, the terminology identified communities.</p>
+<p>In a <span class="math inline">\(K\)</span>-stage survey design we have sampling units (clusters) at stage 1, smaller ones at stage 2, and so on. You can compute a probability <span class="math inline">\(\pi_i=\pi_{i,1}\times \pi_{i,2|1}\times \cdots\times\pi_{i,K|K-1}\)</span>, where <span class="math inline">\(\pi_{i,1}\)</span> is the probability that unit <span class="math inline">\(i\)</span> is sampled at stage 1, <span class="math inline">\(\pi_{i,2|1}\)</span> is the probability that unit <span class="math inline">\(i\)</span> is sampled at stage 2 given that it is sampled at stage 1, and so on. The probabilities are all known constants and <span class="math inline">\(\pi_i\)</span> is the marginal probability that unit <span class="math inline">\(i\)</span> is sampled.</p>
+<p>In a <span class="math inline">\(K\)</span>-phase survey design we have sampling units (clusters) at stage 1, other units at stage 2, and so on. You can compute a number <span class="math inline">\(\pi^*_i=\pi_{i,1}\times \pi^*_{i,2|1}\times \cdots\times\pi^*_{i,K|K-1}\)</span>, where <span class="math inline">\(\pi_{i,1}\)</span> is the probability that unit <span class="math inline">\(i\)</span> is sampled at phase 1, <span class="math inline">\(\pi^*_{i,2|1}\)</span> is the probability that unit <span class="math inline">\(i\)</span> is sampled at stage 2 given the phase-1 data and so on. The probabilities may depend on the entire data for the previous phases and so are random variables, so <span class="math inline">\(\pi^*_i\)</span> is (in general) not the marginal probability that unit <span class="math inline">\(i\)</span> is sampled.</p>
+<p>It’s easy to see that multistage sampling is a special case of multiphase sampling; it’s what you get if you use only the information <em>unit <span class="math inline">\(i\)</span> was in phase <span class="math inline">\(k-1\)</span></em> in defining <span class="math inline">\(\pi^*_{i,k|k-1}\)</span>. The simplest application of two-phase sampling that isn’t two-stage is when you want to stratify on variables that aren’t available for the whole population. You can measure those variable at phase 1 and then stratify the sampling of phase 2 on them. That’s how two-phase sampling is typically used in health research.</p>
+<p>In some ways the distinction doesn’t matter. Suppose we write <span class="math inline">\(R_i\)</span> for the indicator that unit <span class="math inline">\(i\)</span> is sampled. The key property of multi-phase sampling is that <span class="math inline">\(E[R_i/\pi^*_i]=1\)</span>, just as <span class="math inline">\(E[R_i/\pi_i]=1\)</span> for multistage sampling. The computational formulas for multiphase sampling are <em>conceptually</em> quite different from those for multistage sampling, but <em>practically</em> very similar: you get them by simply putting *s on all the probabilities.</p>
+<p>This does raise one modestly interesting question: if <span class="math inline">\(\pi_{i}\)</span> and <span class="math inline">\(\pi_i^*\)</span> are different, can we say anything about which one is better? This is a theoretical question: in practice you usually can’t compute <span class="math inline">\(\pi_i\)</span> because it involves averaging over all possible samples at intermediate phases. It’s still an interesting question. You could argue that using <span class="math inline">\(\pi^*\)</span> was better because handwaving about conditioning, or you could argue that using <span class="math inline">\(\pi\)</span> was better because handwaving about random variation. The answer doesn’t seem to be known.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>/’sxeːvənɪŋə/, not /’ʃeːvənɪŋən/. Yes, you would have been shot as a spy<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

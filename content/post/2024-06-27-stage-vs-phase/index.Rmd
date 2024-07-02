@@ -1,0 +1,20 @@
+---
+title: Stage vs phase
+author: Thomas Lumley
+date: '2024-06-28'
+slug: stage-vs-phase
+categories: []
+tags: []
+---
+
+When two-phase study designs started being used in epidemiology and biostatistics there was a period of conflict. Survey statisticians insisted on the term "two-phase" and biostatisticians (following survey textbooks in some cases) wanted to call these "two-stage" designs. Like the correct pronounciation of 'Scheveningen'^[/'sxeːvənɪŋə/, not /'ʃeːvənɪŋən/. Yes, you would have been shot as a spy], the terminology identified communities.
+
+In a $K$-stage survey design we have sampling units (clusters) at stage 1, smaller ones at stage 2, and so on. You can compute a probability $\pi_i=\pi_{i,1}\times \pi_{i,2|1}\times \cdots\times\pi_{i,K|K-1}$, where $\pi_{i,1}$ is the probability that unit $i$ is sampled at stage 1, $\pi_{i,2|1}$ is the probability that unit $i$ is sampled at stage 2 given that it is sampled at stage 1, and so on. The probabilities are all known constants and $\pi_i$ is the marginal probability that unit $i$ is sampled.
+
+In a $K$-phase survey design we have sampling units (clusters) at stage 1, other units at stage 2, and so on. You can compute a  number $\pi^*_i=\pi_{i,1}\times \pi^*_{i,2|1}\times \cdots\times\pi^*_{i,K|K-1}$, where $\pi_{i,1}$ is the probability that unit $i$ is sampled at phase 1, $\pi^*_{i,2|1}$ is the probability that unit $i$ is sampled at stage 2 given the phase-1 data and so on. The probabilities may depend on the entire data for the previous phases and so are random variables, so $\pi^*_i$ is (in general) not the marginal probability that unit $i$ is sampled.
+
+It's easy to see that multistage sampling is a special case of multiphase sampling; it's what you get if you use only the information *unit $i$ was in phase $k-1$* in defining $\pi^*_{i,k|k-1}$.  The simplest application of two-phase sampling that isn't two-stage is when you want to stratify on  variables that aren't available for the whole population. You can measure those variable at phase 1 and then stratify the sampling of phase 2 on them. That's how two-phase sampling is typically used in health research. 
+
+In some ways the distinction doesn't matter. Suppose we write $R_i$ for the indicator that unit $i$ is sampled. The key property of multi-phase sampling is that $E[R_i/\pi^*_i]=1$, just as $E[R_i/\pi_i]=1$ for multistage sampling.  The computational formulas for multiphase sampling are *conceptually* quite  different from those for multistage sampling, but *practically* very similar: you get them by simply putting *s on all the probabilities. 
+
+This does raise one modestly interesting question: if $\pi_{i}$ and $\pi_i^*$ are different, can we say anything about which one is better? This is a theoretical question: in practice you usually can't compute $\pi_i$ because it involves averaging over all possible samples at intermediate phases. It's still an interesting question.  You could argue that using $\pi^*$ was better because handwaving about conditioning, or you could argue that using $\pi$ was better because handwaving about random variation. The answer doesn't seem to be known. 
