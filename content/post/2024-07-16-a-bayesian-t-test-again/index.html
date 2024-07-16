@@ -1,0 +1,17 @@
+---
+title: A Bayesian t-test, again
+author: Thomas Lumley
+date: '2024-07-16'
+slug: a-bayesian-t-test-again
+categories: []
+tags: []
+---
+
+
+
+<p>The term “<em>t</em>-test” is a bit of a troll here, since I don’t mean either a test or the Normal-based inference developed by Gossett. I’m interested in two-sample comparisons of means, effectively non-parametric in moderate to large samples.</p>
+<p>A frequentist in an elementary course would do this by saying <span class="math inline">\(\bar X\)</span> and <span class="math inline">\(\bar Y\)</span> are each (roughly) Normal by the Central Limit Theorem, so <span class="math inline">\(\bar X-\bar Y\)</span> is also (roughly) Normal, giving interval estimates and, if necessary, tail probabilities. Or, in a different elementary course, by bootstrapping <span class="math inline">\(\bar X\)</span> and <span class="math inline">\(\bar Y\)</span> and looking at the roughly bell-shaped resampling distribution.</p>
+<p>One approach to this for a Bayesian is to do exactly the same thing: <span class="math inline">\(\bar X\)</span> is Normal conditional on <span class="math inline">\(\mu_x\)</span> and <span class="math inline">\(\sigma^2_x\)</span>, which have weakly informative priors, and so is <span class="math inline">\(\bar Y\)</span>. It’s a bit of a pain to use your favourite Bayesian probabilistic programming language for this: if you give it the individual observations it will want a distribution for them, so you need to give it just the means and variances and sample sizes and do more work yourself on the distributions, but that’s feasible. Or you could use some sort of conjugate prior.</p>
+<p>Another approach, <a href="https://notstatschat.rbind.io/2020/09/17/a-bayesian-t-test/">as I’ve written before</a>, is to treat the observations as coming from unknown distributions and specify Bayesian nonparametric priors over these distributions – a Dirichlet process prior is convenient.</p>
+<p>I’ve just come across a third approach. There’s an interesting <a href="https://arxiv.org/abs/2103.15671">preprint by Fong, Holmes, and Walker</a> on the ‘martingale posterior’. They argue that Bayesian inference can be generalised to think about sampling the unobserved data in the population conditional on the observed data. When you do this with the right sort of summary function you get ordinary Bayesian parametric inference, but you could also go directly to posterior distributions of summary statistics without going via parameters. In particular, if you want to do a comparison of means between two groups you can just resample the observed data and compute means to generate posterior distributions for the means that aren’t based on any particular parametric model. The practical analysis turns out to be basically the same as the second approach.</p>
+<p>Of course there will be assumptions – if your data come from a Cauchy distribution then God Herself can’t get you good estimates of the difference in means – but the basic idea and the sort of assumptions are very similar to the elementary frequentist analysis. It feels like our <a href="https://projecteuclid.org/journals/annals-of-applied-statistics/volume-4/issue-4/Model-robust-regression-and-a-Bayesiansandwich-estimator/10.1214/10-AOAS362.full">Bayesian sandwich estimator</a> should have a derivation along these lines. Of course, as you get to more multivariate data and more complicated summaries, you’ll need some sort of smoothing in your resampling, and most of the paper is about ways to do this.</p>
