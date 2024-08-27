@@ -1,0 +1,84 @@
+---
+title: The missing test in survey regression models
+author: Thomas Lumley
+date: '2024-08-27'
+slug: the-missing-test-in-survey-regression-models
+categories: []
+tags: []
+---
+
+
+
+<p><em>Attention Conservation Notice: Do you really care about multiparameter tests? Why, though?</em></p>
+<p>In classical statistics there are three types of test for parametric models: likelihood ratio tests, Wald tests, and score tests. These are asymptotically equivalent for local alternatives and have (asymptotically) a <span class="math inline">\(\chi^2_q\)</span> distribution when testing a <span class="math inline">\(q\)</span>-dimensional restriction on the parameters. There’s a picture <a href="https://notstatschat.rbind.io/2019/06/20/wald-score-lrt-the-picture/">explaining their relationship</a>.</p>
+<p>In survey statistics we traditionally have an extra wrinkle on testing. Given a <span class="math inline">\(q\)</span>-dimensional restriction on the parameter, we have to decide how to scale the <span class="math inline">\(q\)</span> different directions of departure from the null. In the classical parametric setting the answer is easy: use the Fisher information (or its inverse, as appropriate). No-one does anything else. No-one<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> has ever done anything else. Don’t even think about being creative here.</p>
+<p>In the survey setting, however, does this translate to scaling by the (estimated) population Fisher information or to scaling by the estimated sample covariance matrix of the parameters? The first approach gives the <a href="https://www.jstor.org/stable/2241033">Rao-Scott</a> tests – both (weighted) likelihood ratio and score versions<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. The second approach gives traditional Wald-type tests.</p>
+<p>In the second approach, the test statistic is asymptotically equivalent to a quadratic form <span class="math inline">\(Q_S=(\hat\theta-\tilde\theta)V^{-1}(\hat\theta-\tilde\theta)\)</span> for testing all the parameters in the model, and something similar with projection matrices for testing a subset of parameters. This <span class="math inline">\(Q_S\)</span> has a <span class="math inline">\(\chi^2\)</span> distribution: the <span class="math inline">\(V\)</span> is actually the inverse of <span class="math inline">\((\hat\theta-\tilde\theta)\)</span>. In the first approach, the test statistic is asymptotically equivalent to a quadratic form <span class="math inline">\(Q_P=(\hat\theta-\tilde\theta)I(\hat\theta-\tilde\theta)\)</span> for testing all the parameters in the model, and something similar with projection matrices for testing a subset of parameters. This <span class="math inline">\(Q_S\)</span> does not have a <span class="math inline">\(\chi^2\)</span> distribution: the distribution is <span class="math inline">\(\sum_i\lambda_i\chi^2_1\)</span>, where <span class="math inline">\(\lambda_i\)</span> are the eigenvalues<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> of <span class="math inline">\(V^{-1}I^{-1}\)</span>. The unusual null distribution isn’t a problem: there’s an excellent Satterthwaite-type approximation for reasonable tail probabilities and we can work out the tail probabilities accurately if that’s actually needed.</p>
+<p>Score tests of the second type are known. In the survey world they are attributed to <a href="https://www.jstor.org/stable/24306524">Rao, Scott, and Skinner</a>; quite a few people have come up with the same construction. It’s easy to define Wald-type tests for the first type, that use the population Fisher information for scaling rather than the sample covariance: you just do that, and SUDAAN<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> and the R survey package have done so. What’s harder is coming up with a likelihood-ratio test using sample variance scaling, to complete the <span class="math inline">\(2\times 3\)</span> table.</p>
+<p>I have recently come across a <a href="https://academic.oup.com/biomet/article/94/1/167/228777">2007 Biometrika paper</a> by Chandler and Bate that proposes these likelihood ratio tests for the GEE case. It’s not hard to adapt the tests to survey sampling. The basic idea is to scale the parameter inside the log likelihood function rather than scaling the resulting output. That is, they use the independence working loglikelihood <span class="math inline">\(\ell_I\)</span> to define an adjusted loglikelihood around a parameter estimate <span class="math inline">\(\hat\theta_I\)</span> by
+<span class="math display">\[\ell_A(\theta)=\ell_I\left(\hat\theta_I+ I^{-1/2}V^{-1/2}(\theta-\hat\theta_I)\right).\]</span>
+The rescaling term fixes up the quadratic form so that the matrix is the inverse variance of the parameter estimates, so the test statistic has a <span class="math inline">\(\chi^2\)</span> distribution again.</p>
+<div id="example" class="section level3">
+<h3>Example</h3>
+<p>Converting this to survey weighting isn’t hard if you already have the machinery to do the other tests. In fact, Chandler and Bate recommend an approximation to the rescaling for practical use. Here’s an example, based on an example used for <code>anova.svyglm</code> at the moment.</p>
+<pre class="r"><code>suppressMessages(library(survey))
+data(api)
+dstrat&lt;-svydesign(id=~1,strata=~stype, weights=~pw, data=apistrat, fpc=~fpc)
+
+model0&lt;-svyglm(I(sch.wide==&quot;Yes&quot;)~ell+meals+mobility, design=dstrat, family=quasibinomial())
+model2&lt;-svyglm(I(sch.wide==&quot;Yes&quot;)~ell+meals+mobility+stype, design= dstrat, family=quasibinomial())
+
+
+null&lt;-5:6
+Rpsi&lt;-solve(vcov(model2)[null,null])
+numerator&lt;-crossprod(coef(model2)[null], Rpsi%*%coef(model2)[null])
+
+thetahat&lt;-coef(model2)
+thetatwiddle&lt;-c(coef(model0),0,0)
+denominator&lt;-crossprod(thetahat-thetatwiddle, solve(model2$naive.cov)%*%(thetahat-thetatwiddle))
+
+lrt&lt;-2*(numerator/denominator)*(logLik(model2)-logLik(model0))</code></pre>
+<pre><code>## Warning in logLik.svyglm(model2): svyglm not fitted by maximum likelihood.</code></pre>
+<pre><code>## Warning in logLik.svyglm(model0): svyglm not fitted by maximum likelihood.</code></pre>
+<pre class="r"><code>pchisq(lrt,df=2,lower.tail=FALSE)</code></pre>
+<pre><code>##              [,1]
+## [1,] 9.622156e-05</code></pre>
+<p>We can compare this to the other five tests: the two others using sample scaling</p>
+<pre class="r"><code>svyscoretest(model2, ~stype, method=&quot;pseudoscore&quot;)</code></pre>
+<pre><code>##           X2           df          ddf            p 
+## 2.442892e+01 2.000000e+00 1.920000e+02 1.015431e-05</code></pre>
+<pre class="r"><code>anova(model0, model2,method=&quot;Wald&quot;)</code></pre>
+<pre><code>## Wald test for stype
+##  in svyglm(formula = I(sch.wide == &quot;Yes&quot;) ~ ell + meals + mobility + 
+##     stype, design = dstrat, family = quasibinomial())
+## F =  9.27829  on  2  and  192  df: p= 0.0001424</code></pre>
+<p>and the three using population information scaling</p>
+<pre class="r"><code>anova(model0, model2, method=&quot;LRT&quot;)</code></pre>
+<pre><code>## Working (Rao-Scott+F) LRT for stype
+##  in svyglm(formula = I(sch.wide == &quot;Yes&quot;) ~ ell + meals + mobility + 
+##     stype, design = dstrat, family = quasibinomial())
+## Working 2logLR =  25.41158 p= 5.3121e-05 
+## (scale factors:  1.4 0.58 );  denominator df= 192</code></pre>
+<pre class="r"><code>regTermTest(model2, ~stype, method=&quot;WorkingWald&quot;)</code></pre>
+<pre><code>## Working (Rao-Scott+F)  for stype
+##  in svyglm(formula = I(sch.wide == &quot;Yes&quot;) ~ ell + meals + mobility + 
+##     stype, design = dstrat, family = quasibinomial())
+## Working Wald statistic =  23.51266 p= 0.00010101 
+## (scale factors:  1.4 0.58 );  denominator df= 192</code></pre>
+<pre class="r"><code>svyscoretest(model2,~stype, method=&quot;working&quot;)</code></pre>
+<pre><code>## Rao-Scott X^2           ddf             p 
+##  1.324541e+01  1.920000e+02  4.881733e-06</code></pre>
+</div>
+<div id="now-what" class="section level3">
+<h3>Now what?</h3>
+<p>This isn’t just misplaced tidiness. I’m hoping that having the two likelihood-ratio tests to compare may make it easier to say something useful about power comparisons</p>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>to first order<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>rediscovered for GEE by <a href="https://academic.oup.com/biomet/article/77/3/485/253493">Rotnitzky and Jewell</a><a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>in a simple random sample we’d have <span class="math inline">\(V^{-1}=I\)</span> and the matrix would have all eigenvalues of 1 or 0, so we would get <span class="math inline">\(\chi^2\)</span><a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>I think?<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

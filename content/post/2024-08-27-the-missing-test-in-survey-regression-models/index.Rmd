@@ -1,0 +1,72 @@
+---
+title: The missing test in survey regression models
+author: Thomas Lumley
+date: '2024-08-27'
+slug: the-missing-test-in-survey-regression-models
+categories: []
+tags: []
+---
+
+*Attention Conservation Notice: Do you really care about multiparameter tests? Why, though?*
+
+In classical statistics there are three types of test for parametric models: likelihood ratio tests, Wald tests, and score tests.  These are asymptotically equivalent for local alternatives and have (asymptotically) a $\chi^2_q$ distribution when testing a $q$-dimensional restriction on the parameters. There's a picture [explaining their relationship](https://notstatschat.rbind.io/2019/06/20/wald-score-lrt-the-picture/). 
+
+In survey statistics we traditionally have an extra wrinkle on testing.  Given a $q$-dimensional restriction on the parameter, we have to decide how to scale the $q$ different directions of departure from the null.  In the classical parametric setting the answer is easy: use the Fisher information (or its inverse, as appropriate).  No-one does anything else. No-one^[to first order] has ever done anything else. Don't even think about being creative here.   
+
+In the survey setting, however, does this translate to scaling by the (estimated) population Fisher information or to scaling by the estimated sample covariance matrix of the parameters?  The first approach gives the [Rao-Scott](https://www.jstor.org/stable/2241033) tests -- both (weighted) likelihood ratio and score versions^[rediscovered for GEE by [Rotnitzky and Jewell](https://academic.oup.com/biomet/article/77/3/485/253493)].  The second approach gives traditional Wald-type tests. 
+
+In the second approach, the test statistic is asymptotically equivalent to a quadratic form $Q_S=(\hat\theta-\tilde\theta)V^{-1}(\hat\theta-\tilde\theta)$ for testing all the parameters in the model, and something similar with projection matrices for testing a subset of parameters.  This $Q_S$ has a $\chi^2$ distribution: the $V$ is actually the inverse of $(\hat\theta-\tilde\theta)$.  In the first approach, the test statistic is asymptotically equivalent to a quadratic form $Q_P=(\hat\theta-\tilde\theta)I(\hat\theta-\tilde\theta)$ for  testing all the parameters in the model, and something similar with projection matrices for testing a subset of parameters. This $Q_S$ does not have a $\chi^2$ distribution: the distribution is $\sum_i\lambda_i\chi^2_1$, where $\lambda_i$ are the eigenvalues^[in a simple random sample we'd have $V^{-1}=I$ and the matrix would have all eigenvalues of 1 or 0, so we would get $\chi^2$] of $V^{-1}I^{-1}$. The unusual null distribution isn't a problem: there's an excellent Satterthwaite-type approximation for reasonable tail probabilities and  we can work out the tail probabilities accurately if that's actually needed.
+
+Score tests of the second type are known. In the survey world they are attributed to [Rao, Scott, and Skinner](https://www.jstor.org/stable/24306524); quite a few people have come up with the same construction. It's easy to define Wald-type tests for the first type, that use the population Fisher information for scaling rather than the sample covariance: you just do that, and SUDAAN^[I think?] and the R survey package have done so.  What's harder is coming up with a likelihood-ratio test using sample variance scaling, to complete the $2\times 3$ table.
+
+I have recently come across a [2007 Biometrika paper](https://academic.oup.com/biomet/article/94/1/167/228777) by Chandler and Bate that proposes these likelihood ratio tests for the GEE case.  It's not hard to adapt the tests to survey sampling.  The basic idea is to scale the parameter inside the log likelihood function rather than scaling the resulting output. That is, they use the independence working loglikelihood $\ell_I$ to define an adjusted loglikelihood around a parameter estimate $\hat\theta_I$ by 
+$$\ell_A(\theta)=\ell_I\left(\hat\theta_I+ I^{-1/2}V^{-1/2}(\theta-\hat\theta_I)\right).$$
+The rescaling term fixes up the quadratic form so that the matrix is the inverse variance of the parameter estimates, so the test statistic has a $\chi^2$ distribution again. 
+
+### Example
+
+Converting this to survey weighting isn't hard if you already have the machinery to do the other tests. In fact, Chandler and Bate recommend an approximation to the rescaling for practical use.  Here's an example, based on an example used for `anova.svyglm` at the moment.
+
+```{r}
+suppressMessages(library(survey))
+data(api)
+dstrat<-svydesign(id=~1,strata=~stype, weights=~pw, data=apistrat, fpc=~fpc)
+
+model0<-svyglm(I(sch.wide=="Yes")~ell+meals+mobility, design=dstrat, family=quasibinomial())
+model2<-svyglm(I(sch.wide=="Yes")~ell+meals+mobility+stype, design= dstrat, family=quasibinomial())
+
+
+null<-5:6
+Rpsi<-solve(vcov(model2)[null,null])
+numerator<-crossprod(coef(model2)[null], Rpsi%*%coef(model2)[null])
+
+thetahat<-coef(model2)
+thetatwiddle<-c(coef(model0),0,0)
+denominator<-crossprod(thetahat-thetatwiddle, solve(model2$naive.cov)%*%(thetahat-thetatwiddle))
+
+lrt<-2*(numerator/denominator)*(logLik(model2)-logLik(model0))
+
+pchisq(lrt,df=2,lower.tail=FALSE)
+```
+
+
+We can compare this to the other five tests: the  two others using sample scaling
+
+```{r}
+svyscoretest(model2, ~stype, method="pseudoscore")
+anova(model0, model2,method="Wald")
+```
+
+and the three using population information scaling
+
+```{r}
+anova(model0, model2, method="LRT")
+regTermTest(model2, ~stype, method="WorkingWald")
+svyscoretest(model2,~stype, method="working")
+```
+
+
+### Now what?
+
+This isn't just misplaced tidiness. I'm hoping that having the two likelihood-ratio tests to compare may make it easier to say something useful about power comparisons
+
