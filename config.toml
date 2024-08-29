@@ -1,4 +1,4 @@
-baseurl = "http://notstatschat.netlify.com/"
+baseurl = "http://notstatschat.rbind.io/"
 languageCode = "en-us"
 title = "Biased and Inefficient"
 theme = "hugo-lithium"
