@@ -24,11 +24,11 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
     # options for highlight.js (version, additional languages, and theme)
     highlightjsVersion = "9.11.0"
-    highlightjsCDN = "//cdn.bootcss.com"
+    highlightjsCDN = "//cdn.mathjax.org"
     highlightjsLang = ["r", "yaml"]
     highlightjsTheme = "github"
 
-    MathJaxCDN = "//cdn.bootcss.com"
+    MathJaxCDN = "//cdn.mathjax.org"
     MathJaxVersion = "2.7.1"
 
     [params.logo]
