@@ -1,0 +1,20 @@
+---
+title: Ihaka Lectures
+author: Thomas Lumley
+date: '2024-08-29'
+slug: ihaka-lectures
+categories: []
+tags: []
+---
+
+They're back, again. 
+
+For the 2024 Ihaka Lectures we have
+
+* 12 September: Yihui, who [needs no introduction](https://www.google.com/search?q=yihui), on *Reimagining literate programming and automated report generation*
+* 19 September: Farah Hancock, a data journalist. *Initially trained as a designer, Farah Hancock worked for many years in the advertising industry in New Zealand and abroad, primarily working on digital campaigns. Experiencing a midlife career crisis she pivoted to journalism and as a visual thinker she inadvertently fell into data journalism when the Covid-19 pandemic started. Since then she’s visualised a range of topics from food exports to bus cancellations, fatal police shootings and political donations.*
+* 26 September: Peter Ellis, formerly a data scientist in the NZ public service and now Director of the Statistics for Development division at the Pacific Community. Peter will talk about *Making R work in Government* and notes that "R’s competitor in government is not Julia or Python or even SAS, but overwhelmingly Excel."
+
+These lectures are at 6:30 pm in the Science Building 303 at University of Auckland, on the corner of Wellesley Street and Princes St, across the road from Albert Park. Refreshments will be served (in the basement/entry level of building 303) from 6pm.  If you're planning to come in person, please [register](https://unievents.auckland.ac.nz/event-details/eventbrite/732489544947). 
+
+The lectures will be live streamed ([details here](https://unievents.auckland.ac.nz/event-details/eventbrite/732489544947))and subsequently posted on YouTube. The timezone is NZST/UTC+12.  
