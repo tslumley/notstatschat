@@ -39,7 +39,7 @@ In the `DHBins` package, `geom_region` recognises the region names and draws map
 
 First, a map of total expenditure by region
 
-```{r, fig.path='static', warning=FALSE} 
+```{r, fig.path='static', warning=FALSE, out.width="95%"} 
 library(DHBins)
 ggplot(d)+
 	geom_region(aes(fill=money,map_id=region_fixname(region)))+
@@ -51,7 +51,7 @@ ggplot(d)+
 That's not much use: *of course* Auckland has the largest expenditure, because it has about as many people as the next three regions put together.  Like everything in New Zealand, this needs to be *per capita*
 
 
-```{r, fig.path='static', warning=FALSE}
+```{r, fig.path='static', warning=FALSE, out.width="95%"}
 d$percapita<-with(d,money/people)
 ggplot(d)+
 	geom_region(aes(fill=percapita,map_id=region_fixname(region)))+
@@ -64,7 +64,7 @@ Now the outlier is the West Coast, which has very few residents and long roads c
 
 We can also try scaling the hexes rather than colouring them. There's some issues with NA vs zero to work around
 
-```{r, fig.path='static', warning=FALSE}
+```{r, fig.path='static', warning=FALSE, out.width="95%"}
 d$money0<-d$money
 d$money0[is.na(d$money)]<-0
 d$people[is.na(d$people)]<-1
@@ -78,7 +78,7 @@ That's total allocation, but it doesn't show the population.
 
 Here's the hexes scaled to  *per capita* allocation
 
-```{r, fig.path='static', warning=FALSE}
+```{r, fig.path='static', warning=FALSE, out.width="95%"}
 ggplot(d)+
 	geom_region(aes(radius=sqrt(money0/people),map_id=region_fixname(region)))+
 	scale_fill_viridis_c(na.value=NA)+
@@ -86,7 +86,7 @@ ggplot(d)+
 ```
 
 We can combine color for the per-capita allocation and size for the population, to illustrate that the high per-capita allocation to the West Coast isn't actually that much money
-```{r, fig.path='static', warning=FALSE}
+```{r, fig.path='static', warning=FALSE, out.width="95%"}
 d$money0<-d$money
 d$money0[is.na(d$money)]<-0
 d$people[is.na(d$people)]<-1
