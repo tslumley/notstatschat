@@ -1,0 +1,103 @@
+---
+title: National Land Transport Plan graphs
+author: Thomas Lumley
+date: '2024-09-03'
+slug: national-land-transport-plan-graphs
+categories: []
+tags: []
+---
+
+The National Land Transport Plan has just [been released](https://www.nzta.govt.nz/planning-and-investment/national-land-transport-programme/2024-27-nltp/). Greater Auckland have [discussion here](https://www.greaterauckland.org.nz/2024/09/03/nltp-2024-released-destroying-pipeline-of-shovel-ready-local-projects/) including a chart comparing regions. 
+
+I'm going to see how hexmaps created with the `DHBins` package compare for inter-region comparisons.  It's a little messy because the NLTP doesn't quite report by regions: it combines some regions
+
+
+First, the data, in millions of dollars projected expenditure over three years, and thousands of population. I've allocated "Top of South Island" to "Marlborough" and "Otago+Southland" to "Otago"
+```{r echo=FALSE}
+d<-read.table(
+text="region money people
+Northland 991 186
+Auckland 8400 1654
+Waikato 1900 476
+\"Bay of Plenty\" 1900 321
+Gisborne 255 50
+\"Hawkes Bay\" 657 172
+Taranaki 808 121
+\"Manawatu-Wanganui\" 1600 248
+Wellington 3300 526
+Marlborough 479 156
+\"West Coast\" 255 32
+Canterbury 1800 623
+Otago 1400 356
+Tasman NA NA
+Nelson NA NA
+Southland NA NA
+",header=TRUE)
+```
+
+In the `DHBins` package, `geom_region` recognises the region names and draws maps -- I need to update it to recognise the macron in Manawatū and the 'h' in Whanganui, but otherwise we're ok. 
+
+First, a map of total expenditure by region
+
+```{r, fig.path='static', warning=FALSE} 
+library(DHBins)
+ggplot(d)+
+	geom_region(aes(fill=money,map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA,option="A")+
+	geom_label_region(short=TRUE,colour="grey93")+
+  labs(fill="$million")
+```
+
+That's not much use: *of course* Auckland has the largest expenditure, because it has about as many people as the next three regions put together.  Like everything in New Zealand, this needs to be *per capita*
+
+
+```{r, fig.path='static', warning=FALSE}
+d$percapita<-with(d,money/people)
+ggplot(d)+
+	geom_region(aes(fill=percapita,map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA,option="A")+
+	geom_label_region(short=TRUE,colour="grey93")+
+  labs(fill="$k/person")
+```
+
+Now the outlier is the West Coast, which has very few residents and long roads connecting them, but also quite a bit of tourist traffic. 
+
+We can also try scaling the hexes rather than colouring them. There's some issues with NA vs zero to work around
+
+```{r, fig.path='static', warning=FALSE}
+d$money0<-d$money
+d$money0[is.na(d$money)]<-0
+d$people[is.na(d$people)]<-1
+
+ggplot(d)+
+	geom_region(aes(radius=sqrt(money0),map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA)+
+	geom_label_region(short=TRUE,colour="grey93")
+```
+That's total allocation, but it doesn't show the population.
+
+Here's the hexes scaled to  *per capita* allocation
+
+```{r, fig.path='static', warning=FALSE}
+ggplot(d)+
+	geom_region(aes(radius=sqrt(money0/people),map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA)+
+	geom_label_region(short=TRUE,colour="grey93")
+```
+
+We can combine color for the per-capita allocation and size for the population, to illustrate that the high per-capita allocation to the West Coast isn't actually that much money
+```{r, fig.path='static', warning=FALSE}
+d$money0<-d$money
+d$money0[is.na(d$money)]<-0
+d$people[is.na(d$people)]<-1
+
+ggplot(d)+
+  geom_region(aes(map_id=region_fixname(region),radius=!is.na(money)),fill="grey",colour="black",coord=FALSE)+
+	geom_region(aes(radius=sqrt(money0),fill=percapita,map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA,option="A")+
+  labs(fill="$k/person")
+```
+
+
+
+One thing that's very clear from the maps is that there was less money allocated to the South Island, both in total and (apart from the small West Coast budget) *per capita*.  If you want more discussion about what this all implies, try [Greater Auckland](https://www.greaterauckland.org.nz/2024/09/03/nltp-2024-released-destroying-pipeline-of-shovel-ready-local-projects/).

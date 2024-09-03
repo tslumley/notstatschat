@@ -1,0 +1,62 @@
+---
+title: National Land Transport Plan graphs
+author: Thomas Lumley
+date: '2024-09-03'
+slug: national-land-transport-plan-graphs
+categories: []
+tags: []
+---
+
+
+
+<p>The National Land Transport Plan has just <a href="https://www.nzta.govt.nz/planning-and-investment/national-land-transport-programme/2024-27-nltp/">been released</a>. Greater Auckland have <a href="https://www.greaterauckland.org.nz/2024/09/03/nltp-2024-released-destroying-pipeline-of-shovel-ready-local-projects/">discussion here</a> including a chart comparing regions.</p>
+<p>I’m going to see how hexmaps created with the <code>DHBins</code> package compare for inter-region comparisons. It’s a little messy because the NLTP doesn’t quite report by regions: it combines some regions</p>
+<p>First, the data, in millions of dollars projected expenditure over three years, and thousands of population. I’ve allocated “Top of South Island” to “Marlborough” and “Otago+Southland” to “Otago”</p>
+<p>In the <code>DHBins</code> package, <code>geom_region</code> recognises the region names and draws maps – I need to update it to recognise the macron in Manawatū and the ‘h’ in Whanganui, but otherwise we’re ok.</p>
+<p>First, a map of total expenditure by region</p>
+<pre class="r"><code>library(DHBins)</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>ggplot(d)+
+	geom_region(aes(fill=money,map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA,option=&quot;A&quot;)+
+	geom_label_region(short=TRUE,colour=&quot;grey93&quot;)+
+  labs(fill=&quot;$million&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-2-1.png" width="672" /></p>
+<p>That’s not much use: <em>of course</em> Auckland has the largest expenditure, because it has about as many people as the next three regions put together. Like everything in New Zealand, this needs to be <em>per capita</em></p>
+<pre class="r"><code>d$percapita&lt;-with(d,money/people)
+ggplot(d)+
+	geom_region(aes(fill=percapita,map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA,option=&quot;A&quot;)+
+	geom_label_region(short=TRUE,colour=&quot;grey93&quot;)+
+  labs(fill=&quot;$k/person&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-3-1.png" width="672" /></p>
+<p>Now the outlier is the West Coast, which has very few residents and long roads connecting them, but also quite a bit of tourist traffic.</p>
+<p>We can also try scaling the hexes rather than colouring them. There’s some issues with NA vs zero to work around</p>
+<pre class="r"><code>d$money0&lt;-d$money
+d$money0[is.na(d$money)]&lt;-0
+d$people[is.na(d$people)]&lt;-1
+
+ggplot(d)+
+	geom_region(aes(radius=sqrt(money0),map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA)+
+	geom_label_region(short=TRUE,colour=&quot;grey93&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-4-1.png" width="672" />
+That’s total allocation, but it doesn’t show the population.</p>
+<p>Here’s the hexes scaled to <em>per capita</em> allocation</p>
+<pre class="r"><code>ggplot(d)+
+	geom_region(aes(radius=sqrt(money0/people),map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA)+
+	geom_label_region(short=TRUE,colour=&quot;grey93&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-5-1.png" width="672" /></p>
+<p>We can combine color for the per-capita allocation and size for the population, to illustrate that the high per-capita allocation to the West Coast isn’t actually that much money</p>
+<pre class="r"><code>d$money0&lt;-d$money
+d$money0[is.na(d$money)]&lt;-0
+d$people[is.na(d$people)]&lt;-1
+
+ggplot(d)+
+  geom_region(aes(map_id=region_fixname(region),radius=!is.na(money)),fill=&quot;grey&quot;,colour=&quot;black&quot;,coord=FALSE)+
+	geom_region(aes(radius=sqrt(money0),fill=percapita,map_id=region_fixname(region)))+
+	scale_fill_viridis_c(na.value=NA,option=&quot;A&quot;)+
+  labs(fill=&quot;$k/person&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-6-1.png" width="672" /></p>
+<p>One thing that’s very clear from the maps is that there was less money allocated to the South Island, both in total and (apart from the small West Coast budget) <em>per capita</em>. If you want more discussion about what this all implies, try <a href="https://www.greaterauckland.org.nz/2024/09/03/nltp-2024-released-destroying-pipeline-of-shovel-ready-local-projects/">Greater Auckland</a>.</p>
