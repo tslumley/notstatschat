@@ -1,0 +1,47 @@
+---
+title: Two approaches to approximating sums of chisquareds
+author: Thomas Lumley
+date: '2024-09-13'
+slug: two-approaches-to-approximating-sums-of-chisquareds
+categories: []
+tags: []
+---
+
+
+
+<p>The distribution of a <span class="math inline">\(n\times n\)</span> quadratic form in Gaussian variables, <span class="math inline">\(X^TAX\)</span> is a linear combination of <span class="math inline">\(\chi_1^2\)</span> variables:
+<span class="math display">\[Q\sim\sum_{i=1}^n\lambda_iZ^2_i\]</span>
+where <span class="math inline">\(\lambda_i\)</span> are the eigenvalues of <span class="math inline">\(A\Xi\)</span> and <span class="math inline">\(\Xi\)</span> is the covariance matrix of <span class="math inline">\(X\)</span>. This is not in the tables at the back of the book.</p>
+<p>For reasonable values of <span class="math inline">\(n\)</span> and reasonable tail probabilities, the Satterthwaite approximation is perfectly reasonable. It is of the form
+<span class="math display">\[\tilde Q_0\sim a\chi^2_d\]</span>
+where
+<span class="math display">\[a=\frac{\sum_{i=1}^n\lambda_i^2}{\sum_{i=1}^n \lambda_i}\]</span>
+is a sort of average <span class="math inline">\(\lambda\)</span> and
+<span class="math display">\[d=\frac{\left(\sum_{i=1}^n\lambda_i\right)^2}{\sum_{i=1}^n \lambda_i^2}\]</span>
+is a sort of effective sample size. The Satterthwaite approximation matches the mean and variance of <span class="math inline">\(Q\)</span>.</p>
+<p>We were interested, though, in genomic applications where <span class="math inline">\(n\)</span> was unreasonably large and we wanted quite small tail probabilities. The Satterthwaite approximation is not good in the tails: the relative error grows exponentially as you move out into the tail.</p>
+<p>When <span class="math inline">\(n\)</span> is large, it matters whether you are given <span class="math inline">\(\lambda\)</span> or <span class="math inline">\(A\Xi\)</span> or something even prior to <span class="math inline">\(A
+\Xi\)</span>. If you just have <span class="math inline">\(\lambda\)</span>, you can use a saddlepoint approximation, or there are various algorithms for computing the tail probabilities to arbitrary accuracy (if you have arbitrary precision to work with).</p>
+<p>There are two other approaches to approximations. The first is to approximate more moments than just two. For example, <a href="https://www.sciencedirect.com/science/article/pii/S0167947308005653">Liu <em>et al</em></a> use a scaled non-central <span class="math inline">\(\chi^2\)</span> to match the first three cumulants<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> and gets the fourth either correct or close. The second approach is to do the first few terms of the sum and use the Satterthwaite approximation for the remainder
+<span class="math display">\[\tilde Q_k\sim \sum_{i=1}^k\lambda_iZ_i^2+a_k\chi^2_{d_k}\]</span>
+with <span class="math display">\[a_k=\frac{\sum_{i=k+1}^n\lambda_i^2}{\sum_{i=k+1}^n \lambda_i}\]</span>
+and
+<span class="math display">\[d_k=\frac{\left(\sum_{i=k+1}^n\lambda_i\right)^2}{\sum_{i=k+1}^n \lambda_i^2}.\]</span></p>
+<p>I’m going to use an example that I’ve used before, a simulated genomic example from the <code>bigQF</code> package. There’s a <span class="math inline">\(4028\times 4028\)</span> matrix with 3336 non-zero eigenvalues.</p>
+<p>This picture shows the first few cumulants of the full sum, the Satterthwaite approximation, the Liu approximation, and the leading-term approximations, with the vertical axis indicating the relative error
+<img src="images/cumulants.png" style="width:95.0%" /></p>
+<p>The Satterthwaite approximation underestimates the higher cumulants badly: a <span class="math inline">\(\chi^2_d\)</span> has much lighter tails than the weighted sum of <span class="math inline">\(\chi^2_1\)</span>, because the tail of the weighted sum is dominated by the terms with larger <span class="math inline">\(\lambda\)</span>. The Liu approximation is much better, but eventually underestimates for the same reason. The leading-term approaches have the opposite problem: they get the higher cumulants right, but underestimate the the first few, the skewness and kurtosis, and so on.</p>
+<p>How does this compare for the tail probabilities?</p>
+<p><img src="images/tails.png" style="width:95.0%" /></p>
+<p>On the horizontal axis we have the number of standard deviations above the mean, and on the vertical axis the relative error of the approximations to the tail probability. The leading-term approximations have the number of terms in the right margin.</p>
+<p>The Satterthwaite approximation is bad in the tails. The Liu approximation is actually very good – you need to go a long way out into the tail before it gets bad – but it shows the same qualitative pattern of getting worse as the tail probabilities get smaller. The leading-term approximations get broadly<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> better with more terms, as you’d expect. It shows the qualitative pattern of settling down towards a bounded relative error.</p>
+<p>That is, we can think of the Liu approximation as improving the Satterthwaite approximation from the middle of the distribution out, and the leading-term approximation as improving it from the tails in. With 20 terms the leading-term approximation is better than the Liu approximation, but not with just a few terms.</p>
+<p>Which should we prefer? Well, if we are just given <span class="math inline">\(\lambda\)</span> then Liu <em>et al</em>’s approximation is much faster to compute than a good leading-term approximation and also faster than the full saddlepoint approximation, so unless you care about the extremely extreme tails it looks like a good bet. On the other hand, if we are just given <span class="math inline">\(A\Xi\)</span>, Liu’s method requires the trace of <span class="math inline">\((A\Xi)^4\)</span>. Working this out is no faster for large <span class="math inline">\(m\)</span> than working out all the eigenvalues. Working out the first <span class="math inline">\(k\)</span> eigenvalues<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> and the Satterthwaite approximation to the remainder takes only <span class="math inline">\(O(m^2k)\)</span> time, so (for suitable <span class="math inline">\(k\)</span>) it’s faster and more accurate.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>the <span class="math inline">\(m\)</span>th cumulant, like the <span class="math inline">\(m\)</span>th moment, is the expected value of an <span class="math inline">\(m\)</span>th-order polynomial, and if you don’t know which polynomial you probably don’t care<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>not uniformly better, which I think is due to rounding of the <span class="math inline">\(\chi^2\)</span> degrees of freedom to an integer somewhere down in the code<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>with a Lanczos-type algorithm or stochastic SVD<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
