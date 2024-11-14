@@ -1,0 +1,28 @@
+---
+title: Brute force and ignorance
+author: Thomas  Lumley
+date: '2024-11-14'
+slug: brute-force-and-ignorance
+categories: []
+tags: []
+---
+
+
+
+<p>The 1986 Joint Statistical Meetings had a Data Expo where participants were given a dataset to show off visualisation approaches. The “pollen” “data” was a <span class="math inline">\(3848\times 5\)</span> matrix purporting to be five measurements of 3848 pollen grains. In fact, the data were artificial and consisted of an Easter egg surrounded by an ellipsoidal shell.</p>
+<p>With the displays of forty years ago it was quite hard to find the hidden structure. Some form of multi-dimensional slicing was probably needed to detect any anomaly (though Di Cook and Ursula Laa give a <a href="https://arxiv.org/pdf/1910.10854">new ‘tour’</a> that should have worked if it was available back then)</p>
+<p>With modern displays it’s much easier. I’m using a 12in x 12in R display device here, so you may need to zoom in on graphs somehow – and if you’re trying to get the effect of a 4K monitor on your phone you might be out of luck.</p>
+<pre class="r"><code>pollen&lt;-read.table(&quot;~/pollen.txt&quot;)</code></pre>
+<p>A first try doesn’t quite work</p>
+<pre class="r"><code>pairs(pollen)</code></pre>
+<p><img src="staticunnamed-chunk-2-1.png" width="90%" /></p>
+<p>but with smaller plotting symbols and a bit of transparency we do get somewhere</p>
+<pre class="r"><code>pairs(pollen, pch=&quot;.&quot;,col=&quot;#00000020&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-3-1.png" width="90%" /></p>
+<p>If you’re looking at this on a reasonably large screen you’ll see a point cloud with a little linear structure at the centre. Picking the first panel to get a bigger image we see</p>
+<pre class="r"><code>plot(pollen[,1:2], pch=&quot;.&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-4-1.png" width="90%" /></p>
+<p>and switching axes to make it easier to read</p>
+<pre class="r"><code>plot(-pollen[,2:1], pch=&quot;.&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-5-1.png" width="90%" /></p>
+<p>No fancy statistical graphics ideas are needed, just enough space to see the points through the cloud. You easily could make a version of this that still needed some clever multivariate displays; increasing the number of masking points by a couple of orders of magnitude would probably do it. But it’s increasingly true that you can see a lot just by looking</p>
