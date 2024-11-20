@@ -1,0 +1,93 @@
+---
+title: Collinearity four more times
+author: Package Build
+date: '2024-11-21'
+slug: collinearity-again
+categories: []
+tags: []
+---
+
+Quartets of datasets are trendy now, so here's one for collinearity diagnostics. These four data sets have two candidate predictors $x$ and $z$ and outcome $y$, and have very strong correlation (over 0.95) between $x$ and $z$.  I will use the `car` package for variance inflation factors
+```{r}
+set.seed(2024-11-21)
+library(car)
+```
+
+### Redundancy
+
+In the first example, $Y\perp X\mid Z$, so for prediction it is ok to drop $X$, and also the coefficients will estimate the true effects if you do
+
+```{r}
+d1<-data.frame(x=rnorm(1000))
+d1$z<-d1$x+rnorm(1000,s=.2)
+d1$y<-d1$z+rnorm(1000,s=.7)
+
+m1a<-lm(y~x+z,data=d1)
+summary(m1a)
+vif(m1a)
+m1b<-lm(y~z,data=d1)
+summary(m1b) 
+anova(m1b,m1a)
+```
+
+### Combination
+
+The second example is the *Mr Micawber* correlation structure.  $Y$ depends on $X-Z$ and in the eponymous example $X$ is expenditure and $Z$ is income.  Each predictor on its own is relatively weakly associated with $Y$, but the combination is strongly predictive. Dropping either predictor is a bad idea.^[This is also the classic scenario where forward selection for predictive models does poorly.]
+
+```{r}
+d2<-data.frame(x=rnorm(1000))
+d2$z<-d2$x+rnorm(1000,s=.2)
+d2$y<-d2$x-d2$z+rnorm(1000,s=1.4)
+
+m2a<-lm(y~x+z,data=d2)
+summary(m2a)
+vif(m2a)
+m2b<-lm(y~z,data=d2)
+summary(m2b) 
+anova(m2b,m2a)
+```
+
+### Confounding
+
+The third example is straightforward confounding. $X$ is a confounder for the effect of $Z$ on $Y$.  The model with just $Z$ is extremely misleading. 
+
+```{r}
+d3<-data.frame(x=rnorm(100))
+d3$z<-d3$x+rnorm(100,s=.2)
+d3$y<-d3$x+rnorm(100)
+
+
+m3a<-lm(y~x+z,data=d3)
+summary(m3a)
+vif(m3a)
+m3b<-lm(y~z,data=d3)
+summary(m3b) 
+anova(m3b,m3a)
+```
+
+### Measurement noise
+
+Finally, a setting where a latent variable affects both $X$ and $Z$ and also $Y.$ The best model here would use $(X+Z)/2$ as a single predictor -- the two predictors have no additional information in them -- but using the two variables individually is better than using just one of them. 
+
+```{r}
+latent<-rnorm(100,s=0.7)
+noise<-rnorm(100,s=0.7)
+d4<-data.frame(x=latent+noise+rnorm(100,s=0.15),
+		z=latent+noise+rnorm(100,s=0.15),
+		y=latent+rnorm(100,s=1))
+
+
+m4a<-lm(y~x+z,data=d4)
+summary(m4a)
+vif(m4a)
+m4b<-lm(y~z,data=d4)
+summary(m4b) 
+anova(m4b,m4a)
+```		
+
+
+### Summary
+
+If you want a **predictive** model there's no need to drop correlated variables because you will already be evaluating models based on predictive accuracy.  You do want to drop variables with *redundant* information, if you can, but that isn't the same thing as correlation (as example #2 shows). On the other hand, if you want a **causal** model, you can't rely on correlations to choose it. 
+
+A high VIF tells you that there's less information about the conditional coefficients $\beta_{Z|X}$ and $\beta_{X|Z}$ than about the single-variable coefficients $\beta_X$ and $\beta_Z$. It doesn't tell you which set of coefficients you are interested in. 

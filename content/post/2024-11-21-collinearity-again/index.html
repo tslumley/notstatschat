@@ -1,0 +1,272 @@
+---
+title: Collinearity four more times
+author: Package Build
+date: '2024-11-21'
+slug: collinearity-again
+categories: []
+tags: []
+---
+
+
+
+<p>Quartets of datasets are trendy now, so here’s one for collinearity diagnostics. These four data sets have two candidate predictors <span class="math inline">\(x\)</span> and <span class="math inline">\(z\)</span> and outcome <span class="math inline">\(y\)</span>, and have very strong correlation (over 0.95) between <span class="math inline">\(x\)</span> and <span class="math inline">\(z\)</span>. I will use the <code>car</code> package for variance inflation factors</p>
+<pre class="r"><code>set.seed(2024-11-21)
+library(car)</code></pre>
+<pre><code>## Loading required package: carData</code></pre>
+<div id="redundancy" class="section level3">
+<h3>Redundancy</h3>
+<p>In the first example, <span class="math inline">\(Y\perp X\mid Z\)</span>, so for prediction it is ok to drop <span class="math inline">\(X\)</span>, and also the coefficients will estimate the true effects if you do</p>
+<pre class="r"><code>d1&lt;-data.frame(x=rnorm(1000))
+d1$z&lt;-d1$x+rnorm(1000,s=.2)
+d1$y&lt;-d1$z+rnorm(1000,s=.7)
+
+m1a&lt;-lm(y~x+z,data=d1)
+summary(m1a)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ x + z, data = d1)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.72380 -0.48821 -0.04224  0.45949  2.36091 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -0.01373    0.02237  -0.614    0.540    
+## x            0.12971    0.11555   1.123    0.262    
+## z            0.84855    0.11321   7.495 1.46e-13 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.7065 on 997 degrees of freedom
+## Multiple R-squared:  0.6534,	Adjusted R-squared:  0.6527 
+## F-statistic: 939.6 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>vif(m1a)</code></pre>
+<pre><code>##        x        z 
+## 25.41849 25.41849</code></pre>
+<pre class="r"><code>m1b&lt;-lm(y~z,data=d1)
+summary(m1b) </code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ z, data = d1)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.74387 -0.50931 -0.04643  0.44706  2.35572 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -0.01510    0.02234  -0.676    0.499    
+## z            0.97312    0.02246  43.330   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.7065 on 998 degrees of freedom
+## Multiple R-squared:  0.6529,	Adjusted R-squared:  0.6526 
+## F-statistic:  1877 on 1 and 998 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>anova(m1b,m1a)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Model 1: y ~ z
+## Model 2: y ~ x + z
+##   Res.Df    RSS Df Sum of Sq      F Pr(&gt;F)
+## 1    998 498.21                           
+## 2    997 497.58  1   0.62894 1.2602 0.2619</code></pre>
+</div>
+<div id="combination" class="section level3">
+<h3>Combination</h3>
+<p>The second example is the <em>Mr Micawber</em> correlation structure. <span class="math inline">\(Y\)</span> depends on <span class="math inline">\(X-Z\)</span> and in the eponymous example <span class="math inline">\(X\)</span> is expenditure and <span class="math inline">\(Z\)</span> is income. Each predictor on its own is relatively weakly associated with <span class="math inline">\(Y\)</span>, but the combination is strongly predictive. Dropping either predictor is a bad idea.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<pre class="r"><code>d2&lt;-data.frame(x=rnorm(1000))
+d2$z&lt;-d2$x+rnorm(1000,s=.2)
+d2$y&lt;-d2$x-d2$z+rnorm(1000,s=1.4)
+
+m2a&lt;-lm(y~x+z,data=d2)
+summary(m2a)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ x + z, data = d2)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5.0452 -1.0617 -0.0624  0.9366  4.0579 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.02221    0.04400   0.505    0.614    
+## x            0.88973    0.22178   4.012 6.48e-05 ***
+## z           -0.99435    0.21848  -4.551 5.99e-06 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.389 on 997 degrees of freedom
+## Multiple R-squared:  0.02586,	Adjusted R-squared:  0.0239 
+## F-statistic: 13.23 on 2 and 997 DF,  p-value: 2.13e-06</code></pre>
+<pre class="r"><code>vif(m2a)</code></pre>
+<pre><code>##       x       z 
+## 27.6268 27.6268</code></pre>
+<pre class="r"><code>m2b&lt;-lm(y~z,data=d2)
+summary(m2b) </code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ z, data = d2)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.9515 -1.0261 -0.0484  0.9315  4.1074 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)   
+## (Intercept)  0.01638    0.04430   0.370  0.71166   
+## z           -0.13385    0.04188  -3.196  0.00144 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.4 on 998 degrees of freedom
+## Multiple R-squared:  0.01013,	Adjusted R-squared:  0.00914 
+## F-statistic: 10.21 on 1 and 998 DF,  p-value: 0.001437</code></pre>
+<pre class="r"><code>anova(m2b,m2a)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Model 1: y ~ z
+## Model 2: y ~ x + z
+##   Res.Df    RSS Df Sum of Sq      F    Pr(&gt;F)    
+## 1    998 1955.4                                  
+## 2    997 1924.3  1    31.064 16.094 6.477e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+<div id="confounding" class="section level3">
+<h3>Confounding</h3>
+<p>The third example is straightforward confounding. <span class="math inline">\(X\)</span> is a confounder for the effect of <span class="math inline">\(Z\)</span> on <span class="math inline">\(Y\)</span>. The model with just <span class="math inline">\(Z\)</span> is extremely misleading.</p>
+<pre class="r"><code>d3&lt;-data.frame(x=rnorm(100))
+d3$z&lt;-d3$x+rnorm(100,s=.2)
+d3$y&lt;-d3$x+rnorm(100)
+
+
+m3a&lt;-lm(y~x+z,data=d3)
+summary(m3a)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ x + z, data = d3)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.56402 -0.52576  0.01137  0.61253  3.02420 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.01776    0.09518   0.187 0.852371    
+## x            1.80065    0.48551   3.709 0.000347 ***
+## z           -0.63875    0.47192  -1.354 0.179037    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.9252 on 97 degrees of freedom
+## Multiple R-squared:  0.6086,	Adjusted R-squared:  0.6005 
+## F-statistic: 75.41 on 2 and 97 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>vif(m3a)</code></pre>
+<pre><code>##        x        z 
+## 26.27358 26.27358</code></pre>
+<pre class="r"><code>m3b&lt;-lm(y~z,data=d3)
+summary(m3b) </code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ z, data = d3)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.7154 -0.6226 -0.0672  0.6294  3.1791 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -0.06316    0.09850  -0.641    0.523    
+## z            1.07784    0.09788  11.012   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.9835 on 98 degrees of freedom
+## Multiple R-squared:  0.5531,	Adjusted R-squared:  0.5485 
+## F-statistic: 121.3 on 1 and 98 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>anova(m3b,m3a)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Model 1: y ~ z
+## Model 2: y ~ x + z
+##   Res.Df    RSS Df Sum of Sq      F    Pr(&gt;F)    
+## 1     98 94.799                                  
+## 2     97 83.026  1    11.773 13.755 0.0003471 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+<div id="measurement-noise" class="section level3">
+<h3>Measurement noise</h3>
+<p>Finally, a setting where a latent variable affects both <span class="math inline">\(X\)</span> and <span class="math inline">\(Z\)</span> and also <span class="math inline">\(Y.\)</span> The best model here would use <span class="math inline">\((X+Z)/2\)</span> as a single predictor – the two predictors have no additional information in them – but using the two variables individually is better than using just one of them.</p>
+<pre class="r"><code>latent&lt;-rnorm(100,s=0.7)
+noise&lt;-rnorm(100,s=0.7)
+d4&lt;-data.frame(x=latent+noise+rnorm(100,s=0.15),
+		z=latent+noise+rnorm(100,s=0.15),
+		y=latent+rnorm(100,s=1))
+
+
+m4a&lt;-lm(y~x+z,data=d4)
+summary(m4a)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ x + z, data = d4)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.3877 -0.6169  0.0419  0.6557  2.2683 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept)  0.07951    0.11253   0.707    0.482
+## x           -0.50744    0.60089  -0.844    0.400
+## z            1.00203    0.62074   1.614    0.110
+## 
+## Residual standard error: 1.119 on 97 degrees of freedom
+## Multiple R-squared:  0.1452,	Adjusted R-squared:  0.1276 
+## F-statistic: 8.237 on 2 and 97 DF,  p-value: 0.0004964</code></pre>
+<pre class="r"><code>vif(m4a)</code></pre>
+<pre><code>##       x       z 
+## 25.4797 25.4797</code></pre>
+<pre class="r"><code>m4b&lt;-lm(y~z,data=d4)
+summary(m4b) </code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ z, data = d4)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.3204 -0.6567  0.0560  0.6260  2.3681 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.07293    0.11209   0.651 0.516796    
+## z            0.48822    0.12279   3.976 0.000134 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.117 on 98 degrees of freedom
+## Multiple R-squared:  0.1389,	Adjusted R-squared:  0.1301 
+## F-statistic: 15.81 on 1 and 98 DF,  p-value: 0.0001342</code></pre>
+<pre class="r"><code>anova(m4b,m4a)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Model 1: y ~ z
+## Model 2: y ~ x + z
+##   Res.Df    RSS Df Sum of Sq      F Pr(&gt;F)
+## 1     98 122.28                           
+## 2     97 121.39  1   0.89246 0.7131 0.4005</code></pre>
+</div>
+<div id="summary" class="section level3">
+<h3>Summary</h3>
+<p>If you want a <strong>predictive</strong> model there’s no need to drop correlated variables because you will already be evaluating models based on predictive accuracy. You do want to drop variables with <em>redundant</em> information, if you can, but that isn’t the same thing as correlation (as example #2 shows). On the other hand, if you want a <strong>causal</strong> model, you can’t rely on correlations to choose it.</p>
+<p>A high VIF tells you that there’s less information about the conditional coefficients <span class="math inline">\(\beta_{Z|X}\)</span> and <span class="math inline">\(\beta_{X|Z}\)</span> than about the single-variable coefficients <span class="math inline">\(\beta_X\)</span> and <span class="math inline">\(\beta_Z\)</span>. It doesn’t tell you which set of coefficients you are interested in.</p>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>This is also the classic scenario where forward selection for predictive models does poorly.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
