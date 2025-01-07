@@ -1,0 +1,25 @@
+---
+title: The piranha and the polypill
+author: Thomas Lumley
+date: '2025-01-08'
+slug: the-piranha-and-the-polypill
+categories: []
+tags: []
+---
+
+
+
+<p>The piranha problem is both a <a href="https://statmodeling.stat.columbia.edu/2017/12/15/eats/">metaphor</a> and a <a href="https://arxiv.org/abs/2105.13445">set of theorems</a> coming out of Andrew Gelman’s research group. The metaphor is of large intervention effects as piranhas that can’t be kept together in the same tank since they’d eat each other. The theorems show that a large set of intervention effects that must add up to a large total of explained variability unless they are highly correlated with each other.</p>
+<p>In social science contexts, Gelman takes it as given<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> that the total effect of a bunch of simple interventions can’t be very large. In medicine and public health that’s not clear. The chance of having a heart attack at any given age, and of dying of one if you have one, (incidence and case fatality) have been falling for decades, and this is probably due to the combined effect of a lot of factors – better treatments, better preventive medication, reductions in smoking, drinking, and saturated fat consumption. In particular, the ‘polypill’ is a recent idea of prescribing relatively low doses of three blood-pressure medications, a cholesterol-lowering drug, and maybe aspirin<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>, and folate<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> to pretty much everyone over a certain age.</p>
+<p>In medicine there is no intrinsic impossibility to having four interventions that each reduce the risk of heart attack by 20%. It may or may not <em>actually</em> be true but it certainly could be. The interventions don’t eat each other in the natural population because the natural population doesn’t take the polypill, so the piranha metaphor is not a barrier to the polypill – but what do the piranha <em>theorems</em> say?</p>
+<p>The first thing to note about the piranha theorems is that there are both linear regression bounds and mutual information bounds. Let’s consider linear regression bounds first. If we have a set of interventions that each reduce heart attack incidence by 20%, and so have <em>multiplicative</em> effects, the benefits of these interactions will be <em>subadditive</em>. The first one reduces your risk from 2% to 1.6%, by 0.4 percentage points; the second from 1.6% to 1.28%, by 0.32 percentage points; the third from 1.28% to 1.02%, but 0.26 percentage points, and so on. The benefit on an additive scale won’t increase without bound even if the number of treatments keeps increasing. That’s a modest win for the piranhas, but it’s not a problem for the polypill.</p>
+<p>How about mutual information? Well, the mutual information between two variables is bounded above by the entropy of either one, and the entropy of a rare outcome variable is small. Just as with additive effects, a set of interventions that each reduce the incidence of heart attack by 20% will have decreasing impacts measured in terms of mutual information. Again, the impact on this scale won’t increase without bound even if you keep expanding the number of treatments.</p>
+<p>So, the piranha metaphor doesn’t apply to this sort of multifactor intervention with well-tested components, more or less as you’d expect. The piranha <em>theorems</em> apply (because they’re theorems) but they don’t rule out the public health goal – the principle that you can’t remove all the variability with multiple interventions really is an assumption of the piranha problem rather than a conclusion.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>quite reasonably<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>aspirin is in some versions of the intervention but not others. It reduces heart attack risk, but increases bleeding risk, and expert opinion keeps changing on whether the net impact is good or bad<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>some countries already put supplementary folate in bread<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

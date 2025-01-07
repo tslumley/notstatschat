@@ -1,0 +1,19 @@
+---
+title: The piranha and the polypill
+author: Thomas Lumley
+date: '2025-01-08'
+slug: the-piranha-and-the-polypill
+categories: []
+tags: []
+---
+The piranha problem is both a [metaphor](https://statmodeling.stat.columbia.edu/2017/12/15/eats/) and a [set of theorems](https://arxiv.org/abs/2105.13445) coming out of Andrew Gelman's research group.  The metaphor is of large intervention effects as piranhas that can't be kept together in the same tank since they'd eat each other. The theorems show that a large set of intervention effects that  must add up to a large total of explained variability unless they are highly correlated with each other. 
+
+In social science contexts, Gelman takes it as given^[quite reasonably] that the total effect of a bunch of simple interventions can't be very large.  In medicine and public health that's not clear.  The chance of having a heart attack at any given age, and of dying of one if you have one, (incidence and case fatality) have been falling for decades, and this is probably due to the combined effect of a lot of factors -- better treatments, better preventive medication, reductions in smoking, drinking, and saturated fat consumption.   In particular, the 'polypill' is a recent idea of prescribing relatively low doses of three blood-pressure medications, a cholesterol-lowering drug, and maybe aspirin^[aspirin is in some versions of the intervention but not others. It reduces heart attack risk, but increases bleeding risk, and expert opinion keeps changing on whether the net impact is good or bad], and folate^[some countries already put supplementary folate in bread] to pretty much everyone over a certain age.
+
+In medicine there is no intrinsic impossibility to having four interventions that each reduce the risk of heart attack by 20%. It may or may not *actually* be true but it certainly could be. The interventions don't eat each other in the natural population because the natural population doesn't take the polypill, so the piranha metaphor is not a barrier to the polypill -- but what do the piranha *theorems* say?
+
+The first thing to note about the piranha theorems is that there are both linear regression bounds and mutual information bounds.  Let's consider linear regression bounds first.  If we have a set of interventions that each reduce heart attack incidence by 20%, and so have *multiplicative* effects, the benefits of these interactions will be *subadditive*. The first one reduces your risk from 2% to 1.6%, by 0.4 percentage points; the second from 1.6% to 1.28%, by 0.32 percentage points; the third from 1.28% to 1.02%, but 0.26 percentage points, and so on.  The benefit on an additive scale won't increase without bound even if the number of treatments keeps increasing. That's a modest win for the piranhas, but it's not a problem for the polypill. 
+
+How about mutual information? Well, the mutual information between two variables is bounded above by the entropy of either one, and the entropy of a rare outcome variable is small.  Just as with additive effects, a set of interventions that each reduce the incidence of heart attack by 20% will have decreasing impacts measured in terms of mutual information. Again, the impact on this scale won't increase without bound even if you keep expanding the number of treatments. 
+
+So, the piranha metaphor doesn't apply to this sort of multifactor intervention with well-tested components, more or less as you'd expect. The piranha *theorems* apply (because they're theorems) but they don't rule out the public health goal -- the principle that you can't remove all the variability with multiple interventions really is an assumption of the piranha problem rather than a conclusion. 
