@@ -1,0 +1,61 @@
+---
+title: 'Ordinal data: taking transformation invariance seriously'
+author: Thomas Lumley
+date: '2025-02-26'
+slug: ordinal-data-taking-transformation-invariance-seriously
+categories: []
+tags: []
+---
+
+
+
+<p><a href="https://notstatschat.rbind.io/2021/09/03/ordinal-data-and-models/">Again</a> with the <a href="https://notstatschat.rbind.io/2015/01/14/a-transitive-test-is-a-test-for-a-univariate-parameter/">ordinal</a> comparisons, <a href="https://notstatschat.rbind.io/2013/10/06/rock-paper-scissors-wilcoxon-test/">yes</a>.</p>
+<p>The ‘scale of measurement’ paradigm for variables says that ordinal data are determined only up to monotone transformation, just as interval data are determined up to translation and nominal data up to reordering. This is all good for a single observation, and as I’ve argued before a problem only arises when you want to consider a distribution over multiple observations.</p>
+<p>There are many ways to characterise the problem with distributions: my current favourite one is that, yes, a death is worse than a heart attack, but is it worse than two heart attacks, or five, or ten, or fifty? That is, ordering distributions (without strong assumptions) requires you to evaluate tradeoffs where some people get better and some get worse.</p>
+<p>Today, though, I want to look at the transformation invariance. Some people will say that you can’t meaningfully assign numbers to an ordinal scale and do arithmetic on them, because the results aren’t invariant under monotone transformation. Other people will say that, ok, perhaps there is some meaningful numerical coding, but you can’t possibly know what it is.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> In any case, we have the basic idea that we should get the same answers under any scoring system consistent with the ordering. If you have two ordinal distributions, you typically will not get the same comparison results under arbitrary scoring systems/monotone transformations. You will get the same results precisely if the cumulative distribution functions do not cross – the ‘stochastic ordering’ condition we’ve seen before.</p>
+<p>What we get this way is the other side of the transitivity barrier to ordinal testing. Suppose you have a binary relation <span class="math inline">\(\preceq\)</span> on distributions.<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> Given two distributions <span class="math inline">\(F\)</span> and <span class="math inline">\(G\)</span> you could have</p>
+<ul>
+<li><span class="math inline">\(F\prec G\)</span></li>
+<li><span class="math inline">\(F\succ G\)</span></li>
+<li><span class="math inline">\(F\sim G\)</span>, or</li>
+<li><span class="math inline">\(F\diamond G\)</span>,</li>
+</ul>
+<p>where the last two mean “both <span class="math inline">\(F\preceq G\)</span> and <span class="math inline">\(F\succeq G\)</span>” and “neither <span class="math inline">\(F\preceq G\)</span> nor <span class="math inline">\(F\succeq G\)</span>”.</p>
+<p>For comparison, consider the intro-stats version of the Student <span class="math inline">\(t\)</span>-test, where certain textbooks will say</p>
+<ul>
+<li><span class="math inline">\(F\prec G\)</span> if they are both Normal with the same variance and <span class="math inline">\(\mu_F&lt;\mu_G\)</span>,</li>
+<li><span class="math inline">\(F\succ G\)</span> if they are both Normal with the same variance and <span class="math inline">\(\mu_F&gt;\mu_G\)</span>,</li>
+<li><span class="math inline">\(F\sim G\)</span> if they are both Normal with the same variance and <span class="math inline">\(\mu_F=\mu_G\)</span>, and</li>
+<li><span class="math inline">\(F\diamond G\)</span> if they aren’t Normal with the same variance.</li>
+</ul>
+<p>That is, you can’t compare the means of the distributions unless they are Normal with the same variance<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>. A more modern approach is to use a Welch t-test or bootstrap and say</p>
+<ul>
+<li><span class="math inline">\(F\prec G\)</span> if <span class="math inline">\(\mu_F&lt;\mu_G\)</span>,</li>
+<li><span class="math inline">\(F\succ G\)</span> if <span class="math inline">\(\mu_F&gt;\mu_G\)</span>,</li>
+<li><span class="math inline">\(F\sim G\)</span> if <span class="math inline">\(\mu_F=\mu_G\)</span>, and</li>
+<li><span class="math inline">\(F\diamond G\)</span> only if they don’t have means</li>
+</ul>
+<p>We don’t have that freedom if we believe in ordinal data and its invariance properties, and we don’t have moel assumptions guaranteeing stochastic ordering. We have</p>
+<ul>
+<li><span class="math inline">\(F\prec G\)</span> if the CDF for <span class="math inline">\(F\)</span> lies higher everywhere</li>
+<li><span class="math inline">\(F\succ G\)</span> if the CDF for <span class="math inline">\(G\)</span> lies higher everywhere</li>
+<li><span class="math inline">\(F\sim G\)</span> if the CDFs are the same, and</li>
+<li><span class="math inline">\(F\diamond G\)</span> if the CDFs cross</li>
+</ul>
+<p>A lot of textbooks, especially the ones that don’t really think non-Normal distributions have means, will use rank tests and ignore the comparability requirements. That is,</p>
+<ul>
+<li><span class="math inline">\(F\prec G\)</span> if the mean rank for <span class="math inline">\(G\)</span> in the combined sample is higher</li>
+<li><span class="math inline">\(F\succ G\)</span> if the mean rank for <span class="math inline">\(F\)</span> in the combined sample is higher</li>
+<li><span class="math inline">\(F\sim G\)</span> if the mean ranks in the combined sample are the same,</li>
+<li><span class="math inline">\(F\diamond G\)</span> never</li>
+</ul>
+<p>I think this confuses being distribution-free and being ordinal. Rank tests (for data without ties, at least) are distribution-free in that you use the same numerical scores (the ranks) regardless of the actual data values. They aren’t ordinal, because they use numerical scores (the ranks) and do arithmetic on these scores. There’s nothing magical about ranks that lets them get around the invariance requirement; they just don’t satisfy it.</p>
+<p>If you really want to take the transformation-invariance of ordinal data seriously, you need either to assume (and check) a data generating model that guarantees the true CDFs will never cross, or get used to most two-sample comparisons being undefined.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Yet others will say there’s obviously some meaningful numerical coding for an individual, but it could well be different for different individuals. These people are probably right, but there’s not a lot that can be done about it. Arrow’s Impossibility Theorem lurks not very far down this path<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>discrete distributions, for data analysis, but all distributions for data generating models.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>or binary, but that’s probably in a different chapter<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
