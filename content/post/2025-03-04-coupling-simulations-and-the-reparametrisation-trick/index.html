@@ -1,0 +1,88 @@
+---
+title: Coupling simulations and the "reparametrisation trick"
+author: Thomas Lumley
+date: '2025-03-04'
+slug: coupling-simulations-and-the-reparametrisation-trick
+categories: []
+tags: []
+---
+
+
+
+<p>As everyone knows, if you want to repeat a sequence of random numbers in statistical software<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> you can reset your software’s random number stream to the same position and everything will deterministically repeat<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. What’s slightly more complicated is if you want ‘the same’ random numbers from a different set of parameters.</p>
+<p>Suppose you have some simulations, which might be estimating the operating characteristics of a trial with some form of Bayesian response-adaptive randomisation. Running the whole simulation 10,000 times with MCMC for each replicate is slow and annoying.<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> You might want to look at some variational approximation instead, and if it isn’t accurate enough you might want to augment it with proper MCMC for a carefully chosen subset of the replicates.</p>
+<p>In order to run the MCMC on “the same” data as the variational method, you need to be able to generate “the same” data. This is easy for ordinary randomisation: you just generate the same stream of imaginary participants, they get randomised the same way, and you run the two analyses.<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> But with response-adaptive randomisation your allocation probabilities for different treatments depend on analyses of the accumulating data. When you switch from a variational approximation to MCMC, the interim analyses and the subsequent allocation probabilities may change.</p>
+<p>Getting properly coupled streams of imaginary participants now requires some conditions.</p>
+<p>First, choosing treatment arms with the specified randomisation probabilities uses **the same number* of draws from the random stream as the randomisation probabilities change. This is critical; a failure here means that future data for the MCMC and variational analyses might be completely different.</p>
+<p>Second, the treatment choice for a given random stream <span class="math inline">\({\cal U}=U_1,U_2,U_3,\dots\)</span> and vector of allocation probabilities <span class="math inline">\(\langle p_k\rangle\)</span> changes as little as possible when <span class="math inline">\(p_k\)</span> changes with <span class="math inline">\({\cal U}\)</span> held constant. We want to get “the same” treatment allocations, or more precisely, allocations in the same place in the distribution. If our random number generators for a distribution <span class="math inline">\(F\)</span> worked just by taking <span class="math inline">\(F^{-1}(U_1)\)</span>, we would automatically satisfy this second condition: the Frech'et bounds on similarity say that’s how you get the best agreement between two numbers from different distributions.</p>
+<p>Some of the random number generators in R do work like this: by default, <code>rnorm(1,0,1)</code> is computed as <code>qnorm(runif(1),0,1)</code>, so <code>rnorm(1,m,s)</code> is a linear function of <code>rnorm(1,0,1)</code> for the same random number stream. Some don’t, or do only for certain parameter values: here we get close coupling for <code>rhyper</code> with small parameters but not with larger parameters where the algorithm is different. You need to read the documentation, or perhaps the source.</p>
+<pre class="r"><code>set.seed(2025-3-4)
+a&lt;-rhyper(1000,20,20,6)
+set.seed(2025-3-4)
+b&lt;-rhyper(1000,20,20,7)
+
+table(a,b)</code></pre>
+<pre><code>##    b
+## a     0   1   2   3   4   5   6   7
+##   0   3   7   0   0   0   0   0   0
+##   1   0  37  49   0   0   0   0   0
+##   2   0   0 122 124   0   0   0   0
+##   3   0   0   0 156 179   0   0   0
+##   4   0   0   0   0 129 116   0   0
+##   5   0   0   0   0   0  39  28   0
+##   6   0   0   0   0   0   0   6   5</code></pre>
+<pre class="r"><code>set.seed(2025-3-4)
+a&lt;-rhyper(1000,200,200,69)
+set.seed(2025-3-4)
+b&lt;-rhyper(1000,200,200,70)
+par(pty=&quot;s&quot;)
+image(table(a,b),
+      col=c(&quot;grey&quot;,hcl.colors(12, &quot;YlOrRd&quot;, rev = TRUE)))</code></pre>
+<p><img src="staticunnamed-chunk-1-1.png" width="90%" /></p>
+<p>Deep learners will be familiar with the <code>rnorm</code> case under the name of “the reparametrisation trick”: if you want to do gradient descent on a variational autoencoder you need to differentiate a Gaussian random noise input with respect to its parameters, so you need a coupled family of Gaussian random noises. If your programming language doesn’t provide these, you can use <span class="math inline">\(Z_{\mu,\sigma}=Z_{0,1}\times\sigma+\mu\)</span> to do it yourself.</p>
+<p>Going back to the simulation question: is <code>sample(, prob=, replace=TRUE)</code> implemented to produce coupled outputs with constant consumption of random numbers? Well, first, does it seem to be?</p>
+<pre class="r"><code>set.seed(2025-3-4)
+a&lt;-sample(1:4, prob=1:4, replace=TRUE,size=1000)
+set.seed(2025-3-4)
+b&lt;-sample(1:4, prob=(1:4)+0.1, replace=TRUE,size=1000)
+table(a,b)</code></pre>
+<pre><code>##    b
+## a     1   2   3   4
+##   1  84   0   0   0
+##   2   7 207   0   0
+##   3   0   4 298   0
+##   4   0   0   7 393</code></pre>
+<p>Looks promising. If we check the documentation for <code>sample</code> it says that “Walker’s alias method” is used “when there are more than 200 reasonably probable values”, which is not going to be an issue in the platform-trial context but might matter in other contexts. We also need to check that <code>sample</code> uses a constant number of random uniforms, and here we really should look at the implementation: in <code>src/main/random.c</code> in <code>ProbSampleReplace</code> we see</p>
+<pre><code>    /* compute the sample */
+    for (i = 0; i &lt; nans; i++) {
+	rU = unif_rand();
+	for (j = 0; j &lt; nm1; j++) {
+	    if (rU &lt;= p[j])
+		break;
+	}
+	ans[i] = perm[j];
+    }</code></pre>
+<p>where the loop over <code>i</code> indexes the numbers we’re generating and there’s one <code>unif_rand()</code> for each one.</p>
+<p>If you needed a whole library of nicely-coupled random number generators I think you’d be best off using the quantile functions to define them, for example:</p>
+<pre class="r"><code>my_rhyper&lt;-function(n,...){
+  u&lt;-runif(n)
+  qhyper(u,...)
+}
+set.seed(2025-3-4)
+a&lt;-my_rhyper(1000,200,200,69)
+set.seed(2025-3-4)
+b&lt;-my_rhyper(1000,200,200,70)
+par(pty=&quot;s&quot;)
+image(table(a,b),
+      col=c(&quot;grey&quot;,hcl.colors(20, &quot;YlOrRd&quot;, rev = TRUE)))</code></pre>
+<p><img src="staticunnamed-chunk-3-1.png" width="90%" /></p>
+<p>and we’re getting 1000 put of 1000 with either <code>a==b</code> or <code>a+1==b</code></p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>pseudorandom numbers, yes, just go away<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>modulo cosmic rays, Acts of Quantum, and so on<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>if it isn’t, then without loss of generality try a larger number<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>you need to make sure your MCMC engine has a separate random number stream, but it does<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
