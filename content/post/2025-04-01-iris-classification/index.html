@@ -1,0 +1,69 @@
+---
+title: Iris classification
+author: Thomas Lumley
+date: '2025-04-01'
+slug: iris-classification
+categories: []
+tags: []
+---
+
+
+
+<p>The file <code>iris_data.csv</code> contains some data on iris photographs from unsplash.org. For each of 28 photos we have the mean luminance, chroma, and hue and the standard deviation of luminance, chroma, and hue, based on converting from RGB to polar Lab coordinates with the <code>colorspace</code> package. I haven’t included the actual photo files because they’re a bit big, but here are a couple of the photos at lower resolution.</p>
+<p><img src="images/ian-talmacs-MU9Zgo2QDfo-unsplash.jpeg" style="width:90.0%" />
+<img src="images/lucy-mason-h_xX_Wc75nY-unsplash.jpg" style="width:90.0%" /></p>
+<p>We want to classify these images of irises into two groups. As a task, this matches what we do in the classic data set; it isn’t what the photographs are for, and it is entirely pointless.</p>
+<p>So, first, lets look at a pairs plot of the variables</p>
+<pre class="r"><code>iris_data&lt;-read.csv(&quot;~/iris_data.csv&quot;,row.names=1)
+pairs(iris_data[,1:6],pch=19)</code></pre>
+<p><img src="staticunnamed-chunk-1-1.png" width="672" /></p>
+<p>The clusters aren’t all that obvious; let’s add the group variable</p>
+<pre class="r"><code>iris_data&lt;-read.csv(&quot;~/iris_data.csv&quot;,row.names=1)
+pairs(iris_data[,1:6],pch=19,col=ifelse(iris_data[,7],&quot;blue&quot;,&quot;orange&quot;))</code></pre>
+<p><img src="staticunnamed-chunk-2-1.png" width="672" /></p>
+<p>We’re getting some separation, but not perfect separation with any pair of variables. Try principal components</p>
+<pre class="r"><code>pc&lt;-princomp(iris_data[,1:6])
+pairs(pc$scores[,1:4],pch=19,col=ifelse(iris_data[,7],&quot;blue&quot;,&quot;orange&quot;))</code></pre>
+<p><img src="staticunnamed-chunk-3-1.png" width="672" />
+It looks like component 1 is good for most of the separation, but that the next three aren’t much use. Of course, principal components are unsupervised, so we can use advanced supervised learning techniques instead</p>
+<pre class="r"><code>l&lt;-MASS::lda(eye~.,data=iris_data)
+p&lt;-predict(l)$posterior
+hist(p[,1])</code></pre>
+<p><img src="staticunnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>table(pred=p[,1]&gt;0.5,true=iris_data$eye)</code></pre>
+<pre><code>##        true
+## pred    FALSE TRUE
+##   FALSE     1   12
+##   TRUE     15    0</code></pre>
+<p>And we get nearly perfect classification (at least in terms of apparent error)</p>
+<p>On this special day, I want to finish by thanking the people who sent their iris photos to Unsplash</p>
+<pre class="r"><code>t(sapply(strsplit(rownames(iris_data),&quot;-&quot;),&quot;[&quot;,1:2))</code></pre>
+<pre><code>##       [,1]         [,2]         
+##  [1,] &quot;aline&quot;      &quot;coill&quot;      
+##  [2,] &quot;amanda&quot;     &quot;dalbjorn&quot;   
+##  [3,] &quot;anastasiya&quot; &quot;badun&quot;      
+##  [4,] &quot;ashlee&quot;     &quot;marie&quot;      
+##  [5,] &quot;colin&quot;      &quot;watts&quot;      
+##  [6,] &quot;cynthia&quot;    &quot;westbrook&quot;  
+##  [7,] &quot;geronimo&quot;   &quot;giqueaux&quot;   
+##  [8,] &quot;gopinath&quot;   &quot;mohanta&quot;    
+##  [9,] &quot;ian&quot;        &quot;talmacs&quot;    
+## [10,] &quot;james&quot;      &quot;morden&quot;     
+## [11,] &quot;james&quot;      &quot;morden&quot;     
+## [12,] &quot;james&quot;      &quot;morden&quot;     
+## [13,] &quot;javier&quot;     &quot;vinals&quot;     
+## [14,] &quot;jeffrey&quot;    &quot;hamilton&quot;   
+## [15,] &quot;jordan&quot;     &quot;whitfield&quot;  
+## [16,] &quot;kalea&quot;      &quot;jerielle&quot;   
+## [17,] &quot;kalea&quot;      &quot;jerielle&quot;   
+## [18,] &quot;lana&quot;       &quot;svet&quot;       
+## [19,] &quot;lucy&quot;       &quot;mason&quot;      
+## [20,] &quot;olesya&quot;     &quot;blinskaya&quot;  
+## [21,] &quot;ria&quot;        &quot;truter&quot;     
+## [22,] &quot;roman&quot;      &quot;petrov&quot;     
+## [23,] &quot;sardar&quot;     &quot;faizan&quot;     
+## [24,] &quot;sheila&quot;     &quot;swayze&quot;     
+## [25,] &quot;v2osk&quot;      &quot;In4XVKhYaiI&quot;
+## [26,] &quot;veronika&quot;   &quot;scherbik&quot;   
+## [27,] &quot;victor&quot;     &quot;freitas&quot;    
+## [28,] &quot;yoksel&quot;     &quot;zok&quot;</code></pre>
