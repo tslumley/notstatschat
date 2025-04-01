@@ -1,5 +1,5 @@
 ---
-title: Iris classification: the next generation
+title: "Iris classification: the next generation"
 author: Thomas Lumley
 date: '2025-04-01'
 slug: iris-classification

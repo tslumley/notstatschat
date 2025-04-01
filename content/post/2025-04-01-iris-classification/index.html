@@ -1,5 +1,5 @@
 ---
-title: Iris classification
+title: "Iris classification: the next generation"
 author: Thomas Lumley
 date: '2025-04-01'
 slug: iris-classification
@@ -16,20 +16,20 @@ tags: []
 <p>So, first, lets look at a pairs plot of the variables</p>
 <pre class="r"><code>iris_data&lt;-read.csv(&quot;~/iris_data.csv&quot;,row.names=1)
 pairs(iris_data[,1:6],pch=19)</code></pre>
-<p><img src="staticunnamed-chunk-1-1.png" width="672" /></p>
+<p><img src="staticunnamed-chunk-1-1.png" width="90%" /></p>
 <p>The clusters aren’t all that obvious; let’s add the group variable</p>
 <pre class="r"><code>iris_data&lt;-read.csv(&quot;~/iris_data.csv&quot;,row.names=1)
 pairs(iris_data[,1:6],pch=19,col=ifelse(iris_data[,7],&quot;blue&quot;,&quot;orange&quot;))</code></pre>
-<p><img src="staticunnamed-chunk-2-1.png" width="672" /></p>
+<p><img src="staticunnamed-chunk-2-1.png" width="90%" /></p>
 <p>We’re getting some separation, but not perfect separation with any pair of variables. Try principal components</p>
 <pre class="r"><code>pc&lt;-princomp(iris_data[,1:6])
 pairs(pc$scores[,1:4],pch=19,col=ifelse(iris_data[,7],&quot;blue&quot;,&quot;orange&quot;))</code></pre>
-<p><img src="staticunnamed-chunk-3-1.png" width="672" />
+<p><img src="staticunnamed-chunk-3-1.png" width="90%" />
 It looks like component 1 is good for most of the separation, but that the next three aren’t much use. Of course, principal components are unsupervised, so we can use advanced supervised learning techniques instead</p>
 <pre class="r"><code>l&lt;-MASS::lda(eye~.,data=iris_data)
 p&lt;-predict(l)$posterior
 hist(p[,1])</code></pre>
-<p><img src="staticunnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="staticunnamed-chunk-4-1.png" width="90%" /></p>
 <pre class="r"><code>table(pred=p[,1]&gt;0.5,true=iris_data$eye)</code></pre>
 <pre><code>##        true
 ## pred    FALSE TRUE
