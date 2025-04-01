@@ -16,7 +16,7 @@ We want to classify these images of irises into two groups. As a task, this matc
 
 So, first, lets look at a pairs plot of the variables
 
-```{r fig.path='static', width="90%"}
+```{r fig.path='static', out.width="90%"}
 iris_data<-read.csv("~/iris_data.csv",row.names=1)
 pairs(iris_data[,1:6],pch=19)
 ```
@@ -24,7 +24,7 @@ pairs(iris_data[,1:6],pch=19)
 The clusters aren't all that obvious; let's add the group variable
 
 
-```{r fig.path='static', width="90%"}
+```{r fig.path='static', out.width="90%"}
 iris_data<-read.csv("~/iris_data.csv",row.names=1)
 pairs(iris_data[,1:6],pch=19,col=ifelse(iris_data[,7],"blue","orange"))
 ```
@@ -33,13 +33,13 @@ pairs(iris_data[,1:6],pch=19,col=ifelse(iris_data[,7],"blue","orange"))
 We're getting some separation, but not perfect separation with any pair of variables. Try principal components
 
 
-```{r fig.path='static', width="90%"}
+```{r fig.path='static', out.width="90%"}
 pc<-princomp(iris_data[,1:6])
 pairs(pc$scores[,1:4],pch=19,col=ifelse(iris_data[,7],"blue","orange"))
 ```
 It looks like component 1 is good for most of the separation, but that the next three aren't much use. Of course, principal components are unsupervised, so we can use advanced supervised learning techniques instead
 
-```{r width="90%", fig.path="static"}
+```{r out.width="90%", fig.path="static"}
 l<-MASS::lda(eye~.,data=iris_data)
 p<-predict(l)$posterior
 hist(p[,1])
