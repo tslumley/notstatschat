@@ -36,6 +36,8 @@ hist(p[,1])</code></pre>
 ##   FALSE     1   12
 ##   TRUE     15    0</code></pre>
 <p>And we get nearly perfect classification (at least in terms of apparent error)</p>
+<p>You might be curious about which picture is the one error. Here it is:</p>
+<p><img src="images/james-morden-tU8KQ_Y3nNY-unsplash.jpeg" style="width:90.0%" /></p>
 <p>On this special day, I want to finish by thanking the people who sent their iris photos to Unsplash</p>
 <pre class="r"><code>t(sapply(strsplit(rownames(iris_data),&quot;-&quot;),&quot;[&quot;,1:2))</code></pre>
 <pre><code>##       [,1]         [,2]         

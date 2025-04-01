@@ -48,6 +48,10 @@ table(pred=p[,1]>0.5,true=iris_data$eye)
 
 And we get nearly perfect classification (at least in terms of apparent error)
 
+You might be curious about which picture is the one error. Here it is:
+
+![](images/james-morden-tU8KQ_Y3nNY-unsplash.jpeg){width=90%}
+
 On this special day, I want to finish by thanking the people who sent their iris photos to Unsplash
 
 ```{r}
