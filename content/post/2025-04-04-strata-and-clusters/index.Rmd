@@ -1,0 +1,14 @@
+---
+title: Strata and clusters
+author: Thomas Lumley
+date: '2025-04-04'
+slug: strata-and-clusters
+categories: []
+tags: []
+---
+
+People often ask what the difference is between *strata* and *clusters* in sampling. Here's my current soundbite version
+
+**Strata** are a partition of the population where we hope different strata are different.  We sample from all the strata in the population, so the generalisation from the sample to the population is **within strata** and is more accurate because of stratified sampling.
+
+**Clusters** are a partition of the population where we fear different clusters are different.  We are forced to sample from just a few clusters in the population, because it's cheaper that way. The generalisation from the sample to the population is **between clusters** and is less accurate because of cluster sampling. 
