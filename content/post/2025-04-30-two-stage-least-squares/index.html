@@ -1,0 +1,107 @@
+---
+title: Two-stage least squares
+author: Thomas Lumley
+date: '2025-04-30'
+slug: two-stage-least-squares
+categories: []
+tags: []
+---
+
+
+
+<p><em>Attention Conservation Notice: someone asked about this on social media, and I probably should have it written down for the advanced regression course, but you probably don’t need to know it. Also, if you’re an econometrician then I hate your notation and so you will probably hate mine</em></p>
+<p>In two-stage least squares you have an outcome <span class="math inline">\(Y\)</span> and want to fit a causal linear regression <span class="math inline">\(E[Y|do(X=x)]=\theta x\)</span>, but have problems with, say, confounding. If you just did the fit naively you would get an estimate <span class="math inline">\(\hat\beta\)</span> that is biased for the causal <span class="math inline">\(\theta\)</span> and instead estimates the conditional expectation <span class="math inline">\(E[Y|X=x]=\beta X\)</span> in the current population.</p>
+<p>You have some instrumental variables <span class="math inline">\(Z\)</span> that have all the right properties to be instrumental variables, in particular that the effect of <span class="math inline">\(Z\)</span> on <span class="math inline">\(Y\)</span> goes entirely through <span class="math inline">\(X\)</span>.</p>
+<p>Let <span class="math inline">\(\gamma\)</span> be the coefficients for regressing <span class="math inline">\(Y\)</span> on <span class="math inline">\(Z\)</span> and <span class="math inline">\(\delta\)</span> be the coefficients for regressing <span class="math inline">\(X\)</span> on <span class="math inline">\(Z\)</span>. The effect of <span class="math inline">\(Z\)</span> on <span class="math inline">\(Y\)</span> is <span class="math inline">\(\gamma\)</span>, and since this is all mediated by <span class="math inline">\(X\)</span> the effect of <span class="math inline">\(X\)</span> on <span class="math inline">\(Y\)</span> is <span class="math inline">\(\gamma/\delta\)</span>, which can be estimated by <span class="math inline">\(\hat\theta=\hat\gamma/\hat\delta\)</span>. Alternatively, we can take the fitted values <span class="math inline">\(\hat X=\hat \delta Z\)</span> and regress <span class="math inline">\(Y\)</span> on <span class="math inline">\(\hat X\)</span> to give <span class="math inline">\(\hat\theta\)</span> directly. These give the same coefficients for <span class="math inline">\(X\)</span></p>
+<ul>
+<li>The ratio: <span class="math display">\[\hat\theta=\frac{\hat\gamma}{\hat\delta}= \frac{\widehat{\mathrm{var}}[Z]\widehat{\mathrm{cov}}[Z,Y]}{\widehat{\mathrm{var}}[Z]\widehat{\mathrm{cov}}[Z,X]},\]</span>
+where the hats are the usual empirical estimates, which simplifies to <span class="math inline">\(\widehat{\mathrm{cov}}[Z,Y]/\widehat{\mathrm{cov}}[Z,X]\)</span></li>
+<li>The two-stage: <span class="math display">\[\hat\theta = (\hat X^T\hat X)^{-1}\hat X^TY.\]</span> Noting that <span class="math inline">\(\hat X=P_ZX\)</span>, where <span class="math inline">\(P_Z\)</span> is the projection on to the space spanned by <span class="math inline">\(Z\)</span>, this is <span class="math display">\[\hat\theta=(X^TP_Z^TP_ZX)^{-1}X^TP_Z^TY =(X^TP_ZX)^{-1}X^TP_Z^TY.\]</span>
+The denominator is <span class="math inline">\(X^TZ(Z^TZ)^{-1}Z^TX\)</span> and the numerator is <span class="math inline">\(X^TZ(Z^TZ)^{-1}Z^TY\)</span>, and again everything except the last bit cancels.</li>
+</ul>
+<p>More generally, you can have multiple <span class="math inline">\(X\)</span>s and at least that many <span class="math inline">\(Z\)</span>s and do the two-stage thing. Again <span class="math inline">\(\hat X=\hat \delta X= P_ZX\)</span>, and the estimator is
+<span class="math display">\[\hat\theta = (\hat X^T\hat X)^{-1}\hat X^TY.\]</span></p>
+<p>Now for the key question. What is the (asymptotic?) variance of <span class="math inline">\(\hat\theta\)</span>? Is it just what you’d get from the second-stage model? No, but nearly.</p>
+<p>We could write <span class="math inline">\(\hat\theta\)</span> in terms of the inputs
+<span class="math display">\[\hat\theta = ( X^TP_Z^TP_Z X)^{-1} X^TP_Z^TY,\]</span>
+and then just use bilinearity of variances:
+<span class="math display">\[\mathrm{var}[\hat\theta]= ( X^TP_Z^TP_Z X)^{-1} X^TP_Z^T\mathrm{var}[Y] P_ZX( X^TP_Z^TP_Z X)^{-1}.\]</span></p>
+<p>This looks very much like it will simplify to just the ordinary regression variance! There’s one trap: <span class="math inline">\(\mathrm{var}[Y]\)</span>. Our model says <span class="math inline">\(Y=X\theta+\epsilon\)</span>, for (say) iid Normal <span class="math inline">\(\epsilon\)</span>. It doesn’t say <span class="math inline">\(Y=\hat X\theta+\epsilon\)</span>.</p>
+<p>If we replace <span class="math inline">\(\mathrm{var}[Y]\)</span> by the estimator <span class="math inline">\(\hat\sigma^2 I\)</span>, where <span class="math inline">\(I\)</span> is the identity, we can’t use
+<span class="math display">\[\hat\sigma^2_{\text{wrong}}=\frac{1}{n-\text{df}} \sum_i (Y_i-\hat X_i\hat\theta)^2\]</span>
+but we can use
+<span class="math display">\[\hat\sigma^2=\frac{1}{n-\text{df}} \sum_i (Y_i-X_i\hat\theta)^2\]</span>
+to get a consistent estimator of the variance, for some suitable degree-of-freedom correction. The sandwich variance estimator then simplifies in the usual way as the middle and right-hand chunks cancel each other out to give
+<span class="math display">\[\mathrm{var}[\hat\theta]= \hat\sigma^2 ( X^TP_Z^T X)^{-1} =\hat\sigma^2 ( \hat X^T\hat X)^{-1}.\]</span></p>
+<p>Now lets’s do an example from <code>AER::ivreg</code></p>
+<pre class="r"><code>suppressMessages(library(AER))
+data(&quot;CigarettesSW&quot;, package = &quot;AER&quot;)
+CigarettesSW &lt;- transform(CigarettesSW,
+  rprice  = price/cpi,
+  rincome = income/population/cpi,
+  tdiff   = (taxs - tax)/cpi
+)
+fm2 &lt;- ivreg(log(packs) ~ log(rprice) | tdiff, data = CigarettesSW, subset = year == &quot;1995&quot;)</code></pre>
+<p>Stage 1</p>
+<pre class="r"><code>stage1 &lt;-lm(log(rprice)~tdiff, data = CigarettesSW, subset = year == &quot;1995&quot;)
+hatX &lt;- fitted(stage1)
+Y&lt;-with(subset(CigarettesSW, year == &quot;1995&quot;), log(packs))
+stage2&lt;-lm(Y~hatX)</code></pre>
+<p>The unscaled covariance matrices are the same</p>
+<pre class="r"><code>summary(stage2)$cov.unscaled</code></pre>
+<pre><code>##             (Intercept)       hatX
+## (Intercept)    63.26849 -13.227909
+## hatX          -13.22791   2.766546</code></pre>
+<pre class="r"><code>fm2$cov.unscaled</code></pre>
+<pre><code>##             (Intercept) log(rprice)
+## (Intercept)    63.26849  -13.227909
+## log(rprice)   -13.22791    2.766546</code></pre>
+<p>The residual variance in <code>stage2</code> is not correct</p>
+<pre class="r"><code>sd(resid(stage2))</code></pre>
+<pre><code>## [1] 0.2240255</code></pre>
+<pre class="r"><code>fm2$sigma</code></pre>
+<pre><code>## [1] 0.1903539</code></pre>
+<p>But we can compute the right one using <span class="math inline">\(Y-\hat\theta X\)</span> instead of <span class="math inline">\(Y-\hat\theta \hat X\)</span></p>
+<pre class="r"><code>df&lt;-stage2$df.residual
+X&lt;-with(subset(CigarettesSW, year == &quot;1995&quot;), log(rprice))
+sqrt(sum((Y-cbind(1,X)%*%coef(stage2))^2)/df)</code></pre>
+<pre><code>## [1] 0.1903539</code></pre>
+<p>The other example on the help page has univariate <span class="math inline">\(X\)</span>, bivariate <span class="math inline">\(Z\)</span>, and univariate adjustment variables <span class="math inline">\(A\)</span>, which we handle by pasting <span class="math inline">\(A\)</span> on to the right of both <span class="math inline">\(Z\)</span> and <span class="math inline">\(X\)</span>:</p>
+<pre class="r"><code>fm &lt;- ivreg(log(packs) ~ log(rprice) + log(rincome) | log(rincome) + tdiff + I(tax/cpi),
+  data = CigarettesSW, subset = year == &quot;1995&quot;)</code></pre>
+<p>We get</p>
+<pre class="r"><code>X&lt;- with(subset(CigarettesSW, year == &quot;1995&quot;), log(rprice))
+Z&lt;- with(subset(CigarettesSW, year == &quot;1995&quot;), cbind(tdiff,I(tax/cpi)))
+A&lt;-with(subset(CigarettesSW, year == &quot;1995&quot;), log(rincome))
+
+
+
+stage1&lt;-lm(cbind(X,A)~Z+A)
+hatX&lt;-fitted(stage1)
+stage2&lt;-lm(Y~hatX+A)</code></pre>
+<p>Compare the coefficients and unscaled covariance matrices:</p>
+<pre class="r"><code>coef(fm)</code></pre>
+<pre><code>##  (Intercept)  log(rprice) log(rincome) 
+##    9.8949555   -1.2774241    0.2804048</code></pre>
+<pre class="r"><code>coef(stage2)</code></pre>
+<pre><code>## (Intercept)       hatXX       hatXA           A 
+##   9.8949555  -1.2774241   0.2804048          NA</code></pre>
+<pre class="r"><code>fm$cov.unscaled</code></pre>
+<pre><code>##              (Intercept) log(rprice) log(rincome)
+## (Intercept)   31.7527079  -6.7990694    0.2898522
+## log(rprice)   -6.7990694   1.9629850   -0.9648723
+## log(rincome)   0.2898522  -0.9648723    1.6127420</code></pre>
+<pre class="r"><code>summary(stage2)$cov.unscaled</code></pre>
+<pre><code>##             (Intercept)      hatXX      hatXA
+## (Intercept)  31.7527079 -6.7990694  0.2898522
+## hatXX        -6.7990694  1.9629850 -0.9648723
+## hatXA         0.2898522 -0.9648723  1.6127420</code></pre>
+<p>and again we can’t use the residual variance from <code>stage2</code> but we can fix it</p>
+<pre class="r"><code>fm$sigma</code></pre>
+<pre><code>## [1] 0.187856</code></pre>
+<pre class="r"><code>summary(stage2)$sigma</code></pre>
+<pre><code>## [1] 0.2025322</code></pre>
+<pre class="r"><code>df&lt;-stage2$df.residual
+theta&lt;-na.omit(coef(stage2))
+sqrt(sum( (Y-cbind(1,X,A)%*%theta)^2)/df)</code></pre>
+<pre><code>## [1] 0.187856</code></pre>

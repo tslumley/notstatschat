@@ -1,0 +1,126 @@
+---
+title: Two-stage least squares
+author: Thomas Lumley
+date: '2025-04-30'
+slug: two-stage-least-squares
+categories: []
+tags: []
+---
+
+*Attention Conservation Notice: someone asked about this on social media, and I probably should have it written down for the advanced regression course, but you probably don't need to know it. Also, if you're an econometrician then I hate your notation and so you will probably hate mine*
+
+
+In two-stage least squares you have an outcome $Y$ and want to fit a causal linear regression $E[Y|do(X=x)]=\theta x$, but have problems with, say, confounding.  If you just did the fit naively you would get an estimate $\hat\beta$ that is biased for the causal $\theta$ and instead estimates the conditional expectation $E[Y|X=x]=\beta X$ in the current population. 
+
+You have some instrumental variables $Z$ that have all the right properties to be instrumental variables, in particular that the effect of $Z$ on $Y$ goes entirely through $X$. 
+
+Let $\gamma$ be the coefficients for regressing $Y$ on $Z$ and $\delta$ be the coefficients for regressing $X$ on $Z$. The effect of $Z$ on $Y$ is $\gamma$, and since this is all mediated by $X$ the effect of $X$ on $Y$ is $\gamma/\delta$, which can be estimated by $\hat\theta=\hat\gamma/\hat\delta$.  Alternatively, we can take the fitted values $\hat X=\hat \delta Z$ and regress $Y$ on $\hat X$ to give $\hat\theta$ directly. These give the same coefficients for $X$
+
+- The ratio: $$\hat\theta=\frac{\hat\gamma}{\hat\delta}= \frac{\widehat{\mathrm{var}}[Z]\widehat{\mathrm{cov}}[Z,Y]}{\widehat{\mathrm{var}}[Z]\widehat{\mathrm{cov}}[Z,X]},$$
+where the hats are the usual empirical estimates, which simplifies to $\widehat{\mathrm{cov}}[Z,Y]/\widehat{\mathrm{cov}}[Z,X]$
+- The two-stage:  $$\hat\theta = (\hat X^T\hat X)^{-1}\hat X^TY.$$ Noting that $\hat X=P_ZX$, where $P_Z$ is the projection on to the space spanned by $Z$, this is $$\hat\theta=(X^TP_Z^TP_ZX)^{-1}X^TP_Z^TY =(X^TP_ZX)^{-1}X^TP_Z^TY.$$
+The denominator is $X^TZ(Z^TZ)^{-1}Z^TX$ and the numerator is $X^TZ(Z^TZ)^{-1}Z^TY$, and again everything except the last bit cancels.
+
+More generally, you can have multiple $X$s and at least that many $Z$s and do the two-stage thing. Again $\hat X=\hat \delta X= P_ZX$, and the estimator is
+$$\hat\theta = (\hat X^T\hat X)^{-1}\hat X^TY.$$
+
+Now for the key question. What is the (asymptotic?) variance of $\hat\theta$? Is it just what you'd get from the second-stage model? No, but nearly. 
+
+We could write $\hat\theta$ in terms of the inputs
+$$\hat\theta = ( X^TP_Z^TP_Z X)^{-1} X^TP_Z^TY,$$
+and then just use bilinearity of variances:
+$$\mathrm{var}[\hat\theta]= ( X^TP_Z^TP_Z X)^{-1} X^TP_Z^T\mathrm{var}[Y] P_ZX( X^TP_Z^TP_Z X)^{-1}.$$
+
+This looks very much like it will simplify to just the ordinary regression variance! There's one trap: $\mathrm{var}[Y]$.  Our model says $Y=X\theta+\epsilon$, for (say) iid Normal $\epsilon$. It doesn't say $Y=\hat X\theta+\epsilon$.  
+
+If we replace $\mathrm{var}[Y]$ by the estimator $\hat\sigma^2 I$, where $I$ is the identity, we can't use 
+$$\hat\sigma^2_{\text{wrong}}=\frac{1}{n-\text{df}} \sum_i (Y_i-\hat X_i\hat\theta)^2$$
+but we can use
+$$\hat\sigma^2=\frac{1}{n-\text{df}} \sum_i (Y_i-X_i\hat\theta)^2$$
+to get a consistent estimator of the variance, for some suitable degree-of-freedom correction.  The sandwich variance estimator then simplifies in the usual way as the middle and right-hand chunks cancel each other out to give
+$$\mathrm{var}[\hat\theta]= \hat\sigma^2 ( X^TP_Z^T X)^{-1} =\hat\sigma^2 ( \hat X^T\hat X)^{-1}.$$
+
+
+Now lets's do an example from `AER::ivreg`
+
+```{r}
+suppressMessages(library(AER))
+data("CigarettesSW", package = "AER")
+CigarettesSW <- transform(CigarettesSW,
+  rprice  = price/cpi,
+  rincome = income/population/cpi,
+  tdiff   = (taxs - tax)/cpi
+)
+fm2 <- ivreg(log(packs) ~ log(rprice) | tdiff, data = CigarettesSW, subset = year == "1995")
+```
+
+
+Stage 1
+
+```{r}
+stage1 <-lm(log(rprice)~tdiff, data = CigarettesSW, subset = year == "1995")
+hatX <- fitted(stage1)
+Y<-with(subset(CigarettesSW, year == "1995"), log(packs))
+stage2<-lm(Y~hatX)
+```
+
+The unscaled covariance matrices are the same
+
+```{r}
+summary(stage2)$cov.unscaled
+
+fm2$cov.unscaled
+```
+
+The residual variance in `stage2` is not correct
+```{r}
+sd(resid(stage2))
+fm2$sigma
+```
+
+But we can compute the right one using $Y-\hat\theta X$ instead of $Y-\hat\theta \hat X$
+```{r}
+df<-stage2$df.residual
+X<-with(subset(CigarettesSW, year == "1995"), log(rprice))
+sqrt(sum((Y-cbind(1,X)%*%coef(stage2))^2)/df)
+```
+
+The other example on the help page has univariate $X$, bivariate $Z$, and univariate adjustment variables $A$, which we handle by pasting $A$ on to the right of both $Z$ and $X$:
+
+```{r}
+fm <- ivreg(log(packs) ~ log(rprice) + log(rincome) | log(rincome) + tdiff + I(tax/cpi),
+  data = CigarettesSW, subset = year == "1995")
+```
+
+We get
+
+```{r}
+X<- with(subset(CigarettesSW, year == "1995"), log(rprice))
+Z<- with(subset(CigarettesSW, year == "1995"), cbind(tdiff,I(tax/cpi)))
+A<-with(subset(CigarettesSW, year == "1995"), log(rincome))
+
+
+
+stage1<-lm(cbind(X,A)~Z+A)
+hatX<-fitted(stage1)
+stage2<-lm(Y~hatX+A)
+```
+
+
+Compare the coefficients and unscaled covariance matrices:
+```{r}
+coef(fm)
+coef(stage2)
+fm$cov.unscaled
+summary(stage2)$cov.unscaled
+```
+
+and again we can't use the residual variance from `stage2` but we can fix it
+
+```{r}
+fm$sigma
+summary(stage2)$sigma
+df<-stage2$df.residual
+theta<-na.omit(coef(stage2))
+sqrt(sum( (Y-cbind(1,X,A)%*%theta)^2)/df)
+```
