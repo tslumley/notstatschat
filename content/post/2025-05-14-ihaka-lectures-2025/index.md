@@ -9,7 +9,7 @@ tags: []
 
 The 2025 Ihaka Lectures are coming, in September this year.  The theme is "Patterns in Space"^[yes:  Patterns **in** **S P A A A C E**] and we have two speakers, both talking (in part) about how modern computing environments and open-source software improve the research and communication of spatial modellers.
 
-The lectures will be on the University of Auckland City Campus, with the lecture starting at 6pm preceded by refreshments. The official university page will be [here](https://www.auckland.ac.nz/en/science/about-the-faculty/department-of-statistics/ihaka-lecture-series.html), with a link to register for the (free) tickets closer to the event^[It's currently showing last year's programme].  The lectures will also be streamed on the internet^[starting 6pm NZST (UTC+12)] and will be made available on YouTube afterwards.
+The lectures will be on the University of Auckland in the Science building (Building 303, Princes St at Wellesley St), with the lecture starting at 6pm preceded by refreshments. The official university page will be [here](https://www.auckland.ac.nz/en/science/about-the-faculty/department-of-statistics/ihaka-lecture-series.html), with a link to register for the (free) tickets closer to the event^[It's currently showing last year's programme].  The lectures will also be streamed on the internet^[starting 6pm NZST (UTC+12)] and will be made available on YouTube afterwards.
 
 #### September 4: Dan Exeter
 
