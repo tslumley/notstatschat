@@ -1,0 +1,26 @@
+---
+title: Included-variable bias
+author: Thomas Lumley
+date: '2025-06-19'
+slug: included-variable-bias
+categories: []
+tags: []
+---
+
+
+
+<p>If you have two regression models
+<span class="math display">\[E[Y|X]=\beta_0+\beta_1X\]</span>
+and
+<span class="math display">\[E[Y|X,Z]=\gamma_0+\gamma_1X+\gamma_2Z\]</span>
+then typically <span class="math inline">\(\gamma_1\neq\beta_1\)</span>, because they are different things<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<p>A common name for this phenomenon is <strong>omitted-variable bias</strong>. That’s an unfortunate name, because it implies a direction in a situation that’s completely symmetric. Yes, <span class="math inline">\(\hat\beta_1\)</span> is biased for <span class="math inline">\(\gamma_1\)</span>, but <span class="math inline">\(\hat\gamma_1\)</span> is equally biased for <span class="math inline">\(\beta_1\)</span>.</p>
+<p>The idea that <span class="math inline">\(\gamma_1\)</span> is somehow natural and <span class="math inline">\(\beta_1\)</span> is wrong comes from the gold-standard<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> way of thinking about regression model choice: that there is a true model defined by having all its coefficients non-zero, and that your job is to find it. From this point of view, either <span class="math inline">\(\gamma_2=0\)</span>, so <span class="math inline">\(\beta_1\)</span> is preferred but <span class="math inline">\(\beta_1=\gamma_1\)</span>, or <span class="math inline">\(\gamma_2\neq 0\)</span>, so <span class="math inline">\(\gamma_1\)</span> is preferred.</p>
+<p>If you want <span class="math inline">\(\beta_1\)</span> then <span class="math inline">\(\hat\gamma_1\)</span> has <strong>included-variable bias</strong>. If you want <span class="math inline">\(\gamma_1\)</span> then <span class="math inline">\(\hat\beta_1\)</span> has omitted-variable bias. Or you can stop trying to think of the <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\gamma\)</span> as being estimates of the same things and just talk about which one you actually want to estimate.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Also <span class="math inline">\(\gamma_2\neq\beta_1\)</span>, but that doesn’t tend to cause as much confusion.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>ie, old and wrong<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

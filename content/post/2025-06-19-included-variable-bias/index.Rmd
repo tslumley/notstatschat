@@ -1,0 +1,20 @@
+---
+title: Included-variable bias
+author: Thomas Lumley
+date: '2025-06-19'
+slug: included-variable-bias
+categories: []
+tags: []
+---
+
+If you have two regression models
+$$E[Y|X]=\beta_0+\beta_1X$$
+and
+$$E[Y|X,Z]=\gamma_0+\gamma_1X+\gamma_2Z$$
+then typically $\gamma_1\neq\beta_1$, because they are different things^[Also $\gamma_2\neq\beta_1$, but that doesn't tend to cause as much confusion.]
+
+A common name for this phenomenon is **omitted-variable bias**. That's an unfortunate name, because it implies a direction in a situation that's completely symmetric. Yes,  $\hat\beta_1$ is biased for $\gamma_1$, but $\hat\gamma_1$ is equally biased for $\beta_1$.  
+
+The idea that $\gamma_1$ is somehow natural and $\beta_1$ is wrong comes from the gold-standard^[ie, old and wrong] way of thinking about regression model choice: that there is a true model defined by having all its coefficients non-zero, and that your job is to find it.  From this point of view, either $\gamma_2=0$, so $\beta_1$ is preferred but $\beta_1=\gamma_1$, or $\gamma_2\neq 0$, so $\gamma_1$ is preferred. 
+
+If you want $\beta_1$ then $\hat\gamma_1$ has **included-variable bias**. If you want $\gamma_1$ then $\hat\beta_1$ has omitted-variable bias. Or you can stop trying to think of the $\beta$ and $\gamma$ as being estimates of the same things and just talk about which one you actually want to estimate. 
