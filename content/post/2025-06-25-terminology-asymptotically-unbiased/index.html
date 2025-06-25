@@ -1,0 +1,29 @@
+---
+title: 'Terminology: asymptotically unbiased'
+author: Thomas Lumley
+date: '2025-06-25'
+slug: terminology-asymptotically-unbiased
+categories: []
+tags: []
+---
+
+
+
+<p>The phrase <em>asymptotically unbiased</em> has at least two uses in statistics. Some people use it to mean that sequence of estimators <span class="math inline">\(\hat\theta_n\)</span> of a parameter <span class="math inline">\(\theta\)</span> satisfies
+<span class="math display">\[\lim_{n\to\infty}E[\hat \theta_n]=\theta.\]</span>
+I don’t think this is a very interesting property: it’s weaker than consistency plus existence of the first moment, and if you’re going to do asymptotics you should at least be able to ask for consistency.</p>
+<p>I prefer to say <span class="math inline">\(\theta_n\)</span> is asymptotically unbiased if
+<span class="math display">\[\sqrt{n}(\hat\theta_n-\theta)\stackrel{d}{\to} N(0,\sigma^2)\]</span>
+If you want a more general version, there’s some normalising sequence <span class="math inline">\(r_n\)</span> such that
+<span class="math display">\[\sqrt{r_n}(\hat\theta_n-\theta)\stackrel{d}{\to} X\]</span>
+where <span class="math inline">\(X\)</span> is a non-degenerate distribution with mean zero. Or maybe median zero. Something like that.</p>
+<p>In other words, I want <em>asymptotically unbiased</em> to mean that the <em>asymptotic distribution</em> is unbiased, so that (in large samples) the bias is a negligible component of the mean squared error and we can compare estimators by their variances.</p>
+<p>Estimators that aren’t asymptotically unbiased include density estimators, which optimally have <span class="math display">\[n^{2/5}(\hat f(x)-f(x))\stackrel{d}{\to} (\delta(x),\sigma^2(x))\]</span>
+for non-zero <span class="math inline">\(\delta\)</span>. BLUPs<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> of random effects aren’t asymptotically unbiased under asymptotics where random effects are interesting. Lasso estimators aren’t asymptotically unbiased.</p>
+<p>It’s interesting that there any naturally-occurring asymptotically unbiased estimators, and even more so that the efficient estimators in parametric models are asymptotically unbiased. There doesn’t seem to be any intuitive reason that this has to be true.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Yes, I do know what the U stands for. Fight me.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
