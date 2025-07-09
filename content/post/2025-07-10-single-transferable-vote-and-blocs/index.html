@@ -1,0 +1,25 @@
+---
+title: Single Transferable Vote and blocs
+author: Thomas Lumley
+date: '2025-07-10'
+slug: single-transferable-vote-and-blocs
+categories: []
+tags: []
+---
+
+
+
+<p>Suppose you have a single transferable vote election to pick some number <span class="math inline">\(d\)</span> of people, and that you belong to a large voting bloc of sheeplike followers or of cooperative forward-thinkers (delete as necessary). How should you all vote?</p>
+<p>I think the following is true:</p>
+<p>If there is a set of <span class="math inline">\(k\)</span> or more candidates such that everyone in your block ranks all those candidates above any candidates not in the set, and your block has more than <span class="math inline">\(r/(d+1)\)</span> fraction of the total vote, with <span class="math inline">\(k\geq r\)</span>, these candidates will win <span class="math inline">\(r\)</span> positions. (The only point of <span class="math inline">\(k\)</span> here is that you trivially can’t win two positions with only one candidate)</p>
+<p><strong>Proof</strong></p>
+<p>First suppose there are no exhausted ballots. At every step in the voting your set will have more than <span class="math inline">\(r/(d+1)\)</span> fraction of the vote, so no collection of candidates outside your set can have the <span class="math inline">\(d-r\)</span> quotas of more than <span class="math inline">\(1/(d+1)\)</span> fraction needed to win <span class="math inline">\(d-r\)</span> positions.</p>
+<p>By assumption there are no exhausted ballots in your block until after all <span class="math inline">\(k\)</span> of your candidates have been eliminated, so exhaustion of your ballots can’t affect whether your candidates win. Exhausted ballots outside your block can’t stop your candidate winning. QED</p>
+<p>So:</p>
+<ul>
+<li>if you can agree on your candidates you do not need to further agree on any subset of your candidates to rank or on the within-block ranking</li>
+<li>your ranking or non-ranking of the candidates outside your set doesn’t affect the result if you have enough votes to win all the positions</li>
+<li>if you prefer your candidates to the other candidates, you can just vote your honest preferences and don’t need a block vote. The reasons for block voting are either that you want to cooperate or that you don’t know who you actually prefer but do know who is in your party.</li>
+</ul>
+<p>There can be more than one such set of candidates. Suppose there are two positions and everyone in your block puts candidates A and B in the first two positions (in some order) and also puts candidates A through H in the first eight positions (in some order). The conditions are satisfied for A through H, so two of A through H will win. The conditions are also satisfied for A and B, so two of A and B will win.</p>
+<p>If your block doesn’t have enough votes to sweep the entire election then other candidates will win some positions so it matters how you rank the other candidates. You should just rank them in order of how much you don’t want them. It is very hard to do better than that without detailed information on how everyone else votes.</p>
