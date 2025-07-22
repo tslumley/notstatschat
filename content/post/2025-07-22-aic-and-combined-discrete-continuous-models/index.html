@@ -1,0 +1,53 @@
+---
+title: AIC and combined discrete/continuous models
+author: Thomas Lumley
+date: '2025-07-22'
+slug: aic-and-combined-discrete-continuous-models
+categories: []
+tags: []
+---
+
+
+
+<p>There was a question on StackOverflow<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> about continuous data with extra zeroes and comparing a two-part model to a continuous-only model using AIC. This doesn’t work, but the reason is interesting and some other things that don’t work are less obvious.</p>
+<p>For a long time I vaguely wondered about what was going on if you compare a Normal model and a binomial model using AIC. Mechanically, nothing horrible happens. You put the numbers in and you get a number out. The same sort of question arises if you want to compare a beta and a (scaled) binomial model for proportions. All easy, except that the result doesn’t actually mean anything.</p>
+<p>Suppose you have a Beta(<span class="math inline">\(a,b\)</span>) distribution and a scaled binomial distribution <span class="math inline">\(d/n\)</span> with <span class="math inline">\(d\sim Binomial(n,p)\)</span> for empirical data <span class="math inline">\(\hat p_i\)</span>. If the binomial model is true, all the <span class="math inline">\(\hat p_i\)</span> will be multiples of <span class="math inline">\(1/n\)</span> (with probability 1). If the Beta model is true, none of them will be multiples of <span class="math inline">\(1/n\)</span> (with probability 1). The likelihood ratio is infinite in favour of the binomial model in the first scenario and infinite in favour of the Beta model in the second. It’s not a difficult decision. The same is true for a Normal model vs binomial as long as none of the observations are outside the binomial range.</p>
+<p>But in R</p>
+<pre class="r"><code>set.seed(2025-7-22)
+Y&lt;-rbinom(100, 20, .3)
+cts_model &lt;- glm(Y~1, family=gaussian)
+disc_model &lt;- glm(cbind(Y,20-Y)~1,  family=binomial)
+AIC(cts_model)</code></pre>
+<pre><code>## [1] 424.3969</code></pre>
+<pre class="r"><code>AIC(disc_model)</code></pre>
+<pre><code>## [1] 420.7833</code></pre>
+<p>Or, instead of integer <span class="math inline">\(Y\)</span> we could go for proportions and weights</p>
+<pre class="r"><code>Y1&lt;-Y/20
+cts_model1 &lt;- glm(Y1~1, family=gaussian)
+disc_model1 &lt;- glm(Y1~1, weight=rep(20,100), family=binomial)
+AIC(cts_model1)</code></pre>
+<pre><code>## [1] -174.7496</code></pre>
+<pre class="r"><code>AIC(disc_model1)</code></pre>
+<pre><code>## [1] 420.7833</code></pre>
+<p>The two discrete models are the same and so they give the same AIC, but there’s a problem with the continuous models. How can it be true that the two models are about equally good on the integer scale but the Normal model is way better on the proportion scale?</p>
+<p>In discussions of computing AIC you will see the caution that “all the constants” need to be included. That is, when computing the loglikelihood in, say, a Normal linear regression model, a programmer might exclude factors of, say, <span class="math inline">\(\sqrt{2\pi}\)</span> that are the same for all models and drop out of any comparison. That’s fine when comparing Normal linear regression models, but when comparing to a lognormal or Gamma model those terms don’t cancel out, because they aren’t part of the lognormal or Gamma likelihood. You need the full honest-to-Fisher loglikelihood for AIC, not some simplification. The discrete vs continuous problem is exactly the same, only infinitely worse.</p>
+<p>The loose way to talk about the problem is that the continuous model’s loglikelihood comes from a probability density function while the discrete model’s loglikelihood comes from a probability mass function, and these are just two different things. You can’t divide one by the other. They’re as different as apples and Wednesday. Give up now and keep your sanity.</p>
+<p>To get more precise, we need a little measure theory, so we can represent the two distributions as basically the same sort of thing, and talk about their ratio intelligently<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. Let <span class="math inline">\(P\)</span> and <span class="math inline">\(Q\)</span> be two probability measures. These are just functions that assign probabilities to sets. What sets? All sets that you’ll ever care about.<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> We can obviously talk about ratios: <span class="math inline">\(P(A)/Q(A)\)</span> for any<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> set <span class="math inline">\(A\)</span>. A bit less obviously, we can talk about limits of ratios <span class="math inline">\(dP/dQ\)</span> for sequences of sets that shrink to a single point. If <span class="math inline">\(P\)</span> and <span class="math inline">\(Q\)</span> were both discrete random variables then <span class="math inline">\(P(\{x\})/Q(\{x\})\)</span> would make sense for any point <span class="math inline">\(x\)</span>, and that’s what <span class="math inline">\((dP/dQ)(x)\)</span> would be. If <span class="math inline">\(P\)</span> and <span class="math inline">\(Q\)</span> were both absolutely continuous variables with the same range, the ratio of their probability densities at <span class="math inline">\(x\)</span> would make sense and that’s what <span class="math inline">\((dP/dQ)(x)\)</span> would be. If you allow for <span class="math inline">\(P\)</span> to put probability in some places <span class="math inline">\(Q\)</span> doesn’t by calling the ratio <span class="math inline">\(\infty\)</span> then you can always get <span class="math inline">\(dP/dQ\)</span> and
+<span class="math display">\[\int_A \frac{dP}{dQ}(x)\,dQ(x)=\int_A \,dP^-(x)=P^-(x)\]</span>
+where <span class="math inline">\(P^-\)</span> is the part of <span class="math inline">\(P\)</span> where <span class="math inline">\(dP/dQ\)</span> is finite<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a>. If you think about this for discrete variables it make sense: <span class="math inline">\(P^-(\{x\})\)</span> is just <span class="math inline">\(P(\{x\})\)</span> for points where <span class="math inline">\(Q(\{x\})\neq 0\)</span>.</p>
+<p>Ok, so now we can talk about probability distributions as the same basic kind of thing whether they are discrete or continuous or horribly worse than either. We can also talk about likelihood ratios <span class="math inline">\(dP/dQ\)</span>. The problem when we compared likelihoods for Normal and binomial models before was that we just used the density function and not the whole probability measure. If you have two discrete variables with the same support this is fine; the likelihood ratio reduces to the ratio of probability mass functions. If you have two continuous variables with the same support the likelihood ratio reduces to the ratio of probability density functions. In general, though, you need all the bits.</p>
+<p>We’re now in a position to say what the <span class="math inline">\(dP/dQ\)</span> is for Normal <span class="math inline">\(P\)</span> and binomial <span class="math inline">\(Q\)</span>. It’s zero if all the <span class="math inline">\(\hat p_i\)</span> are multiples of <span class="math inline">\(1/n\)</span> in <span class="math inline">\([0,1]\)</span> and it’s infinity if they aren’t. This is not very productive<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a>, but at least it’s correct, which is something.</p>
+<p>And, finally, going back to the model for a continuous variable with a spike at zero, we can see there’s a problem. We can’t compare this to a continuous model, because <span class="math inline">\(dP/dQ\)</span> will be infinite at zero from the spike. You might think we could compare it to a different mixed discrete/continuous model. We <em>could</em>, and we could define an AIC analogue that way,<a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a> but the answer would depend on how the discrete and continuous parts were weighted, which turns out to be somewhat arbitrary.</p>
+<p>None of this problem arises for purely discrete two-part models such as the zero-inflated Poisson, which can straightforwardly be compared to the Poisson because they both put probability on all the non-negative integers. The likelihood ratios are just the ratios of these probabilities and are perfectly well defined.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>or perhaps StackUnderflow, these days<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>though, as it turns out, entirely unproductively<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>rhubarb, rhubarb, axiom of choice, rhubarb, rhubarb, Solovay’s model, rhubarb, inaccessible cardinal<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>reasonable<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p>more precisely, the part that’s absolutely continuous with respect to <span class="math inline">\(Q\)</span>. This is the Radon-Nikodym theorem plus the Lebesgue decomposition theorem. See <a href="https://en.wikipedia.org/wiki/Radon%E2%80%93Nikodym_theorem">Wikipedia</a><a href="#fnref5" class="footnote-back">↩︎</a></p></li>
+<li id="fn6"><p>as I warned you<a href="#fnref6" class="footnote-back">↩︎</a></p></li>
+<li id="fn7"><p>AIC analogues can be defined for lots of optimisation estimators, even for things like survey estimation<a href="#fnref7" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
