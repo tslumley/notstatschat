@@ -1,0 +1,31 @@
+---
+title: Interviewing your laptop
+author: Thomas Lumley
+date: '2025-08-15'
+slug: interviewing-your-laptop
+categories: []
+tags: []
+---
+
+
+
+<p>There’s increasing interest in (or, at least, coverage of) the idea that surveying large language models could substitute for surveying people. This has obvious advantages: to repurpose a Heinlein quote “it’s cheap, clean, convenient, and free of any possibility of wrongdoing–and you don’t have to go home in the cold”. The problem is I can’t see how it could possibly work.</p>
+<p>There is a science-fiction book, <em>Interface</em>, by Stephen Bury<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, about how election campaigns are too polling-driven. A campaign consultant, Cy Ogle, breaks down the US voting population into 400 micro-demographics: a few of these are irrelevant mouth breather, 400-pound Tab drinker, stone-faced urban homeboy, burger-flipping history major, squirrelly winnebago jockey,
+bible-slinging porch monkey,
+economic roadkill,
+pent-up corporate lickspittle,
+high-metabolism world dominator,
+midamerican knickknack queen. Yes, they’re vile labels. He’s a vile person.</p>
+<p>He recruits one member of each micro-demographic and, using sufficiently advanced technology<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>, hooks them up to a computer so he can read out the country’s opinion in real time. There are two sorts of problem with this. First, the people might not be as representative as you wanted. In the book, the ‘high-metabolism world dominator’ loses his wristwatch in a car crash and it’s picked up by someone completely different. Also, the ‘economic roadkill’ representative gets interested in politics, makes up this weird conspiracy theory about the candidate being controlled by a chip in his head, and decides to rescue the country from him<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>.</p>
+<p>The second problem is weighting: how many high-metabolism world dominators are there in the current US voting population vs burger-flipping history majors. If you don’t know that – and if it can change – the micro-demographics aren’t enough.</p>
+<p>Interviewing LLMs has both problems. You can ask Claude or ChatGPT to pretend to be a white grocery-store owner in Indiana, or a Mormon potato farmer in Idaho, or whatever, give it the news, and ask it who it would vote for. It will probably do this better than I could, but it’s not magic. If the political opinion experts don’t know<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> how people would react to the news, it’s hard to be confidence that AI will. In particular, it’s hard for demographics who are not Very Online, and these are exactly the people who are hard to survey. Getting good answers for all the viewpoints is the hard part of opinion polling.</p>
+<p>Even if Claude or ChatGPT is correct about the response of individual imaginary people to the news, that doesn’t solve the weighting problem. How do you assemble individual survey responses, even if they are reliable, into a population (or state or district) summary? This is the other hard part of opinion polling, using a combination of random sampling and auxiliary population information, and it’s where LLMs are not going to help. Even if you stipulate than an LLM could successfully pretend to be any sort of potential voter, there’s no way that it can know the distributions. That’s not in the training data, which are a large convenience sample from the internet, and not referenced to the US voting population in any way.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>who is Neal Stephenson and J. Frederick George<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>a wrist TV with pulse and skin-resistance monitor<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>Yes, the candiddate is <em>actually</em> being controlled by a chip in his head, but a belief can be true without being warranted<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p><em>ex hypothesi</em>, if we’re doing surveys<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
