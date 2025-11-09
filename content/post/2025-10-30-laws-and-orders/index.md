@@ -8,7 +8,7 @@ categories: []
 tags: []
 ---
 
-This is approximately my Belz Lecture for the Statistical Society of Australia (Vic/Tas), from earlier this week. 'Approximately', because it's from my notes. 
+This is approximately my Belz Lecture for the Statistical Society of Australia (Vic/Tas), from a couple of weeks ago. 'Approximately', because it's from my notes. 
 
 <hr>
 
