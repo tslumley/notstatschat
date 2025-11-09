@@ -323,7 +323,7 @@ Binary data has a unique ordering, and for numeric (interval/ratio) data we are 
 
 <img src="images/Screenshot 2025-11-09 at 7.01.44 PM.png" alt="" width="90%"/>
 
-##$# Issues that came up in questions or afterwards
+#### Issues that came up in questions or afterwards
 
 - I should have made it clearer that it may not be the *statistician* who evaluates the tradeoff. For example, in medical treatment it would ideally be the individual patient. In government it may be the Minister rather than the official stats agency. The statistician's job is to make sure that people know evaluating the tradeoff is needed.
 - This *is* a lot like other utility tradeoffs: eg equity vs number of people helped in public health. Someone needs to decide; the problem can't just delegated to maths.
