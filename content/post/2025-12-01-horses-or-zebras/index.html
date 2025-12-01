@@ -1,0 +1,31 @@
+---
+title: Horses or Zebras?
+author: Thomas Lumley
+date: '2025-12-01'
+slug: horses-or-zebras
+categories: []
+tags: []
+---
+
+
+
+<p>Suppose we have a prediction problem. We want to predict whether <span class="math inline">\(Y=1\)</span> or <span class="math inline">\(Y=0\)</span>, but for nearly all the examples in our training data it turns out that <span class="math inline">\(Y=0\)</span>. Many predictive techniques, faced with data like this, will degenerate to predicting <span class="math inline">\(Y=0\)</span> everywhere; even the more successful techniques will predict <span class="math inline">\(Y=1\)</span> for most inputs. The negative predictive value <span class="math inline">\(P(Y=0|\hat Y=0)\)</span> will be high, but the positive predictive value <span class="math inline">\(P(Y=1|\hat Y=0)\)</span> <a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> will be low. The sensitivity <span class="math inline">\(P(\hat Y=1|Y=1)\)</span> <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> may also be low. This, of course, is exactly what should happen. As medical students are told “when you hear hoofbeats expect horses, not zebras”. Or as the TV show <em>House</em> would have it “It’s not lupus – it’s never lupus”. That’s not some sort of prejudice: most equines are in fact horses, and while lupus can mimic a wide range of other conditions, most people have one of the wide range of other conditions.</p>
+<p>“Class imbalance” is still a common complaint in data science, and people like to treat it by resampling data in various ways,<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> but I think it often misses the point. There are two reasons why you’d want to override the default judgement of the model to get more predictions of zebras (or lupus). The first is that your prior probability of <span class="math inline">\(Y=1\)</span> in production use of the model is higher than in the sample. The second is that you care more about false negatives than false positives.</p>
+<p>The first problem occurs much more often in the other direction, when you fit a predictive model to a case-control sample, where <span class="math inline">\(P(Y=1)=1/2\)</span>, and then need to use it on populations where <span class="math inline">\(P(Y=1)\)</span> is tiny. This is very common in studies of new diagnostics, which are first tested on case-control samples because that’s the minimum-cost design. They often fail when generalised to real population distributions where there are very few zebras. The ideal way to do this is via Bayes’ Theorem, which gives the connection between the prior and posterior odds. If you are doing this with a well-specified logistic regression, the resulting adjustment for prior probability just changes the intercept, or, equivalently, changes the decision threshold for <span class="math inline">\(\hat Y=1\)</span> vs <span class="math inline">\(\hat Y=0\)</span>.</p>
+<p>The second problem is more relevant for data science. You want to build a zebra-detector, and you are willing to end up with a few horses as long as you don’t miss any zebras. The right way to do this is to put the penalties for the two types of error into your objective function for fitting the model. If you are doing well-specified logistic regression, the resulting adjustment for prior probability just changes the decision threshold for <span class="math inline">\(\hat Y=1\)</span> vs <span class="math inline">\(\hat Y=0\)</span>, or, equivalently, changes the intercept.</p>
+<p>Logistic regression is a nice clean example because oversampling the cases, adjusting the prior probabilities, and adjusting the relative penalties all give <strong>exactly</strong> the same result<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>. It’s not really special, though. Suppose you have a binary prediction technique that minimises an additive loss
+<span class="math display">\[L(\theta)=\sum_{i\in{\text{training set}}} L_i(Y_i; X_i,\theta).\]</span>
+Different prior probabilities can be handled by putting in prior-probability weights <span class="math inline">\(w^{(p)}\)</span> to increase the representation of some feature and outcome patterns:
+<span class="math display">\[L(\theta)=\sum_{i\in{\text{training set}}} w^{(p)}_iL_i(Y_i; X_i,\theta).\]</span>
+For example, if we had a case-control sample we’d use <span class="math inline">\(w^{(p)}=1\)</span> for cases and <span class="math inline">\(w^{(p)}=1/p\)</span> for controls where <span class="math inline">\(p\)</span> is the control sampling fraction.
+Different penalties can be handled by replacing <span class="math inline">\(L_i\)</span>, which can only have two possible values for any <span class="math inline">\((X,\theta)\)</span> combination, by the two possible losses for that <span class="math inline">\((X,\theta)\)</span> combination. This can also typically be done with case weights, and often with case weights that do not depend on <span class="math inline">\(\theta\)</span>.</p>
+<p>Oversampling will work to the extent that case weights not depending on <span class="math inline">\(\theta\)</span> work, because oversampling is just a way of implementing case weighting: for point estimation, having two copies of an observation is just like having one copy with a weight of two. Weighting still seems better if you want to do any sort of analytic uncertainty estimation because it describes the scenario more accurately: that really is one unusually-valuable zebra, not a small herd of zebra clones.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>the ‘recall’, as machine-learning people call it<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>`precision’ in machine-learning jargon<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>eg “SMOTE”<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>on average, for oversampling<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

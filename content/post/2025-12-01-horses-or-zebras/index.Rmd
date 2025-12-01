@@ -1,0 +1,29 @@
+---
+title: Horses or Zebras?
+author: Thomas Lumley
+date: '2025-12-01'
+slug: horses-or-zebras
+categories: []
+tags: []
+---
+
+Suppose we have a prediction problem. We want to predict whether $Y=1$ or $Y=0$, but for nearly all the examples in our training data it turns out that $Y=0$. Many predictive techniques, faced with data like this, will degenerate to predicting $Y=0$ everywhere; even the more successful techniques will predict $Y=1$ for most inputs. The negative predictive value $P(Y=0|\hat Y=0)$ will be high, but the positive predictive value $P(Y=1|\hat Y=0)$ ^[the 'recall', as machine-learning people call it] will be low.  The sensitivity $P(\hat Y=1|Y=1)$ ^[`precision' in machine-learning jargon] may also be low. This, of course, is exactly what should happen.  As medical students are told "when you hear hoofbeats expect horses, not zebras". Or as the TV show *House* would have it "It's not lupus – it's never lupus". That's not some sort of prejudice: most equines are in fact horses, and while lupus can mimic a wide range of other conditions, most people have one of the wide range of other conditions. 
+
+"Class imbalance" is still a common complaint in data science, and people like to treat it by resampling data in various ways,^[eg "SMOTE"] but I think it often misses the point.  There are two reasons why you'd want to override the default judgement of the model to get more predictions of zebras (or lupus).  The first is that your prior probability of $Y=1$ in production use of the model is higher than in the sample. The second is that you care more about false negatives than false positives. 
+
+The first problem occurs much more often in the other direction, when you fit a predictive model to a case-control sample, where $P(Y=1)=1/2$, and then need to use it on populations where $P(Y=1)$ is tiny. This is very common in studies of new diagnostics, which are first tested on case-control samples because that's the minimum-cost design.  They often fail when generalised to real population distributions where there are very few zebras. The ideal way to do this is via Bayes' Theorem, which gives the connection between the prior and posterior odds.  If you are doing this with a well-specified logistic regression, the resulting adjustment for prior probability just changes the intercept, or, equivalently, changes the decision threshold for $\hat Y=1$ vs $\hat Y=0$. 
+
+The second problem is more relevant for data science.  You want to build a zebra-detector, and you are willing to end up with a few horses as long as you don't miss any zebras.  The right way to do this is to put the penalties for the two types of error into your objective function for fitting the model. If you are doing well-specified logistic regression, the resulting adjustment for prior probability just changes the decision threshold for $\hat Y=1$ vs $\hat Y=0$, or, equivalently, changes  the intercept.
+
+
+Logistic regression is a nice clean example because oversampling the cases, adjusting the prior probabilities, and adjusting the relative penalties all give **exactly** the same result^[on average, for oversampling].  It's not really special, though.   Suppose you have a binary prediction technique that minimises an additive loss
+$$L(\theta)=\sum_{i\in{\text{training set}}} L_i(Y_i; X_i,\theta).$$
+Different prior probabilities can be handled by putting in prior-probability weights $w^{(p)}$ to increase the representation of some feature and outcome patterns:
+$$L(\theta)=\sum_{i\in{\text{training set}}} w^{(p)}_iL_i(Y_i; X_i,\theta).$$
+For example, if we had a case-control sample we'd use $w^{(p)}=1$ for cases and $w^{(p)}=1/p$ for controls where $p$ is the control sampling fraction.
+Different penalties can be handled by replacing $L_i$, which can only have two possible values for any $(X,\theta)$ combination, by the two possible losses for that $(X,\theta)$ combination. This can also typically be done with case weights, and often with case weights that do not depend on $\theta$.
+
+Oversampling will work to the extent that case weights not depending on $\theta$ work, because oversampling is just a way of implementing case weighting: for point estimation, having two copies of an observation is just like having one copy with a weight of two.  Weighting still seems better if you want to do any sort of analytic uncertainty estimation because it describes the scenario more accurately: that really is one unusually-valuable zebra, not a small herd of zebra clones.
+
+
+
