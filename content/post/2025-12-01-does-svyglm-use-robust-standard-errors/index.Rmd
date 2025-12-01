@@ -1,0 +1,48 @@
+---
+title: Does svyglm use robust standard errors?
+author: Thomas
+date: '2025-12-01'
+slug: does-svyglm-use-robust-standard-errors
+categories: []
+tags: []
+---
+
+# Yes
+
+This question comes up from time to time on social media or StackExchange or email, often from reasonable people, so extra emphasis might be useful.
+
+There are two parts to the answer:
+
+## Yes
+
+and
+
+## If you think about it, what *else* could it be using?
+
+Write $\hat\beta$ for the `svyglm` estimator.  Theory says the estimator solves the weighted score equations
+
+$$U(\beta)=\sum_{i=1}^N \frac{R_i}{\pi_i} U_i(\beta)=0$$
+
+where $N$ is the population size, $R_i$ is the sampling indicator, and $U_i=\partial_\beta \ell_i(\beta)$ is the score.  Doing an Taylor series expansion on this gives
+
+$$U(\beta) = U(\hat\beta)+(\hat\beta-\beta)\frac{\partial U}{\partial\beta}+\text{remainder}$$
+so that
+$$\hat\beta-\beta\approx \left [\frac{\partial U}{\partial\beta}\right]^{-1} U(\beta_0).$$
+The large-sample variance approximation is then the 'sandwich'
+$$\widehat{\text{var}}[\hat\beta]= \left [\frac{\partial U}{\partial\beta}\right]^{-1} \widehat{\text{var}}[U(\beta_0)] \left [\frac{\partial U}{\partial\beta}\right]^{-1}.$$
+
+This is all similar to, eg, Huber or White's derivation of the sandwich estimator. The only difference is that the middle term^[meat? cheese? falafel? avocado?] has to be estimated differently because of the survey design. That is, the `svyglm` variance estimator *generalises* the familiar sandwich estimators to allow for non-trivial sampling.  
+
+The middle term is the variance of an estimated population total, and is estimated the same way as for any other population total.  This is **literally** true: all the population-total variance estimates go through the function `svyrecvar`.^[or analogous functions such as `ppsvar` or `twophasevar` for other categories of design] 
+
+The middle term is
+$$\sum_{i,j} \frac{R_{ij}}{\pi_{ij}}\frac{R_iU_i}{\pi_i}\frac{R_jU_j}{\pi_j}$$
+where $\pi_{ij}$ are the pairwise sampling probabilities. If you had independent sampling of individual records, so $\text{cov}[R_i,R_j]=0$, the middle term would reduce to
+$$\sum_{i} \frac{R_{i}}{\pi_{i}}\left[\frac{R_iU_i}{\pi_i}\right]^{\otimes 2}$$
+and the whole thing simplifies to a standard sandwich estimator. 
+
+
+
+Model-based standard error estimates are based on simplifying the sandwich estimator by making stronger assumptions about the structure of the middle term. We can't do this with survey data: we don't necessarily assume anything about how the finite population was generated, so no simplifications are available. 
+
+So, **yes**, all the model in the `survey` and `svyVGAM` packages use model-robust standard errors. 
