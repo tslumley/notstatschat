@@ -27,7 +27,7 @@ tags: []
 	i&lt;-which.min(sapply(1:halfn, function(i) diff(range(s[i:(i+halfn)]))))
 	mean(s[i:(i+halfn)])
 }</code></pre>
-<p>and generate a sample from it for, say, logistic <span class="math inline">\(X\)</span></p>
+<p>and generate a sample from it for, say, Normal <span class="math inline">\(X\)</span></p>
 <pre class="r"><code>set.seed(2025-1-6)
 a_sample &lt;- replicate(1000, {x&lt;-rnorm(100); shorthalf(x)})</code></pre>
 <p>Now we could plot a histogram</p>

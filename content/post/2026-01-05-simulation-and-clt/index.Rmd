@@ -34,7 +34,7 @@ shorthalf<-function(x) {
 }
 ```
 
-and generate a sample from it for, say, logistic $X$
+and generate a sample from it for, say, Normal $X$
 
 ```{r}
 set.seed(2025-1-6)
