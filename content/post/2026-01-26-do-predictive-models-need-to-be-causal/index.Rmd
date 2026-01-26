@@ -1,0 +1,34 @@
+---
+title: Do predictive models need to be causal?
+author: Thomas Lumley
+date: '2026-01-26'
+slug: do-predictive-models-need-to-be-causal
+categories: []
+tags: []
+---
+
+*This post is partly because I'm about to start teaching generalised linear models and partly to avoid doomscrolling*
+
+Do predictive models need to be causal? At first glance the response is something like "Of course not; are you high?".  If you have a model 
+$$\log P(Y=1)= \alpha +\beta_X X+\beta_Z Z$$
+then whether the model is usefully predictive has almost nothing to do with whether one of $\beta_X$ and $\beta_Z$ can  be interpreted as the effect of its predictor on $Y$. 
+
+However, the model being usefully predictive *does* rely on $\beta_X$ and $\beta_Z$ being (approximately) the same in production use as they are in the training set. What does it take to warrant a belief that they will be the same? Prediction is hard, as the Danish proverb says, especially when  it comes to the future.
+
+One possibility is random sampling: in [some of my work](https://pubmed.ncbi.nlm.nih.gov/35775996/) we take small probability samples from a large data set and audit the variables. The relationship between the recorded data and the audit data is used for prediction in the remainder of the data, to increase the precision of estimation.  In a setting like this, probability sampling guarantees the relationship between the coefficients in the training data and the coefficients when applied.
+
+Similarly, if a bank or the IRD audit a probability sample of documents to find error or fraud, they can (in the short term) apply the model to their full collection of data. The relationships in the full data set will be the same as in the training data, because of the sampling. 
+
+We'll come back to this one. The other reason for the relationships in the training data to hold in production use is that they hold *for reasons*. Suppose you want to predict drinking next weekend $Y$ by hangovers this weekend $X$.  The causal effect of $X$ on $Y$ is probably negative, if anything, but the predictive relationship is going to be positive. Thus, say the onlookers, we know that predictive relationships don't have to be causal.
+
+Hang on a minute, though. The relationship between hangover this week and drinking next week is a combination of the relationship between hangover this week and drinking this week, and the relationship between drinking this week and drinking next week.  The former is definitely causal, and the latter is looking more plausibly causal.  Having a hangover this week (probably) doesn't increase your chance of drinking next week, but there is a positive relationship between them **for causal reasons**. In the same way I, a non-driver, used to get ads saying I could save money on my car insurance by switching insurers, because I had a good credit score.  A good credit score doesn't cause low driving risk (as a recession or ill-health will make clear), but probably does predict good driving risk **for causal reasons**. 
+
+In contrast, there's a [machine learning benchmark dataset](https://archive.ics.uci.edu/dataset/73/mushroom) that predicts the edibility or otherwise of mushrooms from their physical characteristics and spatial distribution. The training data is North American mushrooms in the genera *Lepiota* and *Agaricus*. The prediction is really quite good if you use something like XGBoost.  However, because there is no *causal* relationship between eg gill colour and edibility, the model's ability to extrapolate to other mushroom genera is fatally poor. That isn't hyperbole: the model would classify some examples of *Amanita phalloides* (the [death cap](https://en.wikipedia.org/wiki/Amanita_phalloides)) as edible. It's not just the fault of  XGBoost: humans also extrapolate mushroom edibility very poorly when they move beyond their training data. 
+
+This is what I mean by predictive models needing to be causal: if random sampling doesn't guarantee generalisability from training to production use then something else has to, and causality is all we've got.
+
+I said I'd come back to random sampling.  Suppose you have a evidence of a strong relationship between $X$ and $Y$ in your training data, and these are a probability sample of the data where you want to use your model. Everything is good, no worries.  But *why* are $X$ and $Y$ strongly related in your training data?  It's not just chance -- that's approximately what we *mean* by saying they are related in the training data. If you have random sampling you don't need to know the reason that $X$ predicts $Y$, but there still has to *be a reason*. 
+
+One of the few exceptions to causality here is what's probably behind the mushrooms. Saying that *Lepiota* and *Agaricus* are genera, in modern biology, implies they are clades; each genus is descended from a single common ancestor.  Similarly, each species is descended from a single, more recent, common ancestor, in a  tree. If the first ancestor to gain (or lose) production of a toxin had certain physical characteristics, then its descendants will tend to have those characteristics, and those characteristics will be predictive of edibility.  In a similar way, at a national level having English as an official language is moderately correlated with having a parliamentary system of government, and at a personal level having less-active aldehyde dehydrogenase is moderately correlated with using chopsticks to eat; these are traits passed down from history (social, cultural, or genetic). A small coincidence in the past has spread as its descendants multiply.
+
+So, predictive models can work if the relationships are there for reasons -- as the direct consequence of  causal effects --  or if the relationships are inflated from small-scale historical coincidences. Either can work under well-controlled sampling but the latter generalises much less well than the former. 
