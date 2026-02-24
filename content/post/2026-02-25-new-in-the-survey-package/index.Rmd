@@ -1,0 +1,36 @@
+---
+title: New in the survey package
+author: Thomas Lumley
+date: '2026-02-25'
+slug: new-in-the-survey-package
+categories: []
+tags: []
+---
+
+Version 4.5 of `survey` is on CRAN now. There are a lot of little changes and a few new features.
+
+Thanks to Stas Kolenikov we have
+
+#### Bell-McCaffrey standard errors for `svyglm`.  
+
+The standard `svyglm` standard errors are based on sums of squares of PSU-level residuals. As [Bell and McCaffrey](https://www150.statcan.gc.ca/n1/pub/12-001-x/2002002/article/9058-eng.pdf) point out
+
+> These sums of squares tend to
+be too small for two reasons: residuals are generally smaller
+than true errors due to overfitting, and residuals tend to have
+lower intra-cluster correlation than the errors. 
+
+Also, since residuals will typically not have constant variance, the estimated standard error will have a longer tail than would be estimated simply by counting independent contributions as the usual estimators do. So, we have (optionally) a different standard error estimator and a different degrees-of-freedom estimator for `confint.svyglm`.
+
+#### Wilson ('score') confidence intervals for proportions
+
+Yet another option for `svyciprop`, this time extending the "Wilson" intervals that use the score test to define a quadratic whose roots are the interval endpoints.  That is, the interval allows for the variance:mean relationship of the score statistic rather than just evaluating the variance at the mean. 
+
+In other highlights
+
+- **Multiphase designs**: The `multiphase` function defines survey design objects with arbitrarily many phases. I've come across two three-phase designs recently, so I felt it was time for this.  It's still experimental, but there's a [vignette](https://cran.r-project.org/web/packages/survey/vignettes/multiphase.html) describing how the variance estimators are derived
+- **NA weights to drop observations**: some people want to be able to put fictitious zero-weight observations into survey data files, for non-nefarious reasons.  In `svydesign.default` the `na_weights` argument has options `"fail"` for the previous behaviour and `"warn"` and `"allow"` to drop records with `NA` weights before defining the survey design (with or without a warning)
+- `svystat` objects lose their variance information when you do arithmetic on them because people might have expected the variances to [magically transform](https://notstatschat.rbind.io/2024/06/15/automatic-transformation-of-standard-errors/)
+- `rake` now does not try to construct the full multiway table implied by the raking margins (it might be quite big). As a consequence the stopping criterion for iterative proportional fitting is a bit different. If you have a raked design object where you used a fairly loose convergence tolerance you might get slightly different results (from Ben Schneider)
+- The `$aic` component of `svyglm` objects, which is undocumented and meaningless,
+	is now set to `NA`. If this breaks your code, your code was already wrong.
