@@ -1,0 +1,33 @@
+---
+title: Are predictive models enough?
+author: R Build
+date: '2026-04-13'
+slug: are-predictive-models-enough
+categories: []
+tags: []
+---
+
+
+
+<p>In one of the social media discussions about causal inference the suggestion was made that predictive models are all you need: a good predictive model gives you all the conditional distributions you could want, and you don’t need any special causal inference stuff.</p>
+<p>I think there’s something to this point of view, but there are a few limitations.</p>
+<p>The first is that causal inference theory (eg causal graphs) is useful for deciding what variables you need <strong>that you don’t have</strong>. Ideally one should also think about this for predictive inference, but it’s very common in predictive modelling to think about the job as predicting the <span class="math inline">\(Y\)</span> that you want to know in terms of the <span class="math inline">\(X\)</span>s that you have.</p>
+<p>The second is that causal inference theory tells you that some things don’t need to be modelled. The extreme case of this is a randomised experiment, where you have a treatment <span class="math inline">\(T\)</span>, pre-treatment covariates <span class="math inline">\(Z\)</span>, and an outcome <span class="math inline">\(Y\)</span>, and you do not need to get <span class="math inline">\([Y|Z]\)</span> right. You don’t need to model <span class="math inline">\([Y|Z]\)</span> at all, and if you decide to model it (to increase precision), you don’t have to get it right.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<p>More generally, suppose we have observational data <span class="math inline">\((X,T,Y)\)</span> rather than an experiment, and you come up with a good predictive model for everything given everything else. We’ll assume you have <a href="https://bactra.org/weblog/935.html">enough data</a> that all the relationships are well-identified. This model does indeed contain all the information that’s needed to work out your estimate of, say, <span class="math display">\[E[Y|\mathrm{do}(T=1)]-E[Y|\mathrm{do}(T=0)].\]</span> But what <em>is</em> that estimate? It certainly isn’t the difference in conditional means <span class="math display">\[E[Y|T=1]-E[Y|T=0].\]</span>
+Nor, in general, is it something like the marginal ‘effect’
+<span class="math display">\[ E_X\left[ E[Y|T=1,X=x]-E[Y|T=0,X=x]\right]\]</span>
+or
+<span class="math display">\[\frac{1}{n}\sum_{T_i=1}\frac{Y_i}{E[T_i|X=x_i]}-\frac{1}{n}\sum_{T_i=0}\frac{Y_i}{E[1-T_i|X=x_i]}.\]</span></p>
+<p>These formulas do what an unreformed 1970s textbook would recommend, and try to control for all the <span class="math inline">\(X\)</span>. What you want to do is these formulas, but conditioning on <strong>the appropriate <span class="math inline">\(X\)</span></strong>. What are the appropriate <span class="math inline">\(X\)</span> to control for? Well, that is precisely the question addressed by causal inference!</p>
+<p>You don’t necessarily need all the modern formalism. I learned regression before <a href="https://en.wikipedia.org/wiki/Causality_(book)"><em>Causality</em></a> and when the work of people such as Robins, or Rubin, or Imbens, was, let us say, not fully integrated into the biostatistics curriculum. Back then, the description of the appropriate <span class="math inline">\(X\)</span> was “correlated with <span class="math inline">\(T\)</span> and not in the causal pathway”, which works really quite well. It doesn’t correctly diagnose the famous “M” graph
+<img src="images/dagitty-model%20(1).png" style="width:70.0%" /></p>
+<p>where <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are unmeasured and you <em>should not</em> condition on <span class="math inline">\(X\)</span>, but it’s remarkably difficult to find a good example of this in practice.</p>
+<p>People often <em>do</em> get the choice of <span class="math inline">\(X\)</span> spectacularly wrong in real life For example, in teaching regression I use an example where someone trying to estimate the effect of perfluoroalkyl compounds on heart disease adjusted for all the plausible intermediate variables<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. I didn’t go looking for this example; I found it because my local newspaper reported on the paper.</p>
+<p>So, I do think modern causal inference formulations are useful things to learn – and if you don’t learn them, you at least need to learn the pre-formal versions. It’s valuable to have some structure for the questions “which variables do I want to condition on?”. It helps defeat the assumption that individual parameters in your joint predictive model will themselves answer the causal questions. Causal graphs, in particular, are one of the best ways I know to come to the conclusion that an answer to your question needs variables you don’t have.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>you do need to model it in the right sort of way: if you have a parameter other than a difference or ratio then you need to use weights rather than regression adjustment to get the same target parameter, but we know that<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>blood pressure, cholesterol, blood glucose, weight<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

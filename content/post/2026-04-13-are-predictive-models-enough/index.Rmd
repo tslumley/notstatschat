@@ -1,0 +1,34 @@
+---
+title: Are predictive models enough?
+author: R Build
+date: '2026-04-13'
+slug: are-predictive-models-enough
+categories: []
+tags: []
+---
+
+In one of the social media discussions about causal inference the suggestion was made that predictive models are all you need: a good predictive model gives you all the conditional distributions you could want, and you don't need any special causal inference stuff. 
+
+I think there's something to this point of view, but there are a few limitations. 
+
+The first is that causal inference theory (eg causal graphs) is useful for deciding what variables you need **that you don't have**.  Ideally one should also think about this for predictive inference, but it's very common in predictive modelling to think about the job as predicting the $Y$ that you want to know in terms of the $X$s that you have. 
+
+
+The second is that causal inference theory tells you that some things don't need to be modelled.  The extreme case of this is a randomised experiment, where you have a treatment $T$, pre-treatment covariates $Z$, and an outcome $Y$, and you do not need to get $[Y|Z]$ right. You don't need to model $[Y|Z]$ at all, and if you decide to model it (to increase precision), you don't have to get it right.^[you do need to model it in the right sort of way: if you have a parameter other than a difference or ratio then you need to use weights rather than regression adjustment to get the same target parameter, but we know that]  
+
+More generally, suppose we have observational data $(X,T,Y)$ rather than an experiment, and you come up with a good predictive model for everything given everything else.  We'll assume you have [enough data](https://bactra.org/weblog/935.html) that all the relationships are well-identified. This model does indeed contain all the information that's needed to work out your estimate of, say, $$E[Y|\mathrm{do}(T=1)]-E[Y|\mathrm{do}(T=0)].$$ But what *is* that estimate? It certainly isn't the difference in conditional means $$E[Y|T=1]-E[Y|T=0].$$ 
+Nor, in general, is it something like the marginal 'effect'
+$$ E_X\left[ E[Y|T=1,X=x]-E[Y|T=0,X=x]\right]$$
+or 
+$$\frac{1}{n}\sum_{T_i=1}\frac{Y_i}{E[T_i|X=x_i]}-\frac{1}{n}\sum_{T_i=0}\frac{Y_i}{E[1-T_i|X=x_i]}.$$
+
+These formulas do what an unreformed 1970s textbook would recommend, and try to control for all the $X$. What you want to do is these formulas, but conditioning on **the appropriate $X$**. What are the appropriate $X$ to control for? Well, that is precisely the question addressed by causal inference!
+
+You don't necessarily need all the modern formalism. I learned regression before [*Causality*](https://en.wikipedia.org/wiki/Causality_(book)) and when the work of people such as  Robins, or Rubin, or Imbens, was, let us say, not fully integrated into the biostatistics curriculum.  Back then, the description of the appropriate $X$ was "correlated with $T$ and not in the causal pathway", which works really quite well. It doesn't correctly diagnose the famous "M" graph
+![](images/dagitty-model (1).png){width=70%}
+
+where $A$ and $B$ are unmeasured and you *should not* condition on $X$, but it's remarkably difficult to find a good example of this in practice. 
+
+People often *do* get the choice of $X$ spectacularly wrong in real life For example, in teaching regression I use an example where someone trying to estimate the effect of perfluoroalkyl compounds on heart disease adjusted for all the plausible intermediate variables^[blood pressure, cholesterol, blood glucose, weight]. I didn't go looking for this example; I found it because my local newspaper reported on the paper.
+
+So, I do think modern causal inference formulations are useful things to learn -- and if you don't learn them, you at least need to learn the pre-formal versions. It's valuable to have some structure for the questions "which variables do I want to condition on?". It helps defeat the assumption that individual parameters in your joint predictive model will themselves answer the causal questions.  Causal graphs, in particular, are one of the best ways I know to come to the conclusion that an answer to your question needs variables you don't have.
