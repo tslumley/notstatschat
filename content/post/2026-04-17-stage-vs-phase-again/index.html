@@ -1,0 +1,30 @@
+---
+title: Stage vs phase, again
+author: Thomas Lumley
+date: '2026-04-17'
+slug: stage-vs-phase-again
+categories: []
+tags: []
+---
+
+
+
+<p>As I have said before, the distinction between multistage and multiphase surveys is mostly important as a <a href="https://www.biblegateway.com/passage/?search=Judges%2012%3A5-6&amp;version=NIV">shibboleth</a> for survey statisticians.</p>
+<p>The two=phase quantities <span class="math display">\[\pi_i^*=P(i\text{ sampled}|\text{phase 1})P(i\in\text{phase 1})\]</span>
+are not the same as the marginal sampling probabilities
+<span class="math display">\[\pi_i=P(i\text{ sampled})\]</span>
+but one uses them in exactly the same formulas, so the difference doesn’t matter all that much.</p>
+<p>It would still be somewhat interesting to know whether using <span class="math inline">\(1/\pi_i^*\)</span> as weights is better or worse than using <span class="math inline">\(1/\pi_i\)</span> – usually there isn’t any choice, because <span class="math inline">\(\pi_i\)</span> aren’t available in a multiphase sample, but interesting in theory.</p>
+<p>We can answer this question for nested case-control sampling (and frequency-matched nested case-control sampling). This is a very special case of two-phase sampling, so the answer is less interesting, but the problem is more tractable, at least in simulation.</p>
+<p>Imagine we have a cohort of size <span class="math inline">\(N\)</span> that’s either a simple random sample or Poisson sample from a very large population or an iid realistation from a data-generating process. A rare disease with prevalence <span class="math inline">\(p\)</span> is observed in this cohort, giving us a binary outcome variable <span class="math inline">\(Y\)</span>. We take a subsample of the <span class="math inline">\(n\)</span> people with <span class="math inline">\(Y=1\)</span> and <span class="math inline">\(n\)</span> of the people with <span class="math inline">\(Y=0\)</span> and measure <span class="math inline">\(X\)</span> on them.</p>
+<p>The two-phase analysis says the subsampling probability for controls is <span class="math inline">\(n/(N-n)\)</span>: there are <span class="math inline">\(N-n\)</span> people with <span class="math inline">\(Y=0\)</span> and we sample <span class="math inline">\(n\)</span> of them. This is a random variable, because <span class="math inline">\(n\)</span> is random (it’s the sum over the cohort of <span class="math inline">\(Y\)</span>). We could also work out the marginal subsampling probability for controls, which is the expected value of <span class="math inline">\(n/(N-n)\)</span>. Strictly speaking, this is infinite because there’s an infinitesimal chance than <span class="math inline">\(n=N\)</span>. We’re going to ignore that approximate the expected value by <span class="math inline">\(Np/(N-Np)\)</span>.</p>
+<p>Suppose we do the two-phase analysis with the phase-two probability <span class="math inline">\(n/(N-n)\)</span> and the single-phase analysis with the true marginal probability <span class="math inline">\(Np/(N-Np)\)</span>. We should get unbiased pseudoscore equations either way, and effectively unbiased estimators of the regression coefficients. How will the standard errors compare? There are basically three possibilities</p>
+<ul>
+<li>the two-phase analysis is better (because it conditions on the realised <span class="math inline">\(n\)</span>)</li>
+<li>the one-phase analysis is better (because there’s isn’t variation in <span class="math inline">\(\pi_i\)</span>)</li>
+<li>they are the same, because the case-control setting is too simple to learn anything</li>
+</ul>
+<p>I ran a simulation, with <span class="math inline">\(N=10^4\)</span>, <span class="math inline">\(p=0.05\)</span> and standard Normal <span class="math inline">\(X\)</span>, and used logistic regression to model <span class="math inline">\(Y|X\)</span>. For the coefficient of <span class="math inline">\(X\)</span> the two approaches gave essentially identical results. For the intercept the means were the same but there was much less variability with the one-phase analysis.</p>
+<p><img src="images/plots.png" style="width:80.0%" /></p>
+<p>The estimated standard errors matched the simulation standard errors pretty well: for the intercept, the single-phase analysis gave a reduction in the standard error by a factor of about twenty, with no change for the coefficient of <span class="math inline">\(x\)</span>.</p>
+<p>This isn’t all that exciting: we know the intercept is weird in case-control logistic regression, and we do in fact have a very good phase-one estimate of the prevalence of <span class="math inline">\(Y=1\)</span>. It’s still a bit interesting in that it’s a tractable example showing that the two analysis approaches can differ. The same sort of phenomenon will happen for the coefficients of matching variables in frequency-matched logistic regression for the same reason; they are basically intercepts.</p>
