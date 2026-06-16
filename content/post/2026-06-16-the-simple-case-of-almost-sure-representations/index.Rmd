@@ -1,0 +1,19 @@
+---
+title: The simple case of almost sure representations
+author: Thomas Lumley
+date: '2026-06-16'
+slug: the-simple-case-of-almost-sure-representations
+categories: []
+tags: []
+---
+
+The almost-sure representation theorem in probability says that if $X_n\stackrel{d}{\to}X$ we can find a sequence $\tilde X_n, \tilde X$ with the same distributions as $X_n,X$, possibly on a different probability space, so that $\tilde X_n\stackrel{a.s.}{\to}\tilde X$ (where the a.s. is with respect to the distribution of $X$). General versions of this theorem are a bit tricky to prove, and extremely general versions are very tricky to prove.  There's an extremely simple version that gives the idea, though.
+
+
+Suppose $X_n$ are real-valued random variables.  They have distribution functions $F_n:\mathbb{R}\to [0,1]$. $X$ also has a distribution function $F$.  We want to generate $\tilde X_n$ so they have the same marginal distributions, but are as similar as possible (in some sense).  One way to do this is to use the same random numbers for all $n$: generate $U\sim U[0,1]$ and take $\tilde X_n=F^{-1}_n(U)$ and $\tilde X=F^{-1}(U)$. Regular readers will remember this idea of [coupling random-number generators](https://notstatschat.rbind.io/2025/03/04/coupling-simulations-and-the-reparametrisation-trick/).
+
+With this set-up, what does it take for $\tilde X_n\stackrel{a.s.}{\to}\tilde X$? Well, for any random point $\omega$ in your probability space, the value $u=U(\omega)$ is whatever it is, so $\tilde X_n(\omega)\to\tilde X(\omega)$ exactly when $F_n^{-1}(u)\to F^{-1}(u)$.  Convergence in distribution, which we assumed, is equivalent to convergence of the quantile functions at every point where $F^{-1}$ is continuous. The points where $F^{-1}$ is not continuous are precisely the points where $F$ is flat, and this set has probability zero under $X$ (and therefore under $\tilde X$), so the convergence of $F_n^{-1}(u)$ to  $F^{-1}(u)$ is $F$-almost-sure and we are done.
+
+This does get more tricky once you go to more dimensions (or to spaces like the circle) because you can't just use inversion to get your random numbers.  It's not necessarily obvious that whatever method you do use will allow this sort of coupling (and the fact that it can be made to do so is basically the content of the a.s. representation theorem)
+
+So, what about the caveat that the $\tilde X_n$ might be on a different probability space? In the real-valued case this only rules out fairly degenerate settings. For example, $X_n$ might all be binary and maybe you set them up on a probability space that doesn't have any $U[0,1]$ random variables because you hate statisticians. In the [more general proof](https://eventuallyalmosteverywhere.wordpress.com/2014/10/13/skorohod-representation-theorem/), you end up iteratively defining **a whole lot** of random variables, each independent of all the previous ones, so it makes a bit more sense that a user of the theorem might not have equipped their data with a big enough probability space to begin with. 
