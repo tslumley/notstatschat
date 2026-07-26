@@ -1,0 +1,19 @@
+---
+title: Data leakage and independence
+author: Thomas Lumley
+date: '2026-07-27'
+slug: data-leakage-and-independence
+categories: []
+tags: []
+---
+
+
+
+<p>Derek Lowe, <a href="https://www.science.org/content/blog-post/benchmarking-benchmarks">writing on models for protein-ligand interaction</a></p>
+<blockquote>
+<p>Ideally, you train your model on a big pile o’ protein data, while holding out a good piece of it to keep it out of the training set. Then once your software has machine-learned its way to happiness, you see how it performs on those cases that it’s never seen before. But here’s the problem: it is very hard to set this up in a way so that the program is really seeing things that it hasn’t seen.</p>
+</blockquote>
+<p>If you think about this from a statistical point of view, it seems strange. Splitting data into test and training sets at random automatically gives you independence, and we established <a href="https://www150.statcan.gc.ca/n1/pub/12-001-x/2013002/article/11883/section3-eng.htm">nearly a century ago</a> that random sampling is better than trying to engineer representativeness.</p>
+<p>The problem is extrapolation. We aren’t trying to get good predictions for the distribution of problems where we know the answer, but for some larger universe of more interesting problems: all protein-ligand binding in humans or in eukaryotes or in living organisms. The problems where we know the ground truth tend to be both clustered and taken from a few parts of the problem space where the solution is easy.</p>
+<p>To mimic, as closely as feasible, testing in an independent sample from the true universe of problems we don’t want to divide our ground-truth data up at random. We want to assign a whole cluster of examples to either training or test sets, and (ideally) to undersample where our ground-truth data has oversampled. This is kind of like the <a href="https://notstatschat.rbind.io/2024/05/21/crossvalidation-in-complex-survey-data/">ideas about cross-validation for complex survey data</a>, but more extreme. We don’t have sampling weights or sampling units identified in the data and we don’t know anything about the gaps in the data.</p>
+<p>Since we can’t rely on random sampling to guarantee transportability from training to test to production data it’s also important that the model is <a href="https://notstatschat.rbind.io/2026/01/26/do-predictive-models-need-to-be-causal/">‘true for reasons’</a>: that it captures correlations that come from causal mechanisms or that are inherited from common ancestors.</p>
