@@ -1,0 +1,67 @@
+---
+title: Median and MVUE
+author: Thomas Lumley
+date: '2026-10-20'
+slug: median-and-mvue
+categories: []
+tags: []
+---
+
+
+
+<p><em>Attention Conservation Notice: optimality in a one-dimensional parametric model is so 1960s. Wikipedia says “For practical statistics problems, it is important to determine the MVUE if one exists, since less-than-optimal procedures would naturally be avoided, other things being equal”, but they’re not using the word “practical” to mean what I would use it to mean</em></p>
+<p>In the Laplace (or double exponential) distribution, with density
+<span class="math display">\[f(x;\theta) =\frac{1}{2} \exp(-|x-\theta|)\]</span>
+the maximum likelihood estimator of <span class="math inline">\(\theta\)</span> is the median. Clearly the median is Unbiased. Is it the UMVUE? The other U is easy: if it’s MVUE for any <span class="math inline">\(\theta\)</span> then it’s obviously MVUE for every <span class="math inline">\(\theta\)</span> just by symmetry. Is it minimum variance, though? There’s surprisingly little on the Google; you might have thought this would be a popular example or counterexample in mathematical statistics, but it isn’t.</p>
+<p>One of the reasons it’s an interesting example is that the median is not a sufficient statistic. We know it’s not a sufficient statistic because among distributions where the range doesn’t depend on the parameter value<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> the only ones with finite-dimensional sufficient statistics are the exponential family models<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
+<p>We also know that the median is not fully efficient; it does not achieve the Cramér-Rao bound in finite samples.<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> <a href="https://www.scirp.org/html/6-1240248_41538.htm">This paper</a> gives an unpleasant formula for the exact variance, and shows that it’s noticeably larger than the Cramér-Rao bound even in quite large samples. By itself this doesn’t show that the median isn’t MVUE, since we don’t necessarily expect the bound to be attainable.</p>
+<p>The same paper also claims that the mean of the middle three observations can be better than the median. That’s nice and easy to test by simulation! I tried it with <span class="math inline">\(n=15\)</span></p>
+<pre class="r"><code>suppressMessages(library(VGAM))
+rr&lt;-replicate(1000000, {x&lt;-sort(rlaplace(15)); 
+    c(median=x[8],threedian=sum(x[7:9])/3, mean=sum(x)/15)})
+
+t.test(rr[1,]^2)</code></pre>
+<pre><code>## 
+## 	One Sample t-test
+## 
+## data:  rr[1, ]^2
+## t = 584.37, df = 1e+06, p-value &lt; 2.2e-16
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  0.09625834 0.09690622
+## sample estimates:
+##  mean of x 
+## 0.09658228</code></pre>
+<pre class="r"><code>t.test(rr[2,]^2)</code></pre>
+<pre><code>## 
+## 	One Sample t-test
+## 
+## data:  rr[2, ]^2
+## t = 601.15, df = 1e+06, p-value &lt; 2.2e-16
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  0.08962650 0.09021284
+## sample estimates:
+##  mean of x 
+## 0.08991967</code></pre>
+<pre class="r"><code>t.test(rr[3,]^2)</code></pre>
+<pre><code>## 
+## 	One Sample t-test
+## 
+## data:  rr[3, ]^2
+## t = 674.91, df = 1e+06, p-value &lt; 2.2e-16
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  0.1331128 0.1338882
+## sample estimates:
+## mean of x 
+## 0.1335005</code></pre>
+<p>We can see that the median and threedian are better than the mean, and the threedian is very slightly better than the median. So the median is not the UMVUE.</p>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>ruling out examples like <span class="math inline">\(U[0,\theta]\)</span> where the maximum is sufficient<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>this is the Pitman-Koopman-Darmois <a href="https://en.wikipedia.org/wiki/Exponential_family#Classical_estimation:_sufficiency">theorem</a><a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>obviously it’s <em>asymptotically</em> efficient and <em>asymptotically</em> MVUE, but since it’s a maximum likelihood estimator and regular this is deeply unsurprising<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
