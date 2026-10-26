@@ -7,7 +7,7 @@ categories: []
 tags: []
 ---
 
-```{r hide=TRUE}
+```{r echo=FALSE}
 a<-rnorm(1000)
 x0<-rnorm(1000)
 y0<-rnorm(1000)+x0
